@@ -18,6 +18,9 @@
                         <a href="{{ route('admin.attendances.index') }}">
                             <x-secondary-button type="button">{{ __('Monitoring Absensi') }}</x-secondary-button>
                         </a>
+                        <a href="{{ route('admin.leave-requests.index') }}">
+                            <x-secondary-button type="button">{{ __('Pengajuan Izin') }}</x-secondary-button>
+                        </a>
                     </div>
                 </div>
             </div>

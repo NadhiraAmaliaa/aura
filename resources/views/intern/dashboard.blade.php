@@ -32,9 +32,12 @@
                             </p>
                         @endif
 
-                        <div class="mt-4">
+                        <div class="mt-4 flex flex-wrap gap-3">
                             <a href="{{ route('intern.attendance.index') }}">
                                 <x-primary-button type="button">{{ __('Buka Absensi') }}</x-primary-button>
+                            </a>
+                            <a href="{{ route('intern.leave-requests.index') }}">
+                                <x-secondary-button type="button">{{ __('Pengajuan Izin / Sakit') }}</x-secondary-button>
                             </a>
                         </div>
                     </div>

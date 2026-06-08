@@ -22,10 +22,16 @@
                         <x-nav-link :href="route('admin.attendances.index')" :active="request()->routeIs('admin.attendances.*')">
                             {{ __('Monitoring Absensi') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('admin.leave-requests.index')" :active="request()->routeIs('admin.leave-requests.*')">
+                            {{ __('Pengajuan Izin') }}
+                        </x-nav-link>
                     @endif
                     @if (Auth::user()->isIntern())
                         <x-nav-link :href="route('intern.attendance.index')" :active="request()->routeIs('intern.attendance.*')">
                             {{ __('Absensi') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('intern.leave-requests.index')" :active="request()->routeIs('intern.leave-requests.*')">
+                            {{ __('Pengajuan Izin') }}
                         </x-nav-link>
                     @endif
                 </div>
@@ -90,10 +96,16 @@
                 <x-responsive-nav-link :href="route('admin.attendances.index')" :active="request()->routeIs('admin.attendances.*')">
                     {{ __('Monitoring Absensi') }}
                 </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.leave-requests.index')" :active="request()->routeIs('admin.leave-requests.*')">
+                    {{ __('Pengajuan Izin') }}
+                </x-responsive-nav-link>
             @endif
             @if (Auth::user()->isIntern())
                 <x-responsive-nav-link :href="route('intern.attendance.index')" :active="request()->routeIs('intern.attendance.*')">
                     {{ __('Absensi') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('intern.leave-requests.index')" :active="request()->routeIs('intern.leave-requests.*')">
+                    {{ __('Pengajuan Izin') }}
                 </x-responsive-nav-link>
             @endif
         </div>
