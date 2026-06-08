@@ -16,7 +16,7 @@ class InternProgramSeeder extends Seeder
             ['name' => 'Magenta', 'description' => 'Magang Generasi Bertalenta program.'],
             ['name' => 'Kerja Praktek', 'description' => 'Mandatory work practice for university students.'],
             ['name' => 'PKL', 'description' => 'Praktik Kerja Lapangan for vocational students.'],
-            ['name' => 'Kampus Merdeka', 'description' => 'Government-led independent study program.'],
+            ['name' => 'MBKM', 'description' => 'Merdeka Belajar Kampus Merdeka program.'],
             ['name' => 'Internship Mandiri', 'description' => 'Self-initiated independent internship.'],
         ];
 
