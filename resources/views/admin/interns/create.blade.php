@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Add Intern') }}
+            {{ __('Tambah Peserta Magang') }}
         </h2>
     </x-slot>
 
@@ -11,7 +11,7 @@
                 <div class="p-6 text-gray-900">
                     <form method="POST" action="{{ route('admin.interns.store') }}">
                         @csrf
-                        @include('admin.interns._form', ['submitLabel' => __('Create Intern')])
+                        @include('admin.interns._form', ['submitLabel' => __('Tambah Peserta Magang')])
                     </form>
                 </div>
             </div>

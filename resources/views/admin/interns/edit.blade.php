@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Edit Intern') }}
+            {{ __('Edit Peserta Magang') }}
         </h2>
     </x-slot>
 
@@ -12,7 +12,7 @@
                     <form method="POST" action="{{ route('admin.interns.update', $intern) }}">
                         @csrf
                         @method('PUT')
-                        @include('admin.interns._form', ['submitLabel' => __('Update Intern')])
+                        @include('admin.interns._form', ['submitLabel' => __('Simpan Perubahan')])
                     </form>
                 </div>
             </div>

@@ -41,7 +41,7 @@ class AttendanceController extends Controller
             ->first();
 
         if ($existing) {
-            return back()->with('error', 'You have already checked in today.');
+            return back()->with('error', 'Anda sudah melakukan Check In hari ini.');
         }
 
         Attendance::create([
@@ -53,7 +53,7 @@ class AttendanceController extends Controller
             'status' => 'present',
         ]);
 
-        return back()->with('status', 'Checked in successfully.');
+        return back()->with('status', 'Check In berhasil.');
     }
 
     /**
@@ -68,11 +68,11 @@ class AttendanceController extends Controller
             ->first();
 
         if (! $attendance) {
-            return back()->with('error', 'You must check in before checking out.');
+            return back()->with('error', 'Anda harus Check In terlebih dahulu sebelum Check Out.');
         }
 
         if ($attendance->check_out_time) {
-            return back()->with('error', 'You have already checked out today.');
+            return back()->with('error', 'Anda sudah melakukan Check Out hari ini.');
         }
 
         $attendance->update([
@@ -81,6 +81,6 @@ class AttendanceController extends Controller
             'check_out_longitude' => $request->validated('longitude'),
         ]);
 
-        return back()->with('status', 'Checked out successfully.');
+        return back()->with('status', 'Check Out berhasil.');
     }
 }

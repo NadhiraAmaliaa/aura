@@ -66,7 +66,7 @@ class InternController extends Controller
 
         return redirect()
             ->route('admin.interns.index')
-            ->with('status', 'Intern created successfully.');
+            ->with('status', 'Peserta magang berhasil ditambahkan.');
     }
 
     /**
@@ -114,7 +114,7 @@ class InternController extends Controller
 
         return redirect()
             ->route('admin.interns.index')
-            ->with('status', 'Intern updated successfully.');
+            ->with('status', 'Peserta magang berhasil diperbarui.');
     }
 
     /**
@@ -129,6 +129,6 @@ class InternController extends Controller
 
         return redirect()
             ->route('admin.interns.index')
-            ->with('status', 'Intern deleted successfully.');
+            ->with('status', 'Peserta magang berhasil dihapus.');
     }
 }

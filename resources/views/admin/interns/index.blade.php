@@ -2,10 +2,10 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Intern Management') }}
+                {{ __('Manajemen Peserta Magang') }}
             </h2>
             <a href="{{ route('admin.interns.create') }}">
-                <x-primary-button type="button">{{ __('Add Intern') }}</x-primary-button>
+                <x-primary-button type="button">{{ __('Tambah Peserta Magang') }}</x-primary-button>
             </a>
         </div>
     </x-slot>
@@ -21,19 +21,19 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     @if ($interns->isEmpty())
-                        <p class="text-gray-500">{{ __('No interns found.') }}</p>
+                        <p class="text-gray-500">{{ __('Belum ada data peserta magang.') }}</p>
                     @else
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200 text-sm">
                                 <thead>
                                     <tr class="text-left text-gray-500">
-                                        <th class="px-4 py-3">{{ __('Name') }}</th>
+                                        <th class="px-4 py-3">{{ __('Nama') }}</th>
                                         <th class="px-4 py-3">{{ __('Email') }}</th>
                                         <th class="px-4 py-3">{{ __('NIM') }}</th>
-                                        <th class="px-4 py-3">{{ __('Program') }}</th>
-                                        <th class="px-4 py-3">{{ __('Division') }}</th>
+                                        <th class="px-4 py-3">{{ __('Program Magang') }}</th>
+                                        <th class="px-4 py-3">{{ __('Divisi') }}</th>
                                         <th class="px-4 py-3">{{ __('Status') }}</th>
-                                        <th class="px-4 py-3 text-right">{{ __('Actions') }}</th>
+                                        <th class="px-4 py-3 text-right">{{ __('Aksi') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-100">
@@ -51,7 +51,7 @@
                                                     'bg-gray-100 text-gray-800' => $intern->status === 'inactive',
                                                     'bg-blue-100 text-blue-800' => $intern->status === 'completed',
                                                 ])>
-                                                    {{ ucfirst($intern->status) }}
+                                                    {{ ['active' => 'Aktif', 'inactive' => 'Tidak Aktif', 'completed' => 'Selesai'][$intern->status] ?? ucfirst($intern->status) }}
                                                 </span>
                                             </td>
                                             <td class="px-4 py-3">
@@ -59,11 +59,11 @@
                                                     <a href="{{ route('admin.interns.edit', $intern) }}"
                                                        class="text-indigo-600 hover:text-indigo-900">{{ __('Edit') }}</a>
                                                     <form method="POST" action="{{ route('admin.interns.destroy', $intern) }}"
-                                                          onsubmit="return confirm('{{ __('Delete this intern and its user account?') }}');">
+                                                          onsubmit="return confirm('{{ __('Hapus peserta magang dan akun pengguna ini?') }}');">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" class="text-red-600 hover:text-red-900">
-                                                            {{ __('Delete') }}
+                                                            {{ __('Hapus') }}
                                                         </button>
                                                     </form>
                                                 </div>

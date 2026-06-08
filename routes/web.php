@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AttendanceController as AdminAttendanceController;
 use App\Http\Controllers\Admin\InternController;
 use App\Http\Controllers\Intern\AttendanceController;
 use App\Http\Controllers\ProfileController;
@@ -26,6 +27,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         })->name('dashboard');
 
         Route::resource('interns', InternController::class)->except(['show']);
+
+        Route::get('/attendances', [AdminAttendanceController::class, 'index'])->name('attendances.index');
     });
 
 Route::middleware(['auth', 'verified', 'role:intern'])
