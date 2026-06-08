@@ -43,6 +43,17 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the dashboard route name based on the user's role.
+     */
+    public function dashboardRoute(): string
+    {
+        return match ($this->role) {
+            'admin' => 'admin.dashboard',
+            default => 'intern.dashboard',
+        };
+    }
+
+    /**
      * Get the intern profile associated with the user.
      *
      * @return HasOne<Intern, $this>
