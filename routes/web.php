@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\InternController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -15,11 +16,16 @@ Route::get('/dashboard', function () {
     return redirect()->route($user->dashboardRoute());
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
-    Route::get('/admin/dashboard', function () {
-        return view('admin.dashboard');
-    })->name('admin.dashboard');
-});
+Route::middleware(['auth', 'verified', 'role:admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get('/dashboard', function () {
+            return view('admin.dashboard');
+        })->name('dashboard');
+
+        Route::resource('interns', InternController::class)->except(['show']);
+    });
 
 Route::middleware(['auth', 'verified', 'role:intern'])->group(function () {
     Route::get('/intern/dashboard', function () {

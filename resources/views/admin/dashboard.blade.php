@@ -10,6 +10,12 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     {{ __('Welcome, Administrator. You have admin access.') }}
+
+                    <div class="mt-4">
+                        <a href="{{ route('admin.interns.index') }}">
+                            <x-primary-button type="button">{{ __('Manage Interns') }}</x-primary-button>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
