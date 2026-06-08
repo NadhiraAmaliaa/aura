@@ -20,6 +20,11 @@
                             {{ __('Interns') }}
                         </x-nav-link>
                     @endif
+                    @if (Auth::user()->isIntern())
+                        <x-nav-link :href="route('intern.attendance.index')" :active="request()->routeIs('intern.attendance.*')">
+                            {{ __('Attendance') }}
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 
@@ -78,6 +83,11 @@
             @if (Auth::user()->isAdmin())
                 <x-responsive-nav-link :href="route('admin.interns.index')" :active="request()->routeIs('admin.interns.*')">
                     {{ __('Interns') }}
+                </x-responsive-nav-link>
+            @endif
+            @if (Auth::user()->isIntern())
+                <x-responsive-nav-link :href="route('intern.attendance.index')" :active="request()->routeIs('intern.attendance.*')">
+                    {{ __('Attendance') }}
                 </x-responsive-nav-link>
             @endif
         </div>
