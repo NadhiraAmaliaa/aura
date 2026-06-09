@@ -57,7 +57,7 @@
                                             <td class="px-4 py-3">
                                                 <div class="flex items-center justify-end gap-2">
                                                     <a href="{{ route('admin.interns.edit', $intern) }}"
-                                                       class="text-indigo-600 hover:text-indigo-900">{{ __('Edit') }}</a>
+                                                       class="text-indig o-600 hover:text-indigo-900">{{ __('Edit') }}</a>
                                                     <form method="POST" action="{{ route('admin.interns.destroy', $intern) }}"
                                                           onsubmit="return confirm('{{ __('Hapus peserta magang dan akun pengguna ini?') }}');">
                                                         @csrf

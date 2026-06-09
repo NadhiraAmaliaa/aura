@@ -25,6 +25,9 @@
         .sign-name { font-weight: bold; margin-top: 60px; text-decoration: underline; }
         .sign-role { font-size: 11px; }
         .status-box { margin-top: 18px; padding: 8px 10px; border: 1px solid #999; }
+        .qr-wrap { text-align: center; margin-bottom: 6px; }
+        .qr-wrap img { display: block; margin: 0 auto; }
+        .qr-caption { font-size: 9px; color: #555; text-align: center; margin-top: 2px; }
     </style>
 </head>
 <body>
@@ -118,6 +121,10 @@
         <tr>
             <td>
                 Menyetujui,
+                <div class="qr-wrap">
+                    <img src="data:image/svg+xml;base64,{{ $qrCode }}" width="80" height="80" alt="QR Verifikasi">
+                    <div class="qr-caption">Scan untuk verifikasi</div>
+                </div>
                 <div class="sign-name">{{ $leaveRequest->approver?->name ?? '-' }}</div>
                 <div class="sign-role">Administrator</div>
             </td>

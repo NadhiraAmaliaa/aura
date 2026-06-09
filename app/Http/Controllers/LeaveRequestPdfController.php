@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\LeaveRequest;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Symfony\Component\HttpFoundation\Response;
 
 class LeaveRequestPdfController extends Controller
@@ -28,9 +29,18 @@ class LeaveRequestPdfController extends Controller
 
         $leaveRequest->load(['user.intern.internProgram', 'approver']);
 
-        $pdf = Pdf::loadView('leave-requests.pdf', compact('leaveRequest'))
+        $verifyUrl = route('leave-requests.verify', $leaveRequest);
+
+        // Generate QR code as base64-encoded SVG for embedding in the PDF.
+        // SVG backend requires no PHP extensions (Imagick/GD not needed).
+        $qrCode = base64_encode(
+            QrCode::format('svg')->size(120)->errorCorrection('H')->generate($verifyUrl)
+        );
+
+        $pdf = Pdf::loadView('leave-requests.pdf', compact('leaveRequest', 'qrCode'))
             ->setPaper('letter');
 
         return $pdf->stream("pengajuan-{$leaveRequest->request_number}.pdf");
     }
 }
+
