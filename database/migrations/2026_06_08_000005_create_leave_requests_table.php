@@ -24,7 +24,9 @@ return new class extends Migration
             $table->text('address')->nullable();
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->text('admin_note')->nullable();
-            $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
+            // No cascade on delete: SQL Server disallows multiple cascade paths
+            // to the same table (user_id already cascades).
+            $table->foreignId('approved_by')->nullable()->constrained('users');
             $table->timestamp('approved_at')->nullable();
             $table->timestamps();
         });
