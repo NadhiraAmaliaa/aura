@@ -24,7 +24,7 @@ class StoreLeaveRequestRequest extends FormRequest
         return [
             'type' => ['required', 'in:izin,sakit'],
             'reason' => ['required', 'string', 'max:1000'],
-            'start_date' => ['required', 'date'],
+            'start_date' => ['required', 'date', 'after_or_equal:today'],
             'end_date' => ['required', 'date', 'after_or_equal:start_date'],
             'contact_phone' => ['nullable', 'string', 'max:30'],
             'address' => ['nullable', 'string', 'max:500'],
@@ -43,6 +43,7 @@ class StoreLeaveRequestRequest extends FormRequest
             'type.in' => 'Jenis pengajuan tidak valid.',
             'reason.required' => 'Alasan wajib diisi.',
             'start_date.required' => 'Tanggal awal wajib diisi.',
+            'start_date.after_or_equal' => 'Tanggal awal tidak boleh di masa lalu.',
             'end_date.required' => 'Tanggal akhir wajib diisi.',
             'end_date.after_or_equal' => 'Tanggal akhir harus sama atau setelah tanggal awal.',
         ];

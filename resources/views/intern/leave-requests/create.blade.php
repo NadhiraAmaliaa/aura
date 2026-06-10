@@ -28,13 +28,13 @@
                             <div>
                                 <x-input-label for="start_date" :value="__('Tanggal Awal')" />
                                 <x-text-input id="start_date" name="start_date" type="date" class="block mt-1 w-full"
-                                              :value="old('start_date')" required />
+                                              :value="old('start_date')" min="{{ today()->toDateString() }}" required />
                                 <x-input-error :messages="$errors->get('start_date')" class="mt-2" />
                             </div>
                             <div>
                                 <x-input-label for="end_date" :value="__('Tanggal Akhir')" />
                                 <x-text-input id="end_date" name="end_date" type="date" class="block mt-1 w-full"
-                                              :value="old('end_date')" required />
+                                              :value="old('end_date')" min="{{ today()->toDateString() }}" required />
                                 <x-input-error :messages="$errors->get('end_date')" class="mt-2" />
                             </div>
                         </div>

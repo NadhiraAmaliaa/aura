@@ -65,7 +65,7 @@ class LeaveRequestController extends Controller
      */
     public function show(LeaveRequest $leaveRequest): View
     {
-        abort_if($leaveRequest->user_id !== Auth::id(), Response::HTTP_FORBIDDEN);
+        abort_if((int) $leaveRequest->user_id !== (int) Auth::id(), Response::HTTP_FORBIDDEN);
 
         $leaveRequest->load('approver');
 

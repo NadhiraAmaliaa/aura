@@ -58,11 +58,17 @@
                                                     {{ $leaveRequest->statusLabel() }}
                                                 </span>
                                             </td>
-                                            <td class="px-4 py-3 text-right">
+                                            <td class="px-4 py-3 text-right whitespace-nowrap">
                                                 <a href="{{ route('intern.leave-requests.show', $leaveRequest) }}"
-                                                   class="text-indigo-600 hover:text-indigo-900">
+                                                   class="text-indigo-600 hover:text-indigo-900 mr-3">
                                                     {{ __('Detail') }}
                                                 </a>
+                                                @if ($leaveRequest->status === 'approved')
+                                                    <a href="{{ route('leave-requests.pdf', $leaveRequest) }}" target="_blank"
+                                                       class="text-green-600 hover:text-green-900">
+                                                        {{ __('Cetak PDF') }}
+                                                    </a>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach
