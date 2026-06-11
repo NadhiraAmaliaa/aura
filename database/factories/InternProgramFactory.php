@@ -23,7 +23,7 @@ class InternProgramFactory extends Factory
                 'Kerja Praktek',
                 'PKL',
                 'Kampus Merdeka',
-                'Internship Mandiri',
+                'Internship Mandiri'
             ]),
             'description' => fake()->optional()->sentence(),
         ];

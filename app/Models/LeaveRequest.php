@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 #[Fillable([
     'user_id',
@@ -88,6 +90,23 @@ class LeaveRequest extends Model
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /**
+     * Scope to approved leave requests for a user that cover a given date.
+     *
+     * @param  Builder<LeaveRequest>  $query
+     * @param  \DateTimeInterface|string  $date
+     * @return Builder<LeaveRequest>
+     */
+    public function scopeApprovedCovering(Builder $query, int $userId, $date): Builder
+    {
+        $date = Carbon::parse($date)->toDateString();
+
+        return $query->where('user_id', $userId)
+            ->where('status', 'approved')
+            ->whereDate('start_date', '<=', $date)
+            ->whereDate('end_date', '>=', $date);
     }
 
     /**

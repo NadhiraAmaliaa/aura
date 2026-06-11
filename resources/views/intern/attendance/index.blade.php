@@ -26,7 +26,19 @@
                         {{ __('Hari Ini') }} &middot; {{ now()->format('l, d M Y') }}
                     </h3>
 
-                    @if (! $todayAttendance)
+                    <p class="text-sm text-gray-500 mb-4">
+                        @if ($expectedCheckOut)
+                            {{ __('Jam pulang yang diharapkan hari ini: :time (hanya informasi).', ['time' => $expectedCheckOut]) }}
+                        @else
+                            {{ __('Akhir pekan — absensi lembur atau kegiatan khusus diperbolehkan.') }}
+                        @endif
+                    </p>
+
+                    @if ($todayLeave)
+                        <div class="rounded-md bg-blue-50 px-4 py-3 text-sm text-blue-800">
+                            {{ __('Hari ini Anda tercatat :type berdasarkan pengajuan yang telah disetujui. Anda tidak dapat melakukan Check In.', ['type' => $todayLeave->typeLabel()]) }}
+                        </div>
+                    @elseif (! $todayAttendance)
                         <p class="text-gray-600 mb-4">{{ __('Anda belum Check In hari ini.') }}</p>
                         <form method="POST" action="{{ route('intern.attendance.check-in') }}" data-geo-form>
                             @csrf
@@ -38,6 +50,9 @@
                         <p class="text-gray-600 mb-2">
                             {{ __('Check In pada pukul') }}
                             <span class="font-medium">{{ $todayAttendance->check_in_time?->format('H:i') }}</span>
+                            <span class="ml-2 inline-flex rounded-full px-2 py-1 text-xs font-medium {{ $todayAttendance->statusBadgeClass() }}">
+                                {{ $todayAttendance->statusLabel() }}
+                            </span>
                         </p>
                         <form method="POST" action="{{ route('intern.attendance.check-out') }}" data-geo-form>
                             @csrf
@@ -88,7 +103,11 @@
                                             <td class="px-4 py-3 text-gray-600">
                                                 {{ $record->check_out_time?->format('H:i') ?? '—' }}
                                             </td>
-                                            <td class="px-4 py-3 text-gray-600">{{ ucfirst($record->status) }}</td>
+                                            <td class="px-4 py-3">
+                                                <span class="inline-flex rounded-full px-2 py-1 text-xs font-medium {{ $record->statusBadgeClass() }}">
+                                                    {{ $record->statusLabel() }}
+                                                </span>
+                                            </td>
                                         </tr>
                                     @endforeach
                                 </tbody>

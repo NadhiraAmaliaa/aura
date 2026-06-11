@@ -45,11 +45,15 @@ Route::middleware(['auth', 'verified', 'role:intern'])
     ->name('intern.')
     ->group(function () {
         Route::get('/dashboard', function () {
-            $todayAttendance = \App\Models\Attendance::where('user_id', Auth::id())
+            $userId = Auth::id();
+
+            $todayAttendance = \App\Models\Attendance::where('user_id', $userId)
                 ->whereDate('attendance_date', today())
                 ->first();
 
-            return view('intern.dashboard', compact('todayAttendance'));
+            $todayLeave = \App\Models\LeaveRequest::approvedCovering($userId, today())->first();
+
+            return view('intern.dashboard', compact('todayAttendance', 'todayLeave'));
         })->name('dashboard');
 
         Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');

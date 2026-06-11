@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Intern;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AttendanceLocationRequest;
 use App\Models\Attendance;
+use App\Models\LeaveRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -22,11 +23,20 @@ class AttendanceController extends Controller
             ->whereDate('attendance_date', today())
             ->first();
 
+        $todayLeave = LeaveRequest::approvedCovering($userId, today())->first();
+
+        $expectedCheckOut = Attendance::expectedCheckOutTime(today());
+
         $history = Attendance::where('user_id', $userId)
             ->orderByDesc('attendance_date')
             ->paginate(10);
 
-        return view('intern.attendance.index', compact('todayAttendance', 'history'));
+        return view('intern.attendance.index', compact(
+            'todayAttendance',
+            'todayLeave',
+            'expectedCheckOut',
+            'history'
+        ));
     }
 
     /**
@@ -36,6 +46,15 @@ class AttendanceController extends Controller
     {
         $userId = Auth::id();
 
+        $todayLeave = LeaveRequest::approvedCovering($userId, today())->first();
+
+        if ($todayLeave) {
+            return back()->with(
+                'error',
+                'Hari ini Anda sedang dalam masa '.$todayLeave->typeLabel().' yang telah disetujui, sehingga tidak dapat melakukan Check In.'
+            );
+        }
+
         $existing = Attendance::where('user_id', $userId)
             ->whereDate('attendance_date', today())
             ->first();
@@ -44,13 +63,15 @@ class AttendanceController extends Controller
             return back()->with('error', 'Anda sudah melakukan Check In hari ini.');
         }
 
+        $now = now();
+
         Attendance::create([
             'user_id' => $userId,
             'attendance_date' => today(),
-            'check_in_time' => now()->format('H:i'),
+            'check_in_time' => $now->format('H:i'),
             'check_in_latitude' => $request->validated('latitude'),
             'check_in_longitude' => $request->validated('longitude'),
-            'status' => 'present',
+            'status' => Attendance::determineStatus($now),
         ]);
 
         return back()->with('status', 'Check In berhasil.');

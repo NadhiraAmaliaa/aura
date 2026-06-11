@@ -46,7 +46,7 @@
                             <select id="status" name="status"
                                     class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
                                 <option value="">{{ __('Semua Status') }}</option>
-                                @foreach (['present' => 'Hadir', 'late' => 'Terlambat', 'sick' => 'Sakit', 'permission' => 'Izin', 'absent' => 'Tidak Hadir'] as $value => $label)
+                                @foreach (['present' => 'Hadir', 'late' => 'Terlambat', 'sick' => 'Sakit', 'permission' => 'Izin', 'absent' => 'Alpha'] as $value => $label)
                                     <option value="{{ $value }}" @selected(request('status') === $value)>
                                         {{ $label }}
                                     </option>
@@ -103,7 +103,7 @@
                                                 'late'       => ['label' => 'Terlambat',   'class' => 'bg-yellow-100 text-yellow-800'],
                                                 'sick'       => ['label' => 'Sakit',        'class' => 'bg-orange-100 text-orange-800'],
                                                 'permission' => ['label' => 'Izin',         'class' => 'bg-blue-100 text-blue-800'],
-                                                'absent'     => ['label' => 'Tidak Hadir', 'class' => 'bg-red-100 text-red-800'],
+                                                'absent'     => ['label' => 'Alpha',       'class' => 'bg-red-100 text-red-800'],
                                             ];
                                             $badge = $statusMap[$attendance->status] ?? ['label' => ucfirst($attendance->status), 'class' => 'bg-gray-100 text-gray-800'];
                                         @endphp

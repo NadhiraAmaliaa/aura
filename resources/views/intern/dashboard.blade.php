@@ -16,7 +16,11 @@
                             {{ __('Absensi Hari Ini') }} &middot; {{ now()->format('d M Y') }}
                         </h3>
 
-                        @if (! $todayAttendance)
+                        @if ($todayLeave)
+                            <div class="rounded-md bg-blue-50 px-4 py-3 text-sm text-blue-800">
+                                {{ __('Hari ini Anda tercatat :type berdasarkan pengajuan yang telah disetujui. Anda tidak perlu melakukan Check In.', ['type' => $todayLeave->typeLabel()]) }}
+                            </div>
+                        @elseif (! $todayAttendance)
                             <p class="text-gray-600">{{ __('Anda belum Check In hari ini.') }}</p>
                         @elseif (! $todayAttendance->check_out_time)
                             <p class="text-gray-600">
