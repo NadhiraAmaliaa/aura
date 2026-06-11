@@ -33,6 +33,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::resource('interns', InternController::class)->except(['show']);
 
         Route::get('/attendances', [AdminAttendanceController::class, 'index'])->name('attendances.index');
+        Route::get('/attendances/{attendance}/edit', [AdminAttendanceController::class, 'edit'])->name('attendances.edit');
+        Route::patch('/attendances/{attendance}', [AdminAttendanceController::class, 'update'])->name('attendances.update');
 
         Route::get('/leave-requests', [AdminLeaveRequestController::class, 'index'])->name('leave-requests.index');
         Route::get('/leave-requests/{leaveRequest}', [AdminLeaveRequestController::class, 'show'])->name('leave-requests.show');

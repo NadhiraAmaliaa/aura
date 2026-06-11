@@ -61,13 +61,62 @@ class Attendance extends Model
     /**
      * Determine the attendance status from a check-in moment.
      *
-     * Present when checked in at or before 08:00, otherwise late.
+     * Weekends are always treated as present (overtime / special activities,
+     * no late rules). On working days, present when checked in at or before
+     * the work start time, otherwise late.
      */
     public static function determineStatus(Carbon $checkInTime): string
     {
+        if (self::isWeekend($checkInTime)) {
+            return 'present';
+        }
+
         $threshold = $checkInTime->copy()->setTimeFromTimeString(self::WORK_START_TIME);
 
         return $checkInTime->greaterThan($threshold) ? 'late' : 'present';
+    }
+
+    /**
+     * Whether the given date falls on a weekend (Saturday or Sunday).
+     */
+    public static function isWeekend(Carbon $date): bool
+    {
+        return $date->dayOfWeekIso >= 6;
+    }
+
+    /**
+     * Whether a check-in is allowed at the given moment.
+     *
+     * Weekends are always allowed. On working days, a check-in is only
+     * allowed up to the defined end of working hours for that day.
+     */
+    public static function isCheckInAllowed(Carbon $checkInTime): bool
+    {
+        if (self::isWeekend($checkInTime)) {
+            return true;
+        }
+
+        $endTime = self::expectedCheckOutTime($checkInTime);
+
+        if ($endTime === null) {
+            return true;
+        }
+
+        $cutoff = $checkInTime->copy()->setTimeFromTimeString($endTime);
+
+        return $checkInTime->lessThanOrEqualTo($cutoff);
+    }
+
+    /**
+     * Map a leave request type to its corresponding attendance status.
+     */
+    public static function statusForLeaveType(string $leaveType): string
+    {
+        return match ($leaveType) {
+            'sakit' => 'sick',
+            'izin' => 'permission',
+            default => 'permission',
+        };
     }
 
     /**

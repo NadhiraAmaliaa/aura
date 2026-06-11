@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UpdateAttendanceRequest;
 use App\Models\Attendance;
 use App\Models\InternProgram;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -48,5 +50,30 @@ class AttendanceController extends Controller
         $programs = InternProgram::orderBy('name')->get();
 
         return view('admin.attendances.index', compact('attendances', 'programs'));
+    }
+
+    /**
+     * Show the form to correct a single attendance record's status.
+     */
+    public function edit(Attendance $attendance): View
+    {
+        $attendance->load(['user.intern.internProgram']);
+
+        return view('admin.attendances.edit', compact('attendance'));
+    }
+
+    /**
+     * Apply an authorized administrative status correction.
+     */
+    public function update(UpdateAttendanceRequest $request, Attendance $attendance): RedirectResponse
+    {
+        $attendance->update([
+            'status' => $request->validated('status'),
+            'notes' => $request->validated('notes'),
+        ]);
+
+        return redirect()
+            ->route('admin.attendances.index')
+            ->with('status', 'Status absensi berhasil diperbarui.');
     }
 }

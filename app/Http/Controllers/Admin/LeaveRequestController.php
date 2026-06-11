@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateLeaveRequestStatusRequest;
+use App\Models\Attendance;
 use App\Models\LeaveRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
@@ -91,8 +93,44 @@ class LeaveRequestController extends Controller
             'approved_at' => now(),
         ]);
 
+        if ($status === 'approved') {
+            $this->syncAttendanceForApprovedLeave($leaveRequest);
+        }
+
         return redirect()
             ->route('admin.leave-requests.show', $leaveRequest)
             ->with('status', $message);
+    }
+
+    /**
+     * Reflect an approved leave on attendance records for each covered date.
+     *
+     * A record is only created when none exists for that date. Existing
+     * attendance records are never overwritten — corrections to those must
+     * go through the authorized administrative process.
+     */
+    private function syncAttendanceForApprovedLeave(LeaveRequest $leaveRequest): void
+    {
+        $status = Attendance::statusForLeaveType($leaveRequest->type);
+
+        $date = Carbon::parse($leaveRequest->start_date)->startOfDay();
+        $endDate = Carbon::parse($leaveRequest->end_date)->startOfDay();
+
+        while ($date->lessThanOrEqualTo($endDate)) {
+            $exists = Attendance::where('user_id', $leaveRequest->user_id)
+                ->whereDate('attendance_date', $date->toDateString())
+                ->exists();
+
+            if (! $exists) {
+                Attendance::create([
+                    'user_id' => $leaveRequest->user_id,
+                    'attendance_date' => $date->toDateString(),
+                    'status' => $status,
+                    'notes' => 'Otomatis dari pengajuan '.$leaveRequest->request_number.'.',
+                ]);
+            }
+
+            $date->addDay();
+        }
     }
 }

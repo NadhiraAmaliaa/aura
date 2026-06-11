@@ -65,6 +65,15 @@ class AttendanceController extends Controller
 
         $now = now();
 
+        if (! Attendance::isCheckInAllowed($now)) {
+            $endTime = Attendance::expectedCheckOutTime($now);
+
+            return back()->with(
+                'error',
+                'Check In hanya dapat dilakukan hingga pukul '.$endTime.' pada hari kerja. Waktu Check In telah melewati jam kerja.'
+            );
+        }
+
         Attendance::create([
             'user_id' => $userId,
             'attendance_date' => today(),
@@ -88,7 +97,7 @@ class AttendanceController extends Controller
             ->whereDate('attendance_date', today())
             ->first();
 
-        if (! $attendance) {
+        if (! $attendance || ! $attendance->check_in_time) {
             return back()->with('error', 'Anda harus Check In terlebih dahulu sebelum Check Out.');
         }
 
@@ -96,8 +105,15 @@ class AttendanceController extends Controller
             return back()->with('error', 'Anda sudah melakukan Check Out hari ini.');
         }
 
+        $now = now();
+        $checkInMoment = $now->copy()->setTimeFromTimeString($attendance->check_in_time->format('H:i:s'));
+
+        if ($now->lessThanOrEqualTo($checkInMoment)) {
+            return back()->with('error', 'Waktu Check Out harus setelah waktu Check In.');
+        }
+
         $attendance->update([
-            'check_out_time' => now()->format('H:i'),
+            'check_out_time' => $now->format('H:i'),
             'check_out_latitude' => $request->validated('latitude'),
             'check_out_longitude' => $request->validated('longitude'),
         ]);

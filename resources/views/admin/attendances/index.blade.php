@@ -8,6 +8,12 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
+            @if (session('status'))
+                <div class="rounded-md bg-green-100 px-4 py-3 text-sm text-green-800">
+                    {{ session('status') }}
+                </div>
+            @endif
+
             {{-- Filters --}}
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
@@ -92,6 +98,7 @@
                                         <th class="px-4 py-3">{{ __('Check Out') }}</th>
                                         <th class="px-4 py-3">{{ __('Status') }}</th>
                                         <th class="px-4 py-3">{{ __('Catatan') }}</th>
+                                        <th class="px-4 py-3 text-right">{{ __('Aksi') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-100">
@@ -133,6 +140,12 @@
                                             </td>
                                             <td class="px-4 py-3 text-gray-500 max-w-xs truncate">
                                                 {{ $attendance->notes ?? '—' }}
+                                            </td>
+                                            <td class="px-4 py-3 text-right whitespace-nowrap">
+                                                <a href="{{ route('admin.attendances.edit', $attendance) }}"
+                                                   class="text-indigo-600 hover:text-indigo-900">
+                                                    {{ __('Koreksi') }}
+                                                </a>
                                             </td>
                                         </tr>
                                     @endforeach
