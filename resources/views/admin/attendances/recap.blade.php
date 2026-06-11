@@ -54,8 +54,26 @@
                             @endif
                         </div>
                     </form>
+
+                    @php
+                        $exportParams = array_filter([
+                            'start_date' => $recap['start_date']->format('Y-m-d'),
+                            'end_date' => $recap['end_date']->format('Y-m-d'),
+                            'program' => request('program'),
+                        ], fn ($value) => $value !== null && $value !== '');
+                    @endphp
+
+                    <div class="mt-4 flex flex-wrap gap-2 border-t border-gray-100 pt-4">
+                        <a href="{{ route('admin.attendances.recap.excel', $exportParams) }}">
+                            <x-secondary-button type="button">{{ __('Export Excel') }}</x-secondary-button>
+                        </a>
+                        <a href="{{ route('admin.attendances.recap.pdf', $exportParams) }}" target="_blank">
+                            <x-secondary-button type="button">{{ __('Export PDF') }}</x-secondary-button>
+                        </a>
+                    </div>
                 </div>
             </div>
+
 
             {{-- Summary --}}
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">

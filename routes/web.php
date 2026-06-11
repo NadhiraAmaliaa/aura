@@ -36,6 +36,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])
 
         Route::get('/attendances', [AdminAttendanceController::class, 'index'])->name('attendances.index');
         Route::get('/attendances/recap', [AttendanceRecapController::class, 'index'])->name('attendances.recap');
+        Route::get('/attendances/recap/excel', [AttendanceRecapController::class, 'exportExcel'])->name('attendances.recap.excel');
+        Route::get('/attendances/recap/pdf', [AttendanceRecapController::class, 'exportPdf'])->name('attendances.recap.pdf');
         Route::get('/attendances/{attendance}/edit', [AdminAttendanceController::class, 'edit'])->name('attendances.edit');
         Route::patch('/attendances/{attendance}', [AdminAttendanceController::class, 'update'])->name('attendances.update');
 
