@@ -61,13 +61,14 @@ class Attendance extends Model
     /**
      * Determine the attendance status from a check-in moment.
      *
-     * Weekends are always treated as present (overtime / special activities,
-     * no late rules). On working days, present when checked in at or before
-     * the work start time, otherwise late.
+     * Non-working days (weekends, national holidays, collective leave and
+     * company holidays) are always treated as present (overtime / special
+     * activities, no late rules). On working days, present when checked in at
+     * or before the work start time, otherwise late.
      */
     public static function determineStatus(Carbon $checkInTime): string
     {
-        if (self::isWeekend($checkInTime)) {
+        if (self::isNonWorkingDay($checkInTime)) {
             return 'present';
         }
 
@@ -85,14 +86,31 @@ class Attendance extends Model
     }
 
     /**
+     * Whether the given date is a non-working day.
+     *
+     * A non-working day is a weekend or a date registered as a national
+     * holiday, collective leave or company holiday. Such days carry no late
+     * rules; valid attendance on them is treated as present.
+     */
+    public static function isNonWorkingDay(Carbon $date): bool
+    {
+        if (self::isWeekend($date)) {
+            return true;
+        }
+
+        return NonWorkingDay::existsOn($date);
+    }
+
+    /**
      * Whether a check-in is allowed at the given moment.
      *
-     * Weekends are always allowed. On working days, a check-in is only
-     * allowed up to the defined end of working hours for that day.
+     * Non-working days are always allowed (special activities). On working
+     * days, a check-in is only allowed up to the defined end of working hours
+     * for that day.
      */
     public static function isCheckInAllowed(Carbon $checkInTime): bool
     {
-        if (self::isWeekend($checkInTime)) {
+        if (self::isNonWorkingDay($checkInTime)) {
             return true;
         }
 
@@ -122,11 +140,15 @@ class Attendance extends Model
     /**
      * The expected check-out time for a given date (information only).
      *
-     * Monday-Thursday 17:00, Friday 15:00. Weekends have no fixed time
+     * Monday-Thursday 17:00, Friday 15:00. Non-working days have no fixed time
      * because attendance is for overtime or special activities.
      */
     public static function expectedCheckOutTime(Carbon $date): ?string
     {
+        if (self::isNonWorkingDay($date)) {
+            return null;
+        }
+
         return match ($date->dayOfWeekIso) {
             1, 2, 3, 4 => '17:00',
             5 => '15:00',

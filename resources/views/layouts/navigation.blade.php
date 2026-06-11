@@ -19,8 +19,14 @@
                         <x-nav-link :href="route('admin.interns.index')" :active="request()->routeIs('admin.interns.*')">
                             {{ __('Peserta Magang') }}
                         </x-nav-link>
-                        <x-nav-link :href="route('admin.attendances.index')" :active="request()->routeIs('admin.attendances.*')">
+                        <x-nav-link :href="route('admin.attendances.index')" :active="request()->routeIs('admin.attendances.index', 'admin.attendances.edit', 'admin.attendances.update')">
                             {{ __('Monitoring Absensi') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('admin.attendances.recap')" :active="request()->routeIs('admin.attendances.recap')">
+                            {{ __('Rekap Absensi') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('admin.non-working-days.index')" :active="request()->routeIs('admin.non-working-days.*')">
+                            {{ __('Hari Libur') }}
                         </x-nav-link>
                         <x-nav-link :href="route('admin.leave-requests.index')" :active="request()->routeIs('admin.leave-requests.*')">
                             {{ __('Pengajuan Izin') }}
@@ -93,8 +99,14 @@
                 <x-responsive-nav-link :href="route('admin.interns.index')" :active="request()->routeIs('admin.interns.*')">
                     {{ __('Peserta Magang') }}
                 </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('admin.attendances.index')" :active="request()->routeIs('admin.attendances.*')">
+                <x-responsive-nav-link :href="route('admin.attendances.index')" :active="request()->routeIs('admin.attendances.index', 'admin.attendances.edit', 'admin.attendances.update')">
                     {{ __('Monitoring Absensi') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.attendances.recap')" :active="request()->routeIs('admin.attendances.recap')">
+                    {{ __('Rekap Absensi') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.non-working-days.index')" :active="request()->routeIs('admin.non-working-days.*')">
+                    {{ __('Hari Libur') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('admin.leave-requests.index')" :active="request()->routeIs('admin.leave-requests.*')">
                     {{ __('Pengajuan Izin') }}

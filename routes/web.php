@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\Admin\AttendanceController as AdminAttendanceController;
+use App\Http\Controllers\Admin\AttendanceRecapController;
 use App\Http\Controllers\Admin\InternController;
 use App\Http\Controllers\Admin\LeaveRequestController as AdminLeaveRequestController;
+use App\Http\Controllers\Admin\NonWorkingDayController;
 use App\Http\Controllers\Intern\AttendanceController;
 use App\Http\Controllers\Intern\LeaveRequestController;
 use App\Http\Controllers\LeaveRequestPdfController;
@@ -33,8 +35,13 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::resource('interns', InternController::class)->except(['show']);
 
         Route::get('/attendances', [AdminAttendanceController::class, 'index'])->name('attendances.index');
+        Route::get('/attendances/recap', [AttendanceRecapController::class, 'index'])->name('attendances.recap');
         Route::get('/attendances/{attendance}/edit', [AdminAttendanceController::class, 'edit'])->name('attendances.edit');
         Route::patch('/attendances/{attendance}', [AdminAttendanceController::class, 'update'])->name('attendances.update');
+
+        Route::resource('non-working-days', NonWorkingDayController::class)
+            ->except(['show'])
+            ->parameters(['non-working-days' => 'nonWorkingDay']);
 
         Route::get('/leave-requests', [AdminLeaveRequestController::class, 'index'])->name('leave-requests.index');
         Route::get('/leave-requests/{leaveRequest}', [AdminLeaveRequestController::class, 'show'])->name('leave-requests.show');
