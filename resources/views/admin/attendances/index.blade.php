@@ -60,9 +60,23 @@
                             </select>
                         </div>
 
+                        {{-- Work mode --}}
+                        <div>
+                            <x-input-label for="work_mode" :value="__('Mode Kehadiran')" />
+                            <select id="work_mode" name="work_mode"
+                                    class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                                <option value="">{{ __('Semua Mode') }}</option>
+                                @foreach (\App\Models\Attendance::workModeLabels() as $value => $label)
+                                    <option value="{{ $value }}" @selected(request('work_mode') === $value)>
+                                        {{ $label }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
                         <div class="flex items-end gap-2 sm:col-span-2 lg:col-span-4">
                             <x-primary-button>{{ __('Terapkan Filter') }}</x-primary-button>
-                            @if (request()->hasAny(['search', 'date', 'program', 'status']))
+                            @if (request()->hasAny(['search', 'date', 'program', 'status', 'work_mode']))
                                 <a href="{{ route('admin.attendances.index') }}">
                                     <x-secondary-button type="button">{{ __('Reset') }}</x-secondary-button>
                                 </a>
@@ -94,6 +108,7 @@
                                         <th class="px-4 py-3">{{ __('Nama') }}</th>
                                         <th class="px-4 py-3">{{ __('NIM') }}</th>
                                         <th class="px-4 py-3">{{ __('Program Magang') }}</th>
+                                        <th class="px-4 py-3">{{ __('Mode') }}</th>
                                         <th class="px-4 py-3">{{ __('Check In') }}</th>
                                         <th class="px-4 py-3">{{ __('Check Out') }}</th>
                                         <th class="px-4 py-3">{{ __('Status') }}</th>
@@ -126,6 +141,13 @@
                                             </td>
                                             <td class="px-4 py-3 text-gray-600">
                                                 {{ $intern?->internProgram?->name ?? '—' }}
+                                            </td>
+                                            <td class="px-4 py-3 text-gray-600 whitespace-nowrap">
+                                                @if ($attendance->workModeLabel())
+                                                    {{ $attendance->workModeLabel() }}
+                                                @else
+                                                    &mdash;
+                                                @endif
                                             </td>
                                             <td class="px-4 py-3 text-gray-600">
                                                 {{ $attendance->check_in_time?->format('H:i') ?? '—' }}

@@ -55,6 +55,8 @@ class AttendanceRecapExport implements FromArray, WithTitle, WithStyles, WithEve
                 'Program',
                 'Hari Kerja Efektif',
                 'WFO',
+                'WFH',
+                'Dinas',
                 'Izin',
                 'Tidak Absen',
                 'Terlambat Datang',
@@ -71,6 +73,8 @@ class AttendanceRecapExport implements FromArray, WithTitle, WithStyles, WithEve
                 $row['intern']->internProgram?->name,
                 $row['effective_working_days'],
                 $row['wfo'],
+                $row['wfh'],
+                $row['dinas'],
                 $row['izin'],
                 $row['tidak_absen'],
                 $row['terlambat'],
@@ -117,7 +121,7 @@ class AttendanceRecapExport implements FromArray, WithTitle, WithStyles, WithEve
                 $lastRow = 6 + count($this->recap['rows']);
 
                 // Borders around the data table (header + rows).
-                $sheet->getStyle('A6:K'.$lastRow)
+                $sheet->getStyle('A6:M'.$lastRow)
                     ->getBorders()
                     ->getAllBorders()
                     ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);

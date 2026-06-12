@@ -39,12 +39,50 @@
                             {{ __('Hari ini Anda tercatat :type berdasarkan pengajuan yang telah disetujui. Anda tidak dapat melakukan Check In.', ['type' => $todayLeave->typeLabel()]) }}
                         </div>
                     @elseif (! $todayAttendance)
-                        <p class="text-gray-600 mb-4">{{ __('Anda belum Check In hari ini.') }}</p>
-                        <form method="POST" action="{{ route('intern.attendance.check-in') }}" data-geo-form>
+                        <p class="text-gray-600 mb-4">{{ __('Anda belum Check In hari ini. Pilih mode kehadiran terlebih dahulu:') }}</p>
+
+                        <form method="POST" action="{{ route('intern.attendance.check-in') }}" data-geo-form id="check-in-form">
                             @csrf
                             <input type="hidden" name="latitude" data-geo-lat>
                             <input type="hidden" name="longitude" data-geo-lng>
-                            <x-primary-button>{{ __('Check In') }}</x-primary-button>
+
+                            <div class="space-y-3 max-w-md">
+                                {{-- WFO --}}
+                                <label class="block rounded-lg border border-gray-200 p-4 cursor-pointer hover:bg-gray-50">
+                                    <span class="flex items-center gap-2 font-medium text-gray-900">
+                                        <input type="radio" name="work_mode" value="{{ \App\Models\Attendance::WORK_MODE_WFO }}"
+                                               class="text-indigo-600 focus:ring-indigo-500" checked>
+                                        {{ __('WFO (Bekerja dari Kantor)') }}
+                                    </span>
+                                    <p class="mt-2 ml-6 text-xs text-gray-500">{{ __('Berlaku batas waktu & status terlambat. Validasi lokasi kantor menyusul.') }}</p>
+                                </label>
+
+                                {{-- WFH --}}
+                                <label class="block rounded-lg border border-gray-200 p-4 cursor-pointer hover:bg-gray-50">
+                                    <span class="flex items-center gap-2 font-medium text-gray-900">
+                                        <input type="radio" name="work_mode" value="{{ \App\Models\Attendance::WORK_MODE_WFH }}"
+                                               class="text-indigo-600 focus:ring-indigo-500">
+                                        {{ __('WFH (Bekerja dari Rumah)') }}
+                                    </span>
+                                    <p class="mt-2 ml-6 text-xs text-gray-500">{{ __('Berlaku batas waktu & status terlambat. Tanpa validasi lokasi.') }}</p>
+                                </label>
+
+                                {{-- Dinas --}}
+                                <label class="block rounded-lg border border-gray-200 p-4 cursor-pointer hover:bg-gray-50">
+                                    <span class="flex items-center gap-2 font-medium text-gray-900">
+                                        <input type="radio" name="work_mode" value="{{ \App\Models\Attendance::WORK_MODE_DINAS }}"
+                                               class="text-indigo-600 focus:ring-indigo-500">
+                                        {{ __('Dinas (Tugas Luar)') }}
+                                    </span>
+                                    <p class="mt-2 ml-6 text-xs text-gray-500">{{ __('Dapat Check In kapan saja & di mana saja. Tanpa status terlambat.') }}</p>
+                                </label>
+                            </div>
+
+                            <x-input-error :messages="$errors->get('work_mode')" class="mt-2" />
+
+                            <div class="mt-4">
+                                <x-primary-button>{{ __('Check In') }}</x-primary-button>
+                            </div>
                         </form>
                     @elseif (! $todayAttendance->check_out_time)
                         <p class="text-gray-600 mb-2">
@@ -53,6 +91,11 @@
                             <span class="ml-2 inline-flex rounded-full px-2 py-1 text-xs font-medium {{ $todayAttendance->statusBadgeClass() }}">
                                 {{ $todayAttendance->statusLabel() }}
                             </span>
+                            @if ($todayAttendance->workModeLabel())
+                                <span class="ml-1 inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
+                                    {{ $todayAttendance->workModeLabel() }}
+                                </span>
+                            @endif
                         </p>
                         <form method="POST" action="{{ route('intern.attendance.check-out') }}" data-geo-form>
                             @csrf
@@ -86,6 +129,7 @@
                                 <thead>
                                     <tr class="text-left text-gray-500">
                                         <th class="px-4 py-3">{{ __('Tanggal') }}</th>
+                                        <th class="px-4 py-3">{{ __('Mode') }}</th>
                                         <th class="px-4 py-3">{{ __('Check In') }}</th>
                                         <th class="px-4 py-3">{{ __('Check Out') }}</th>
                                         <th class="px-4 py-3">{{ __('Status') }}</th>
@@ -96,6 +140,13 @@
                                         <tr>
                                             <td class="px-4 py-3 font-medium text-gray-900">
                                                 {{ $record->attendance_date->format('d M Y') }}
+                                            </td>
+                                            <td class="px-4 py-3 text-gray-600">
+                                                @if ($record->workModeLabel())
+                                                    {{ $record->workModeLabel() }}
+                                                @else
+                                                    &mdash;
+                                                @endif
                                             </td>
                                             <td class="px-4 py-3 text-gray-600">
                                                 {{ $record->check_in_time?->format('H:i') ?? '—' }}

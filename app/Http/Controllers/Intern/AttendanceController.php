@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Intern;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AttendanceLocationRequest;
+use App\Http\Requests\CheckInRequest;
 use App\Models\Attendance;
 use App\Models\LeaveRequest;
 use Illuminate\Http\RedirectResponse;
@@ -42,7 +43,7 @@ class AttendanceController extends Controller
     /**
      * Record a check-in for today.
      */
-    public function checkIn(AttendanceLocationRequest $request): RedirectResponse
+    public function checkIn(CheckInRequest $request): RedirectResponse
     {
         $userId = Auth::id();
 
@@ -63,16 +64,21 @@ class AttendanceController extends Controller
             return back()->with('error', 'Anda sudah melakukan Check In hari ini.');
         }
 
+        $workMode = $request->validated('work_mode');
         $now = now();
 
-        if (! Attendance::isCheckInAllowed($now)) {
-            $endTime = Attendance::expectedCheckOutTime($now);
+        if (! Attendance::isCheckInAllowed($now, $workMode)) {
+            $deadline = Attendance::checkInDeadline($now, $workMode);
 
             return back()->with(
                 'error',
-                'Check In hanya dapat dilakukan hingga pukul '.$endTime.' pada hari kerja. Waktu Check In telah melewati jam kerja.'
+                'Check In untuk mode ini hanya dapat dilakukan hingga pukul '.$deadline.'. Waktu Check In telah terlewati.'
             );
         }
+
+        // NOTE: WFO check-ins will later be validated against the office
+        // location and radius (geofencing). See Attendance::requiresGeofence().
+        // The geofence enforcement is intentionally not implemented yet.
 
         Attendance::create([
             'user_id' => $userId,
@@ -80,7 +86,8 @@ class AttendanceController extends Controller
             'check_in_time' => $now->format('H:i'),
             'check_in_latitude' => $request->validated('latitude'),
             'check_in_longitude' => $request->validated('longitude'),
-            'status' => Attendance::determineStatus($now),
+            'status' => Attendance::determineStatus($now, $workMode),
+            'work_mode' => $workMode,
         ]);
 
         return back()->with('status', 'Check In berhasil.');

@@ -31,6 +31,16 @@
                                 {{ $attendance->check_out_time?->format('H:i') ?? '—' }}
                             </dd>
                         </div>
+                        <div>
+                            <dt class="text-gray-500">{{ __('Mode Kehadiran') }}</dt>
+                            <dd class="font-medium text-gray-900">
+                                @if ($attendance->workModeLabel())
+                                    {{ $attendance->workModeLabel() }}
+                                @else
+                                    &mdash;
+                                @endif
+                            </dd>
+                        </div>
                     </dl>
 
                     <form method="POST" action="{{ route('admin.attendances.update', $attendance) }}" class="space-y-6">
@@ -48,6 +58,20 @@
                                 @endforeach
                             </select>
                             <x-input-error :messages="$errors->get('status')" class="mt-2" />
+                        </div>
+
+                        <div>
+                            <x-input-label for="work_mode" :value="__('Mode Kehadiran')" />
+                            <select id="work_mode" name="work_mode"
+                                    class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                                <option value="">{{ __('— Tidak ditentukan —') }}</option>
+                                @foreach (\App\Models\Attendance::workModeLabels() as $value => $label)
+                                    <option value="{{ $value }}" @selected(old('work_mode', $attendance->work_mode) === $value)>
+                                        {{ $label }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <x-input-error :messages="$errors->get('work_mode')" class="mt-2" />
                         </div>
 
                         <div>

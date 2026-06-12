@@ -30,6 +30,10 @@ class AttendanceController extends Controller
             $query->where('status', $request->status);
         }
 
+        if ($request->filled('work_mode')) {
+            $query->where('work_mode', $request->work_mode);
+        }
+
         if ($request->filled('program')) {
             $query->whereHas('user.intern', function ($q) use ($request): void {
                 $q->where('intern_program_id', $request->program);
@@ -69,6 +73,7 @@ class AttendanceController extends Controller
     {
         $attendance->update([
             'status' => $request->validated('status'),
+            'work_mode' => $request->validated('work_mode'),
             'notes' => $request->validated('notes'),
         ]);
 

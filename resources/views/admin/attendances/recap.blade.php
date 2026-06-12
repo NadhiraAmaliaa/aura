@@ -105,6 +105,8 @@
                                         <th class="px-3 py-3">{{ __('Program') }}</th>
                                         <th class="px-3 py-3 text-right">{{ __('Hari Kerja Efektif') }}</th>
                                         <th class="px-3 py-3 text-right">{{ __('WFO') }}</th>
+                                        <th class="px-3 py-3 text-right">{{ __('WFH') }}</th>
+                                        <th class="px-3 py-3 text-right">{{ __('Dinas') }}</th>
                                         <th class="px-3 py-3 text-right">{{ __('Izin') }}</th>
                                         <th class="px-3 py-3 text-right">{{ __('Tidak Absen') }}</th>
                                         <th class="px-3 py-3 text-right">{{ __('Terlambat Datang') }}</th>
@@ -121,6 +123,8 @@
                                             <td class="px-3 py-3 text-gray-600">{{ $row['intern']->internProgram?->name }}</td>
                                             <td class="px-3 py-3 text-right text-gray-700">{{ $row['effective_working_days'] }}</td>
                                             <td class="px-3 py-3 text-right text-gray-700">{{ $row['wfo'] }}</td>
+                                            <td class="px-3 py-3 text-right text-gray-700">{{ $row['wfh'] }}</td>
+                                            <td class="px-3 py-3 text-right text-gray-700">{{ $row['dinas'] }}</td>
                                             <td class="px-3 py-3 text-right text-gray-700">{{ $row['izin'] }}</td>
                                             <td class="px-3 py-3 text-right text-gray-700">{{ $row['tidak_absen'] }}</td>
                                             <td class="px-3 py-3 text-right text-gray-700">{{ $row['terlambat'] }}</td>

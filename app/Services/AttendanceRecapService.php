@@ -22,11 +22,12 @@ use Illuminate\Support\Collection;
 class AttendanceRecapService
 {
     /**
-     * Attendance statuses that count as physically working (WFO).
+     * Attendance statuses that count as physically/remotely working
+     * (present or late), regardless of the work mode (WFO / WFH / Dinas).
      *
      * @var array<int, string>
      */
-    private const WFO_STATUSES = ['present', 'late'];
+    private const WORKING_STATUSES = ['present', 'late'];
 
     /**
      * Attendance statuses that count as an approved absence (Izin).
@@ -206,8 +207,16 @@ class AttendanceRecapService
         int $completedEWD,
         string $todayString
     ): array {
-        // Running totals (include today's record if it already exists).
-        $wfo = $records->whereIn('status', self::WFO_STATUSES)->count();
+        // Running totals (include today's record if it already exists). The
+        // total working attendance (present|late) is split by work mode so the
+        // recap can show WFO, WFH and Dinas separately.
+        $working = $records->whereIn('status', self::WORKING_STATUSES);
+
+        $hadir = $working->count();
+        $wfo = $working->where('work_mode', Attendance::WORK_MODE_WFO)->count();
+        $wfh = $working->where('work_mode', Attendance::WORK_MODE_WFH)->count();
+        $dinas = $working->where('work_mode', Attendance::WORK_MODE_DINAS)->count();
+
         $late = $records->where('status', 'late')->count();
         $izin = $records->whereIn('status', self::LEAVE_STATUSES)->count();
 
@@ -216,26 +225,31 @@ class AttendanceRecapService
         )->count();
 
         // Tidak Absen is derived from completed days only. Today is still in
-        // progress so it must not be counted as absent. We measure WFO and Izin
-        // on the same completed-day window to keep the subtraction consistent.
+        // progress so it must not be counted as absent. We measure working
+        // attendance and Izin on the same completed-day window to keep the
+        // subtraction consistent.
         $completedRecords = $records->filter(
             fn (Attendance $attendance): bool => $attendance->attendance_date->toDateString() < $todayString
         );
 
-        $wfoCompleted = $completedRecords->whereIn('status', self::WFO_STATUSES)->count();
+        $hadirCompleted = $completedRecords->whereIn('status', self::WORKING_STATUSES)->count();
         $izinCompleted = $completedRecords->whereIn('status', self::LEAVE_STATUSES)->count();
-        $tidakAbsen = $completedEWD - ($wfoCompleted + $izinCompleted);
+        $tidakAbsen = $completedEWD - ($hadirCompleted + $izinCompleted);
 
         return [
             'intern' => $intern,
             'effective_working_days' => $effectiveWorkingDays,
+            'hadir' => $hadir,
             'wfo' => $wfo,
+            'wfh' => $wfh,
+            'dinas' => $dinas,
             'izin' => $izin,
             'tidak_absen' => $tidakAbsen,
             'terlambat' => $late,
             'tidak_co' => $tidakCo,
-            // Late is a subset of WFO, so punctuality is measured against WFO.
-            'persen_terlambat' => $this->percentage($late, $wfo),
+            // Late is a subset of working attendance, so punctuality is measured
+            // against total working attendance (WFO + WFH + Dinas).
+            'persen_terlambat' => $this->percentage($late, $hadir),
             // Absence is measured against completed obligations only.
             'persen_tidak_absen' => $this->percentage($tidakAbsen, $completedEWD),
         ];

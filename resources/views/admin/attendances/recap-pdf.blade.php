@@ -52,6 +52,8 @@
                     <th>Program</th>
                     <th>Hari Kerja Efektif</th>
                     <th>WFO</th>
+                    <th>WFH</th>
+                    <th>Dinas</th>
                     <th>Izin</th>
                     <th>Tidak Absen</th>
                     <th>Terlambat Datang</th>
@@ -68,6 +70,8 @@
                         <td>{{ $row['intern']->internProgram?->name }}</td>
                         <td class="num">{{ $row['effective_working_days'] }}</td>
                         <td class="num">{{ $row['wfo'] }}</td>
+                        <td class="num">{{ $row['wfh'] }}</td>
+                        <td class="num">{{ $row['dinas'] }}</td>
                         <td class="num">{{ $row['izin'] }}</td>
                         <td class="num">{{ $row['tidak_absen'] }}</td>
                         <td class="num">{{ $row['terlambat'] }}</td>

@@ -6,14 +6,14 @@ use App\Models\Attendance;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class UpdateAttendanceRequest extends FormRequest
+class CheckInRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return $this->user()?->isAdmin() ?? false;
+        return $this->user()?->isIntern() ?? false;
     }
 
     /**
@@ -24,9 +24,9 @@ class UpdateAttendanceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'status' => ['required', Rule::in(['present', 'late', 'sick', 'permission', 'absent'])],
-            'work_mode' => ['nullable', Rule::in(array_keys(Attendance::workModeLabels()))],
-            'notes' => ['nullable', 'string', 'max:1000'],
+            'work_mode' => ['required', Rule::in(array_keys(Attendance::workModeLabels()))],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
         ];
     }
 
@@ -38,8 +38,7 @@ class UpdateAttendanceRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'status.required' => 'Status absensi wajib dipilih.',
-            'status.in' => 'Status absensi tidak valid.',
+            'work_mode.required' => 'Mode kehadiran wajib dipilih.',
             'work_mode.in' => 'Mode kehadiran tidak valid.',
         ];
     }

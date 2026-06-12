@@ -31,6 +31,11 @@ class AttendanceFactory extends Factory
             'check_out_latitude' => fake()->optional()->latitude(-90, 90),
             'check_out_longitude' => fake()->optional()->longitude(-180, 180),
             'status' => fake()->randomElement(['present', 'late', 'sick', 'permission', 'absent']),
+            'work_mode' => fake()->randomElement([
+                Attendance::WORK_MODE_WFO,
+                Attendance::WORK_MODE_WFH,
+                Attendance::WORK_MODE_DINAS,
+            ]),
             'notes' => fake()->optional()->sentence(),
         ];
     }

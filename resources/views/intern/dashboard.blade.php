@@ -25,7 +25,12 @@
                         @elseif (! $todayAttendance->check_out_time)
                             <p class="text-gray-600">
                                 {{ __('Check In pada pukul') }}
-                                <span class="font-medium">{{ $todayAttendance->check_in_time?->format('H:i') }}</span>.
+                                <span class="font-medium">{{ $todayAttendance->check_in_time?->format('H:i') }}</span>
+                                @if ($todayAttendance->workModeLabel())
+                                    <span class="ml-1 inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
+                                        {{ $todayAttendance->workModeLabel() }}
+                                    </span>
+                                @endif
                                 {{ __('Belum Check Out.') }}
                             </p>
                         @else
