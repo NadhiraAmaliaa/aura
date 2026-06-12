@@ -18,6 +18,7 @@ class InternProgramSeeder extends Seeder
             ['name' => 'PKL', 'description' => 'Praktik Kerja Lapangan for vocational students.'],
             ['name' => 'MBKM', 'description' => 'Merdeka Belajar Kampus Merdeka program.'],
             ['name' => 'Internship Mandiri', 'description' => 'Self-initiated independent internship.'],
+            ['name' => 'Kemnaker', 'description' => 'Internship program in collaboration with the Ministry of Manpower.'],
         ];
 
         foreach ($programs as $program) {

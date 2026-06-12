@@ -50,17 +50,13 @@ class AttendanceRecapService
         $start = $startDate->copy()->startOfDay();
         $end = $endDate->copy()->startOfDay();
 
+        // All effective working dates within the report period (weekends and
+        // registered non-working days removed). This is the shared calendar;
+        // each intern's effective days are a subset bounded by their own
+        // internship start/end dates.
         $effectiveDates = $this->effectiveWorkingDates($start, $end);
-        $effectiveWorkingDays = count($effectiveDates);
-        $effectiveLookup = array_flip($effectiveDates);
 
-        // Only fully-elapsed effective working days count toward Tidak Absen.
-        // Today is still in progress and must not be treated as missed.
         $todayString = Carbon::today()->toDateString();
-        $completedEffectiveDays = count(array_filter(
-            $effectiveDates,
-            fn (string $date): bool => $date < $todayString
-        ));
 
         $interns = $this->interns($programId);
         $attendancesByUser = $this->attendancesByUser($interns->pluck('user_id')->all(), $start, $end);
@@ -68,9 +64,20 @@ class AttendanceRecapService
         $rows = [];
 
         foreach ($interns as $intern) {
+            // Restrict the shared calendar to the dates this intern is actually
+            // an active participant, so each intern gets their own EWD.
+            $internDates = $this->datesWithinInternship($effectiveDates, $intern);
+            $internLookup = array_flip($internDates);
+
+            $effectiveWorkingDays = count($internDates);
+            $completedEffectiveDays = count(array_filter(
+                $internDates,
+                fn (string $date): bool => $date < $todayString
+            ));
+
             $records = ($attendancesByUser->get($intern->user_id) ?? collect())
                 ->filter(fn (Attendance $attendance): bool => isset(
-                    $effectiveLookup[$attendance->attendance_date->toDateString()]
+                    $internLookup[$attendance->attendance_date->toDateString()]
                 ));
 
             $rows[] = $this->buildRow($intern, $records, $effectiveWorkingDays, $completedEffectiveDays, $todayString);
@@ -79,9 +86,38 @@ class AttendanceRecapService
         return [
             'start_date' => $start,
             'end_date' => $end,
-            'effective_working_days' => $effectiveWorkingDays,
+            'effective_working_days' => count($effectiveDates),
             'rows' => $rows,
         ];
+    }
+
+    /**
+     * Restrict a list of effective working dates to those that fall within an
+     * intern's internship period (inclusive). Interns without a start or end
+     * date are not bounded on that side.
+     *
+     * @param  array<int, string>  $effectiveDates
+     * @return array<int, string>
+     */
+    private function datesWithinInternship(array $effectiveDates, Intern $intern): array
+    {
+        $internStart = $intern->start_date?->toDateString();
+        $internEnd = $intern->end_date?->toDateString();
+
+        return array_values(array_filter(
+            $effectiveDates,
+            function (string $date) use ($internStart, $internEnd): bool {
+                if ($internStart !== null && $date < $internStart) {
+                    return false;
+                }
+
+                if ($internEnd !== null && $date > $internEnd) {
+                    return false;
+                }
+
+                return true;
+            }
+        ));
     }
 
     /**
