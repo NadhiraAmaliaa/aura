@@ -10,14 +10,15 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class LeaveRequestController extends Controller
 {
     /**
      * Display a filtered, paginated listing of all leave requests.
      */
-    public function index(Request $request): View
+    public function index(Request $request): Response
     {
         $query = LeaveRequest::query()
             ->with(['user.intern.internProgram'])
@@ -44,17 +45,22 @@ class LeaveRequestController extends Controller
 
         $leaveRequests = $query->paginate(15)->withQueryString();
 
-        return view('admin.leave-requests.index', compact('leaveRequests'));
+        return Inertia::render('admin/LeaveRequests/Index', [
+            'leaveRequests' => $leaveRequests,
+            'filters' => $request->only(['status', 'type', 'search']),
+        ]);
     }
 
     /**
      * Display the detail of a single leave request.
      */
-    public function show(LeaveRequest $leaveRequest): View
+    public function show(LeaveRequest $leaveRequest): Response
     {
         $leaveRequest->load(['user.intern.internProgram', 'approver']);
 
-        return view('admin.leave-requests.show', compact('leaveRequest'));
+        return Inertia::render('admin/LeaveRequests/Show', [
+            'leaveRequest' => $leaveRequest,
+        ]);
     }
 
     /**

@@ -7,26 +7,29 @@ use App\Http\Requests\StoreNonWorkingDayRequest;
 use App\Http\Requests\UpdateNonWorkingDayRequest;
 use App\Models\NonWorkingDay;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class NonWorkingDayController extends Controller
 {
     /**
      * Display a listing of the non-working days.
      */
-    public function index(): View
+    public function index(): Response
     {
         $nonWorkingDays = NonWorkingDay::orderByDesc('date')->paginate(15);
 
-        return view('admin.non-working-days.index', compact('nonWorkingDays'));
+        return Inertia::render('admin/NonWorkingDays/Index', [
+            'nonWorkingDays' => $nonWorkingDays,
+        ]);
     }
 
     /**
      * Show the form for creating a new non-working day.
      */
-    public function create(): View
+    public function create(): Response
     {
-        return view('admin.non-working-days.create');
+        return Inertia::render('admin/NonWorkingDays/Create');
     }
 
     /**
@@ -44,9 +47,11 @@ class NonWorkingDayController extends Controller
     /**
      * Show the form for editing the specified non-working day.
      */
-    public function edit(NonWorkingDay $nonWorkingDay): View
+    public function edit(NonWorkingDay $nonWorkingDay): Response
     {
-        return view('admin.non-working-days.edit', compact('nonWorkingDay'));
+        return Inertia::render('admin/NonWorkingDays/Edit', [
+            'nonWorkingDay' => $nonWorkingDay,
+        ]);
     }
 
     /**

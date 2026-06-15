@@ -9,14 +9,15 @@ use App\Models\Attendance;
 use App\Models\LeaveRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class AttendanceController extends Controller
 {
     /**
      * Display the attendance page with today's status and history.
      */
-    public function index(): View
+    public function index(): Response
     {
         $userId = Auth::id();
 
@@ -32,12 +33,12 @@ class AttendanceController extends Controller
             ->orderByDesc('attendance_date')
             ->paginate(10);
 
-        return view('intern.attendance.index', compact(
-            'todayAttendance',
-            'todayLeave',
-            'expectedCheckOut',
-            'history'
-        ));
+        return Inertia::render('intern/Attendance/Index', [
+            'todayAttendance' => $todayAttendance,
+            'todayLeave' => $todayLeave,
+            'expectedCheckOut' => $expectedCheckOut,
+            'history' => $history,
+        ]);
     }
 
     /**

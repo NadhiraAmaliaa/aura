@@ -12,9 +12,10 @@ use App\Http\Controllers\LeaveRequestVerifyController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::get('/', function () {
-    return view('welcome');
+    return Inertia::render('Welcome');
 });
 
 Route::get('/dashboard', function () {
@@ -29,7 +30,27 @@ Route::middleware(['auth', 'verified', 'role:admin'])
     ->name('admin.')
     ->group(function () {
         Route::get('/dashboard', function () {
-            return view('admin.dashboard');
+            $today = today();
+
+            $stats = [
+                'total_interns' => \App\Models\Intern::count(),
+                'active_interns' => \App\Models\Intern::where('status', 'active')->count(),
+                'present_today' => \App\Models\Attendance::whereDate('attendance_date', $today)
+                    ->whereIn('status', ['present', 'late'])
+                    ->count(),
+                'pending_leaves' => \App\Models\LeaveRequest::where('status', 'pending')->count(),
+            ];
+
+            $recentLeaves = \App\Models\LeaveRequest::with('user')
+                ->where('status', 'pending')
+                ->orderByDesc('created_at')
+                ->limit(5)
+                ->get();
+
+            return Inertia::render('admin/Dashboard', [
+                'stats' => $stats,
+                'recentLeaves' => $recentLeaves,
+            ]);
         })->name('dashboard');
 
         Route::resource('interns', InternController::class)->except(['show']);
@@ -64,7 +85,11 @@ Route::middleware(['auth', 'verified', 'role:intern'])
 
             $todayLeave = \App\Models\LeaveRequest::approvedCovering($userId, today())->first();
 
-            return view('intern.dashboard', compact('todayAttendance', 'todayLeave'));
+            return Inertia::render('intern/Dashboard', [
+                'todayAttendance' => $todayAttendance,
+                'todayLeave' => $todayLeave,
+                'expectedCheckOut' => \App\Models\Attendance::expectedCheckOutTime(today()),
+            ]);
         })->name('dashboard');
 
         Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');

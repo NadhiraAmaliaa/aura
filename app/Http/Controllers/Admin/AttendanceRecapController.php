@@ -9,7 +9,8 @@ use App\Models\InternProgram;
 use App\Services\AttendanceRecapService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Carbon;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,14 +20,22 @@ class AttendanceRecapController extends Controller
     /**
      * Display the attendance recap for a selected reporting period.
      */
-    public function index(AttendanceRecapRequest $request, AttendanceRecapService $service): View
+    public function index(AttendanceRecapRequest $request, AttendanceRecapService $service): InertiaResponse
     {
         [$startDate, $endDate, $programId] = $this->resolveFilters($request);
 
         $recap = $service->build($startDate, $endDate, $programId);
         $programs = InternProgram::orderBy('name')->get();
 
-        return view('admin.attendances.recap', compact('recap', 'programs'));
+        return Inertia::render('admin/Attendances/Recap', [
+            'recap' => $recap,
+            'programs' => $programs,
+            'filters' => [
+                'start_date' => $startDate->toDateString(),
+                'end_date' => $endDate->toDateString(),
+                'program' => $programId,
+            ],
+        ]);
     }
 
     /**

@@ -10,30 +10,35 @@ use App\Models\InternProgram;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class InternController extends Controller
 {
     /**
      * Display a listing of the interns.
      */
-    public function index(): View
+    public function index(): Response
     {
         $interns = Intern::with(['user', 'internProgram'])
             ->latest()
             ->paginate(10);
 
-        return view('admin.interns.index', compact('interns'));
+        return Inertia::render('admin/Interns/Index', [
+            'interns' => $interns,
+        ]);
     }
 
     /**
      * Show the form for creating a new intern.
      */
-    public function create(): View
+    public function create(): Response
     {
         $programs = InternProgram::orderBy('name')->get();
 
-        return view('admin.interns.create', compact('programs'));
+        return Inertia::render('admin/Interns/Create', [
+            'programs' => $programs,
+        ]);
     }
 
     /**
@@ -72,12 +77,15 @@ class InternController extends Controller
     /**
      * Show the form for editing the specified intern.
      */
-    public function edit(Intern $intern): View
+    public function edit(Intern $intern): Response
     {
         $intern->load('user');
         $programs = InternProgram::orderBy('name')->get();
 
-        return view('admin.interns.edit', compact('intern', 'programs'));
+        return Inertia::render('admin/Interns/Edit', [
+            'intern' => $intern,
+            'programs' => $programs,
+        ]);
     }
 
     /**

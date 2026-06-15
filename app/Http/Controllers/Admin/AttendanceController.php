@@ -8,14 +8,15 @@ use App\Models\Attendance;
 use App\Models\InternProgram;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class AttendanceController extends Controller
 {
     /**
      * Display a filtered, paginated listing of all attendance records.
      */
-    public function index(Request $request): View
+    public function index(Request $request): Response
     {
         $query = Attendance::query()
             ->with(['user.intern.internProgram'])
@@ -53,17 +54,23 @@ class AttendanceController extends Controller
         $attendances = $query->paginate(15)->withQueryString();
         $programs = InternProgram::orderBy('name')->get();
 
-        return view('admin.attendances.index', compact('attendances', 'programs'));
+        return Inertia::render('admin/Attendances/Index', [
+            'attendances' => $attendances,
+            'programs' => $programs,
+            'filters' => $request->only(['date', 'status', 'work_mode', 'program', 'search']),
+        ]);
     }
 
     /**
      * Show the form to correct a single attendance record's status.
      */
-    public function edit(Attendance $attendance): View
+    public function edit(Attendance $attendance): Response
     {
         $attendance->load(['user.intern.internProgram']);
 
-        return view('admin.attendances.edit', compact('attendance'));
+        return Inertia::render('admin/Attendances/Edit', [
+            'attendance' => $attendance,
+        ]);
     }
 
     /**
