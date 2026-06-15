@@ -30,6 +30,8 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
 
+        $intern = $user && $user->isIntern() ? $user->intern : null;
+
         return [
             ...parent::share($request),
             'auth' => [
@@ -40,6 +42,14 @@ class HandleInertiaRequests extends Middleware
                     'role' => $user->role,
                     'is_admin' => $user->isAdmin(),
                     'is_intern' => $user->isIntern(),
+                    'intern' => $intern ? [
+                        'status' => $intern->status,
+                        'start_date' => $intern->start_date?->toDateString(),
+                        'end_date' => $intern->end_date?->toDateString(),
+                        'can_record_attendance' => $intern->canRecordAttendanceOn(),
+                        'can_submit_leave' => $intern->canSubmitLeave(),
+                        'attendance_block_reason' => $intern->attendanceBlockReason(),
+                    ] : null,
                 ] : null,
             ],
             'flash' => [

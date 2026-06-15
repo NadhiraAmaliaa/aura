@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-// use Illuminate\Support\Carbon; //(DELETE LATER)
+use Illuminate\Support\Carbon; //(DELETE LATER)
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -20,8 +20,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // if (env('DEMO_NOW')) {
-        //     Carbon::setTestNow(Carbon::parse(env('DEMO_NOW')));
-        // }
+        if (env('DEMO_NOW')) {
+            Carbon::setTestNow(Carbon::parse(env('DEMO_NOW')));
+        }
     }
 }

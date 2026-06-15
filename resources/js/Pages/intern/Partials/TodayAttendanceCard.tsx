@@ -7,8 +7,8 @@ import {
     workModeBadge,
     workModeLabels,
 } from '@/lib/labels';
-import { Attendance, LeaveRequest, WorkMode } from '@/types';
-import { router } from '@inertiajs/react';
+import { Attendance, LeaveRequest, PageProps, WorkMode } from '@/types';
+import { router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
 const workModeOptions: { value: WorkMode; title: string; description: string }[] =
@@ -45,6 +45,9 @@ export default function TodayAttendanceCard({
     const { capture, locating } = useGeolocation();
     const [workMode, setWorkMode] = useState<WorkMode>('wfo');
     const [processing, setProcessing] = useState(false);
+
+    const intern = usePage<PageProps>().props.auth.user?.intern ?? null;
+    const attendanceBlocked = intern ? !intern.can_record_attendance : false;
 
     const today = new Date().toLocaleDateString('id-ID', {
         weekday: 'long',
@@ -100,6 +103,11 @@ export default function TodayAttendanceCard({
                     {todayLeave.type === 'sakit' ? 'Sakit' : 'Izin'} berdasarkan
                     pengajuan yang telah disetujui. Anda tidak dapat melakukan
                     Check In.
+                </div>
+            ) : attendanceBlocked ? (
+                <div className="rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    {intern?.attendance_block_reason ??
+                        'Absensi tidak tersedia saat ini.'}
                 </div>
             ) : !todayAttendance ? (
                 <div>

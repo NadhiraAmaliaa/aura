@@ -72,7 +72,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::patch('/leave-requests/{leaveRequest}/reject', [AdminLeaveRequestController::class, 'reject'])->name('leave-requests.reject');
     });
 
-Route::middleware(['auth', 'verified', 'role:intern'])
+Route::middleware(['auth', 'verified', 'role:intern', 'intern.active'])
     ->prefix('intern')
     ->name('intern.')
     ->group(function () {

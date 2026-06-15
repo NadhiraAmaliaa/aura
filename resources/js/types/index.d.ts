@@ -9,6 +9,16 @@ export interface AuthUser {
     role: UserRole;
     is_admin: boolean;
     is_intern: boolean;
+    intern?: AuthIntern | null;
+}
+
+export interface AuthIntern {
+    status: InternStatus;
+    start_date: string | null;
+    end_date: string | null;
+    can_record_attendance: boolean;
+    can_submit_leave: boolean;
+    attendance_block_reason: string | null;
 }
 
 export interface User {

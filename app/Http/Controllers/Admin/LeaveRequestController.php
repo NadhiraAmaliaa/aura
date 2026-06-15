@@ -118,11 +118,20 @@ class LeaveRequestController extends Controller
     private function syncAttendanceForApprovedLeave(LeaveRequest $leaveRequest): void
     {
         $status = Attendance::statusForLeaveType($leaveRequest->type);
+        $intern = $leaveRequest->user?->intern;
 
         $date = Carbon::parse($leaveRequest->start_date)->startOfDay();
         $endDate = Carbon::parse($leaveRequest->end_date)->startOfDay();
 
         while ($date->lessThanOrEqualTo($endDate)) {
+            // Never record leave attendance for days outside the intern's
+            // internship period; those days are not part of the recap window.
+            if ($intern !== null && ! $intern->isWithinPeriod($date)) {
+                $date->addDay();
+
+                continue;
+            }
+
             $exists = Attendance::where('user_id', $leaveRequest->user_id)
                 ->whereDate('attendance_date', $date->toDateString())
                 ->exists();

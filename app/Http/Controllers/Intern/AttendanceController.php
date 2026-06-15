@@ -48,6 +48,15 @@ class AttendanceController extends Controller
     {
         $userId = Auth::id();
 
+        $intern = Auth::user()->intern;
+
+        if (! $intern || ! $intern->canRecordAttendanceOn()) {
+            return back()->with(
+                'error',
+                $intern?->attendanceBlockReason() ?? 'Profil magang Anda belum lengkap. Silakan hubungi administrator.'
+            );
+        }
+
         $todayLeave = LeaveRequest::approvedCovering($userId, today())->first();
 
         if ($todayLeave) {
@@ -100,6 +109,15 @@ class AttendanceController extends Controller
     public function checkOut(AttendanceLocationRequest $request): RedirectResponse
     {
         $userId = Auth::id();
+
+        $intern = Auth::user()->intern;
+
+        if (! $intern || ! $intern->canRecordAttendanceOn()) {
+            return back()->with(
+                'error',
+                $intern?->attendanceBlockReason() ?? 'Profil magang Anda belum lengkap. Silakan hubungi administrator.'
+            );
+        }
 
         $attendance = Attendance::where('user_id', $userId)
             ->whereDate('attendance_date', today())

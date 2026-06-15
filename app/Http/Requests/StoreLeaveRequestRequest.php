@@ -48,4 +48,46 @@ class StoreLeaveRequestRequest extends FormRequest
             'end_date.after_or_equal' => 'Tanggal akhir harus sama atau setelah tanggal awal.',
         ];
     }
+
+    /**
+     * Ensure the leave falls inside the intern's active internship period.
+     */
+    public function withValidator(\Illuminate\Validation\Validator $validator): void
+    {
+        $validator->after(function (\Illuminate\Validation\Validator $validator): void {
+            $intern = $this->user()?->intern;
+
+            if ($intern === null) {
+                $validator->errors()->add('start_date', 'Profil magang Anda belum lengkap. Silakan hubungi administrator.');
+
+                return;
+            }
+
+            if (! $intern->canSubmitLeave()) {
+                $validator->errors()->add(
+                    'start_date',
+                    'Masa magang Anda tidak aktif, sehingga tidak dapat mengajukan izin/sakit.'
+                );
+
+                return;
+            }
+
+            $startDate = $this->date('start_date');
+            $endDate = $this->date('end_date');
+
+            if ($startDate && $intern->start_date && $startDate->lt($intern->start_date->copy()->startOfDay())) {
+                $validator->errors()->add(
+                    'start_date',
+                    'Tanggal awal berada di luar masa magang Anda (mulai '.$intern->start_date->format('d-m-Y').').'
+                );
+            }
+
+            if ($endDate && $intern->end_date && $endDate->gt($intern->end_date->copy()->startOfDay())) {
+                $validator->errors()->add(
+                    'end_date',
+                    'Tanggal akhir berada di luar masa magang Anda (berakhir '.$intern->end_date->format('d-m-Y').').'
+                );
+            }
+        });
+    }
 }
