@@ -1,12 +1,12 @@
-import Badge from '@/Components/Badge';
-import DangerButton from '@/Components/DangerButton';
-import Modal from '@/Components/Modal';
-import Pagination from '@/Components/Pagination';
-import SecondaryButton from '@/Components/SecondaryButton';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Division, Paginated } from '@/types';
-import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import Badge from "@/Components/Badge";
+import DangerButton from "@/Components/DangerButton";
+import Modal from "@/Components/Modal";
+import Pagination from "@/Components/Pagination";
+import SecondaryButton from "@/Components/SecondaryButton";
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import { Division, Paginated } from "@/types";
+import { Head, Link, router } from "@inertiajs/react";
+import { useState } from "react";
 
 type DivisionRow = Division & { interns_count: number };
 
@@ -22,7 +22,7 @@ export default function Index({
             return;
         }
 
-        router.delete(route('admin.divisions.destroy', deleting.id), {
+        router.delete(route("admin.divisions.destroy", deleting.id), {
             onFinish: () => setDeleting(null),
         });
     };
@@ -35,7 +35,7 @@ export default function Index({
                         Divisi
                     </h2>
                     <Link
-                        href={route('admin.divisions.create')}
+                        href={route("admin.divisions.create")}
                         className="rounded-md bg-green-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-800"
                     >
                         Tambah Divisi
@@ -84,13 +84,13 @@ export default function Index({
                                             <Badge
                                                 className={
                                                     division.is_active
-                                                        ? 'bg-green-100 text-green-800'
-                                                        : 'bg-gray-100 text-gray-800'
+                                                        ? "bg-green-100 text-green-800"
+                                                        : "bg-gray-100 text-gray-800"
                                                 }
                                             >
                                                 {division.is_active
-                                                    ? 'Aktif'
-                                                    : 'Nonaktif'}
+                                                    ? "Aktif"
+                                                    : "Nonaktif"}
                                             </Badge>
                                         </td>
                                         <td className="px-4 py-3 text-sm text-gray-700">
@@ -99,7 +99,7 @@ export default function Index({
                                         <td className="px-4 py-3 text-right text-sm">
                                             <Link
                                                 href={route(
-                                                    'admin.divisions.edit',
+                                                    "admin.divisions.edit",
                                                     division.id,
                                                 )}
                                                 className="font-medium text-green-700 hover:underline"

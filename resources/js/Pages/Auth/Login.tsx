@@ -1,62 +1,60 @@
-import Autocomplete, {
-    AutocompleteOption,
-} from '@/Components/Autocomplete';
-import Checkbox from '@/Components/Checkbox';
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, useForm } from '@inertiajs/react';
-import { FormEventHandler, useState } from 'react';
+import Autocomplete, { AutocompleteOption } from "@/Components/Autocomplete";
+import Checkbox from "@/Components/Checkbox";
+import InputError from "@/Components/InputError";
+import InputLabel from "@/Components/InputLabel";
+import PrimaryButton from "@/Components/PrimaryButton";
+import TextInput from "@/Components/TextInput";
+import GuestLayout from "@/Layouts/GuestLayout";
+import { Head, useForm } from "@inertiajs/react";
+import { FormEventHandler, useState } from "react";
 
-type LoginTab = 'admin' | 'intern';
+type LoginTab = "admin" | "intern";
 
 export default function Login({ status }: { status?: string }) {
-    const [tab, setTab] = useState<LoginTab>('intern');
+    const [tab, setTab] = useState<LoginTab>("intern");
 
     const { data, setData, post, processing, errors, reset, clearErrors } =
         useForm({
-            login_as: 'intern',
+            login_as: "intern",
             // Admin field
-            nik: '',
+            nik: "",
             // Intern fields
-            university_id: '' as number | string,
-            university_name: '',
-            nim: '',
+            university_id: "" as number | string,
+            university_name: "",
+            nim: "",
             // Shared
-            password: '',
+            password: "",
             remember: false,
         });
 
     const switchTab = (next: LoginTab) => {
         setTab(next);
-        setData('login_as', next);
+        setData("login_as", next);
         clearErrors();
-        reset('password');
+        reset("password");
     };
 
     const handleUniversity = (option: AutocompleteOption | null) => {
         setData((previous) => ({
             ...previous,
-            university_id: option ? option.id : '',
-            university_name: option ? option.name : '',
+            university_id: option ? option.id : "",
+            university_name: option ? option.name : "",
         }));
     };
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
 
-        post(route('login'), {
-            onFinish: () => reset('password'),
+        post(route("login"), {
+            onFinish: () => reset("password"),
         });
     };
 
     const tabClass = (value: LoginTab) =>
-        'flex-1 rounded-md px-4 py-2 text-sm font-medium transition ' +
+        "flex-1 rounded-md px-4 py-2 text-sm font-medium transition " +
         (tab === value
-            ? 'bg-green-600 text-white shadow'
-            : 'text-gray-600 hover:bg-gray-100');
+            ? "bg-green-600 text-white shadow"
+            : "text-gray-600 hover:bg-gray-100");
 
     return (
         <GuestLayout>
@@ -71,22 +69,22 @@ export default function Login({ status }: { status?: string }) {
             <div className="mb-6 flex gap-2 rounded-lg bg-gray-100 p-1">
                 <button
                     type="button"
-                    className={tabClass('intern')}
-                    onClick={() => switchTab('intern')}
+                    className={tabClass("intern")}
+                    onClick={() => switchTab("intern")}
                 >
                     Peserta Magang
                 </button>
                 <button
                     type="button"
-                    className={tabClass('admin')}
-                    onClick={() => switchTab('admin')}
+                    className={tabClass("admin")}
+                    onClick={() => switchTab("admin")}
                 >
                     Admin
                 </button>
             </div>
 
             <form onSubmit={submit}>
-                {tab === 'intern' ? (
+                {tab === "intern" ? (
                     <>
                         <div>
                             <InputLabel
@@ -96,7 +94,7 @@ export default function Login({ status }: { status?: string }) {
                             <div className="mt-1">
                                 <Autocomplete
                                     id="university_id"
-                                    url={route('lookup.universities')}
+                                    url={route("lookup.universities")}
                                     value={data.university_id}
                                     displayValue={data.university_name}
                                     placeholder="Cari perguruan tinggi..."
@@ -118,7 +116,7 @@ export default function Login({ status }: { status?: string }) {
                                 value={data.nim}
                                 className="mt-1 block w-full"
                                 autoComplete="username"
-                                onChange={(e) => setData('nim', e.target.value)}
+                                onChange={(e) => setData("nim", e.target.value)}
                             />
                             <InputError message={errors.nim} className="mt-2" />
                         </div>
@@ -134,7 +132,7 @@ export default function Login({ status }: { status?: string }) {
                             className="mt-1 block w-full"
                             autoComplete="username"
                             isFocused={true}
-                            onChange={(e) => setData('nik', e.target.value)}
+                            onChange={(e) => setData("nik", e.target.value)}
                         />
                         <InputError message={errors.nik} className="mt-2" />
                     </div>
@@ -149,7 +147,7 @@ export default function Login({ status }: { status?: string }) {
                         value={data.password}
                         className="mt-1 block w-full"
                         autoComplete="current-password"
-                        onChange={(e) => setData('password', e.target.value)}
+                        onChange={(e) => setData("password", e.target.value)}
                     />
                     <InputError message={errors.password} className="mt-2" />
                 </div>
@@ -160,7 +158,7 @@ export default function Login({ status }: { status?: string }) {
                             name="remember"
                             checked={data.remember}
                             onChange={(e) =>
-                                setData('remember', e.target.checked)
+                                setData("remember", e.target.checked)
                             }
                         />
                         <span className="ms-2 text-sm text-gray-600">

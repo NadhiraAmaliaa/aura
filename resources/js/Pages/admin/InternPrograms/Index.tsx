@@ -1,11 +1,11 @@
-import DangerButton from '@/Components/DangerButton';
-import Modal from '@/Components/Modal';
-import Pagination from '@/Components/Pagination';
-import SecondaryButton from '@/Components/SecondaryButton';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { InternProgram, Paginated } from '@/types';
-import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import DangerButton from "@/Components/DangerButton";
+import Modal from "@/Components/Modal";
+import Pagination from "@/Components/Pagination";
+import SecondaryButton from "@/Components/SecondaryButton";
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import { InternProgram, Paginated } from "@/types";
+import { Head, Link, router } from "@inertiajs/react";
+import { useState } from "react";
 
 type ProgramRow = InternProgram & { interns_count: number };
 
@@ -21,7 +21,7 @@ export default function Index({
             return;
         }
 
-        router.delete(route('admin.intern-programs.destroy', deleting.id), {
+        router.delete(route("admin.intern-programs.destroy", deleting.id), {
             onFinish: () => setDeleting(null),
         });
     };
@@ -34,7 +34,7 @@ export default function Index({
                         Program Magang
                     </h2>
                     <Link
-                        href={route('admin.intern-programs.create')}
+                        href={route("admin.intern-programs.create")}
                         className="rounded-md bg-green-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-800"
                     >
                         Tambah Program
@@ -80,7 +80,7 @@ export default function Index({
                                             {program.name}
                                         </td>
                                         <td className="px-4 py-3 text-sm text-gray-600">
-                                            {program.description ?? '-'}
+                                            {program.description ?? "-"}
                                         </td>
                                         <td className="px-4 py-3 text-sm text-gray-700">
                                             {program.interns_count}
@@ -88,7 +88,7 @@ export default function Index({
                                         <td className="px-4 py-3 text-right text-sm">
                                             <Link
                                                 href={route(
-                                                    'admin.intern-programs.edit',
+                                                    "admin.intern-programs.edit",
                                                     program.id,
                                                 )}
                                                 className="font-medium text-green-700 hover:underline"

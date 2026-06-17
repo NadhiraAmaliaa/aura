@@ -1,73 +1,79 @@
-import { AttendanceStatus, LeaveStatus, LeaveType, NonWorkingDayType, WorkMode } from '@/types';
+import {
+    AttendanceStatus,
+    LeaveStatus,
+    LeaveType,
+    NonWorkingDayType,
+    WorkMode,
+} from "@/types";
 
 export const attendanceStatusLabels: Record<AttendanceStatus, string> = {
-    present: 'Hadir',
-    late: 'Terlambat',
-    sick: 'Sakit',
-    permission: 'Izin',
-    absent: 'Alpha',
+    present: "Hadir",
+    late: "Terlambat",
+    sick: "Sakit",
+    permission: "Izin",
+    absent: "Alpha",
 };
 
 export const attendanceStatusBadge: Record<AttendanceStatus, string> = {
-    present: 'bg-green-100 text-green-800',
-    late: 'bg-yellow-100 text-yellow-800',
-    sick: 'bg-blue-100 text-blue-800',
-    permission: 'bg-indigo-100 text-indigo-800',
-    absent: 'bg-red-100 text-red-800',
+    present: "bg-green-100 text-green-800",
+    late: "bg-yellow-100 text-yellow-800",
+    sick: "bg-blue-100 text-blue-800",
+    permission: "bg-indigo-100 text-indigo-800",
+    absent: "bg-red-100 text-red-800",
 };
 
 export const workModeLabels: Record<WorkMode, string> = {
-    wfo: 'WFO',
-    wfh: 'WFH',
-    dinas: 'Dinas',
+    wfo: "WFO",
+    wfh: "WFH",
+    dinas: "Dinas",
 };
 
 export const workModeBadge: Record<WorkMode, string> = {
-    wfo: 'bg-green-100 text-green-800',
-    wfh: 'bg-sky-100 text-sky-800',
-    dinas: 'bg-purple-100 text-purple-800',
+    wfo: "bg-green-100 text-green-800",
+    wfh: "bg-sky-100 text-sky-800",
+    dinas: "bg-purple-100 text-purple-800",
 };
 
 export const leaveTypeLabels: Record<LeaveType, string> = {
-    izin: 'Izin',
-    sakit: 'Sakit',
+    izin: "Izin",
+    sakit: "Sakit",
 };
 
 export const leaveStatusLabels: Record<LeaveStatus, string> = {
-    pending: 'Menunggu',
-    approved: 'Disetujui',
-    rejected: 'Ditolak',
+    pending: "Menunggu",
+    approved: "Disetujui",
+    rejected: "Ditolak",
 };
 
 export const leaveStatusBadge: Record<LeaveStatus, string> = {
-    pending: 'bg-yellow-100 text-yellow-800',
-    approved: 'bg-green-100 text-green-800',
-    rejected: 'bg-red-100 text-red-800',
+    pending: "bg-yellow-100 text-yellow-800",
+    approved: "bg-green-100 text-green-800",
+    rejected: "bg-red-100 text-red-800",
 };
 
 export const nonWorkingDayTypeLabels: Record<NonWorkingDayType, string> = {
-    national_holiday: 'Hari Libur Nasional',
-    collective_leave: 'Cuti Bersama',
-    company_holiday: 'Libur Perusahaan',
+    national_holiday: "Hari Libur Nasional",
+    collective_leave: "Cuti Bersama",
+    company_holiday: "Libur Perusahaan",
 };
 
 export const internStatusLabels: Record<string, string> = {
-    upcoming: 'Akan Datang',
-    active: 'Aktif',
-    inactive: 'Nonaktif',
-    completed: 'Selesai',
+    upcoming: "Akan Datang",
+    active: "Aktif",
+    inactive: "Nonaktif",
+    completed: "Selesai",
 };
 
 export const internStatusBadge: Record<string, string> = {
-    upcoming: 'bg-amber-100 text-amber-800',
-    active: 'bg-green-100 text-green-800',
-    inactive: 'bg-gray-100 text-gray-800',
-    completed: 'bg-blue-100 text-blue-800',
+    upcoming: "bg-amber-100 text-amber-800",
+    active: "bg-green-100 text-green-800",
+    inactive: "bg-gray-100 text-gray-800",
+    completed: "bg-blue-100 text-blue-800",
 };
 
 export function formatDate(value: string | null | undefined): string {
     if (!value) {
-        return '-';
+        return "-";
     }
 
     const date = new Date(value);
@@ -76,16 +82,16 @@ export function formatDate(value: string | null | undefined): string {
         return value;
     }
 
-    return date.toLocaleDateString('id-ID', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric',
+    return date.toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
     });
 }
 
 export function formatTime(value: string | null | undefined): string {
     if (!value) {
-        return '-';
+        return "-";
     }
 
     // Accept "HH:mm:ss", "HH:mm", or full datetime strings.

@@ -1,7 +1,7 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Division } from '@/types';
-import { Head } from '@inertiajs/react';
-import DivisionForm from './DivisionForm';
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import { Division } from "@/types";
+import { Head } from "@inertiajs/react";
+import DivisionForm from "./DivisionForm";
 
 export default function Edit({ division }: { division: Division }) {
     return (

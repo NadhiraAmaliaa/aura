@@ -1,13 +1,13 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import Badge from '@/Components/Badge';
-import DangerButton from '@/Components/DangerButton';
-import Modal from '@/Components/Modal';
-import Pagination from '@/Components/Pagination';
-import SecondaryButton from '@/Components/SecondaryButton';
-import { internStatusBadge, internStatusLabels } from '@/lib/labels';
-import { Intern, Paginated } from '@/types';
-import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import Badge from "@/Components/Badge";
+import DangerButton from "@/Components/DangerButton";
+import Modal from "@/Components/Modal";
+import Pagination from "@/Components/Pagination";
+import SecondaryButton from "@/Components/SecondaryButton";
+import { internStatusBadge, internStatusLabels } from "@/lib/labels";
+import { Intern, Paginated } from "@/types";
+import { Head, Link, router } from "@inertiajs/react";
+import { useState } from "react";
 
 export default function Index({ interns }: { interns: Paginated<Intern> }) {
     const [deleting, setDeleting] = useState<Intern | null>(null);
@@ -17,7 +17,7 @@ export default function Index({ interns }: { interns: Paginated<Intern> }) {
             return;
         }
 
-        router.delete(route('admin.interns.destroy', deleting.id), {
+        router.delete(route("admin.interns.destroy", deleting.id), {
             onFinish: () => setDeleting(null),
         });
     };
@@ -30,7 +30,7 @@ export default function Index({ interns }: { interns: Paginated<Intern> }) {
                         Peserta Magang
                     </h2>
                     <Link
-                        href={route('admin.interns.create')}
+                        href={route("admin.interns.create")}
                         className="rounded-md bg-green-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-800"
                     >
                         Tambah Peserta
@@ -85,14 +85,14 @@ export default function Index({ interns }: { interns: Paginated<Intern> }) {
                                             <div className="text-sm text-gray-500">
                                                 {intern.university_ref?.name ??
                                                     intern.university ??
-                                                    '-'}
+                                                    "-"}
                                             </div>
                                         </td>
                                         <td className="px-4 py-3 text-sm text-gray-700">
                                             {intern.nim}
                                         </td>
                                         <td className="px-4 py-3 text-sm text-gray-700">
-                                            {intern.intern_program?.name ?? '-'}
+                                            {intern.intern_program?.name ?? "-"}
                                         </td>
                                         <td className="px-4 py-3 text-sm text-gray-700">
                                             {intern.division}
@@ -115,7 +115,7 @@ export default function Index({ interns }: { interns: Paginated<Intern> }) {
                                         <td className="px-4 py-3 text-right text-sm">
                                             <Link
                                                 href={route(
-                                                    'admin.interns.edit',
+                                                    "admin.interns.edit",
                                                     intern.id,
                                                 )}
                                                 className="font-medium text-green-700 hover:underline"
@@ -149,8 +149,8 @@ export default function Index({ interns }: { interns: Paginated<Intern> }) {
                         Hapus peserta magang ini?
                     </h2>
                     <p className="mt-1 text-sm text-gray-600">
-                        Akun pengguna dan seluruh data absensi {deleting?.user?.name}{' '}
-                        akan dihapus permanen.
+                        Akun pengguna dan seluruh data absensi{" "}
+                        {deleting?.user?.name} akan dihapus permanen.
                     </p>
                     <div className="mt-6 flex justify-end">
                         <SecondaryButton onClick={() => setDeleting(null)}>

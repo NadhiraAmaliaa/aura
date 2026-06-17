@@ -1,29 +1,29 @@
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import { useForm, usePage } from '@inertiajs/react';
-import { FormEventHandler } from 'react';
-import { PageProps } from '@/types';
+import InputError from "@/Components/InputError";
+import InputLabel from "@/Components/InputLabel";
+import PrimaryButton from "@/Components/PrimaryButton";
+import TextInput from "@/Components/TextInput";
+import { useForm, usePage } from "@inertiajs/react";
+import { FormEventHandler } from "react";
+import { PageProps } from "@/types";
 
 export default function UpdateProfileInformation({
-    className = '',
+    className = "",
 }: {
     status?: string;
     className?: string;
 }) {
     const user = usePage<PageProps>().props.auth.user!;
-    const isAdmin = user.role === 'admin';
+    const isAdmin = user.role === "admin";
 
     const { data, setData, patch, errors, processing, recentlySuccessful } =
         useForm({
             name: user.name,
-            nik: user.nik ?? '',
+            nik: user.nik ?? "",
         });
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        patch(route('profile.update'));
+        patch(route("profile.update"));
     };
 
     return (
@@ -44,7 +44,7 @@ export default function UpdateProfileInformation({
                         id="name"
                         className="mt-1 block w-full"
                         value={data.name}
-                        onChange={(e) => setData('name', e.target.value)}
+                        onChange={(e) => setData("name", e.target.value)}
                         required
                         isFocused
                         autoComplete="name"
@@ -60,7 +60,7 @@ export default function UpdateProfileInformation({
                             type="text"
                             className="mt-1 block w-full"
                             value={data.nik}
-                            onChange={(e) => setData('nik', e.target.value)}
+                            onChange={(e) => setData("nik", e.target.value)}
                             required
                             autoComplete="username"
                         />

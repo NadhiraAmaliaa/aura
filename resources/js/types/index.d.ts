@@ -1,6 +1,6 @@
-import { Config as ZiggyConfig } from 'ziggy-js';
+import { Config as ZiggyConfig } from "ziggy-js";
 
-export type UserRole = 'admin' | 'intern';
+export type UserRole = "admin" | "intern";
 
 export interface AuthUser {
     id: number;
@@ -77,7 +77,7 @@ export interface Division {
     is_active: boolean;
 }
 
-export type InternStatus = 'upcoming' | 'active' | 'inactive' | 'completed';
+export type InternStatus = "upcoming" | "active" | "inactive" | "completed";
 
 export interface Intern {
     id: number;
@@ -102,13 +102,13 @@ export interface Intern {
 }
 
 export type AttendanceStatus =
-    | 'present'
-    | 'late'
-    | 'sick'
-    | 'permission'
-    | 'absent';
+    | "present"
+    | "late"
+    | "sick"
+    | "permission"
+    | "absent";
 
-export type WorkMode = 'wfo' | 'wfh' | 'dinas';
+export type WorkMode = "wfo" | "wfh" | "dinas";
 
 export interface Attendance {
     id: number;
@@ -126,8 +126,8 @@ export interface Attendance {
     user?: User;
 }
 
-export type LeaveType = 'izin' | 'sakit';
-export type LeaveStatus = 'pending' | 'approved' | 'rejected';
+export type LeaveType = "izin" | "sakit";
+export type LeaveStatus = "pending" | "approved" | "rejected";
 
 export interface LeaveRequest {
     id: number;
@@ -150,9 +150,9 @@ export interface LeaveRequest {
 }
 
 export type NonWorkingDayType =
-    | 'national_holiday'
-    | 'collective_leave'
-    | 'company_holiday';
+    | "national_holiday"
+    | "collective_leave"
+    | "company_holiday";
 
 export interface NonWorkingDay {
     id: number;

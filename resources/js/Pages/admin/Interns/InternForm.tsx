@@ -1,15 +1,13 @@
-import Autocomplete, {
-    AutocompleteOption,
-} from '@/Components/Autocomplete';
-import Checkbox from '@/Components/Checkbox';
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import SelectInput from '@/Components/SelectInput';
-import TextInput from '@/Components/TextInput';
-import { Intern, InternProgram } from '@/types';
-import { Link, useForm } from '@inertiajs/react';
-import { FormEventHandler } from 'react';
+import Autocomplete, { AutocompleteOption } from "@/Components/Autocomplete";
+import Checkbox from "@/Components/Checkbox";
+import InputError from "@/Components/InputError";
+import InputLabel from "@/Components/InputLabel";
+import PrimaryButton from "@/Components/PrimaryButton";
+import SelectInput from "@/Components/SelectInput";
+import TextInput from "@/Components/TextInput";
+import { Intern, InternProgram } from "@/types";
+import { Link, useForm } from "@inertiajs/react";
+import { FormEventHandler } from "react";
 
 interface InternFormData {
     name: string;
@@ -38,55 +36,55 @@ export default function InternForm({
 
     const { data, setData, post, put, processing, errors } =
         useForm<InternFormData>({
-            name: intern?.user?.name ?? '',
-            password: '',
-            password_confirmation: '',
+            name: intern?.user?.name ?? "",
+            password: "",
+            password_confirmation: "",
             intern_program_id: intern?.intern_program_id
                 ? String(intern.intern_program_id)
-                : '',
-            university_id: intern?.university_id ?? '',
-            study_program_id: intern?.study_program_id ?? '',
-            division_id: intern?.division_id ?? '',
-            nim: intern?.nim ?? '',
-            phone: intern?.phone ?? '',
-            start_date: intern?.start_date ?? '',
-            end_date: intern?.end_date ?? '',
-            is_active: intern ? intern.status !== 'inactive' : true,
+                : "",
+            university_id: intern?.university_id ?? "",
+            study_program_id: intern?.study_program_id ?? "",
+            division_id: intern?.division_id ?? "",
+            nim: intern?.nim ?? "",
+            phone: intern?.phone ?? "",
+            start_date: intern?.start_date ?? "",
+            end_date: intern?.end_date ?? "",
+            is_active: intern ? intern.status !== "inactive" : true,
         });
 
     // Display names for the autocomplete fields when editing. The relation
     // names are preferred, falling back to the denormalised text columns.
     const universityDisplay =
-        intern?.university_ref?.name ?? intern?.university ?? '';
+        intern?.university_ref?.name ?? intern?.university ?? "";
     const studyProgramDisplay =
-        intern?.study_program?.name ?? intern?.major ?? '';
+        intern?.study_program?.name ?? intern?.major ?? "";
     const divisionDisplay =
-        intern?.division_ref?.name ?? intern?.division ?? '';
+        intern?.division_ref?.name ?? intern?.division ?? "";
 
     const handleUniversity = (option: AutocompleteOption | null) => {
         setData((previous) => ({
             ...previous,
-            university_id: option ? option.id : '',
+            university_id: option ? option.id : "",
             // Changing the university invalidates the chosen study program.
-            study_program_id: '',
+            study_program_id: "",
         }));
     };
 
     const handleStudyProgram = (option: AutocompleteOption | null) => {
-        setData('study_program_id', option ? option.id : '');
+        setData("study_program_id", option ? option.id : "");
     };
 
     const handleDivision = (option: AutocompleteOption | null) => {
-        setData('division_id', option ? option.id : '');
+        setData("division_id", option ? option.id : "");
     };
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
 
         if (isEdit && intern) {
-            put(route('admin.interns.update', intern.id));
+            put(route("admin.interns.update", intern.id));
         } else {
-            post(route('admin.interns.store'));
+            post(route("admin.interns.store"));
         }
     };
 
@@ -103,7 +101,7 @@ export default function InternForm({
                             id="name"
                             className="mt-1 block w-full"
                             value={data.name}
-                            onChange={(e) => setData('name', e.target.value)}
+                            onChange={(e) => setData("name", e.target.value)}
                         />
                         <InputError className="mt-2" message={errors.name} />
                     </div>
@@ -112,8 +110,8 @@ export default function InternForm({
                             htmlFor="password"
                             value={
                                 isEdit
-                                    ? 'Kata Sandi Baru (opsional)'
-                                    : 'Kata Sandi'
+                                    ? "Kata Sandi Baru (opsional)"
+                                    : "Kata Sandi"
                             }
                         />
                         <TextInput
@@ -123,10 +121,13 @@ export default function InternForm({
                             value={data.password}
                             autoComplete="new-password"
                             onChange={(e) =>
-                                setData('password', e.target.value)
+                                setData("password", e.target.value)
                             }
                         />
-                        <InputError className="mt-2" message={errors.password} />
+                        <InputError
+                            className="mt-2"
+                            message={errors.password}
+                        />
                     </div>
                     <div>
                         <InputLabel
@@ -140,10 +141,7 @@ export default function InternForm({
                             value={data.password_confirmation}
                             autoComplete="new-password"
                             onChange={(e) =>
-                                setData(
-                                    'password_confirmation',
-                                    e.target.value,
-                                )
+                                setData("password_confirmation", e.target.value)
                             }
                         />
                     </div>
@@ -165,7 +163,7 @@ export default function InternForm({
                             className="mt-1 block w-full"
                             value={data.intern_program_id}
                             onChange={(e) =>
-                                setData('intern_program_id', e.target.value)
+                                setData("intern_program_id", e.target.value)
                             }
                         >
                             <option value="">Pilih program</option>
@@ -186,7 +184,7 @@ export default function InternForm({
                             id="nim"
                             className="mt-1 block w-full"
                             value={data.nim}
-                            onChange={(e) => setData('nim', e.target.value)}
+                            onChange={(e) => setData("nim", e.target.value)}
                         />
                         <InputError className="mt-2" message={errors.nim} />
                     </div>
@@ -198,7 +196,7 @@ export default function InternForm({
                         <div className="mt-1">
                             <Autocomplete
                                 id="university_id"
-                                url={route('lookup.universities')}
+                                url={route("lookup.universities")}
                                 value={data.university_id}
                                 displayValue={universityDisplay}
                                 placeholder="Cari perguruan tinggi..."
@@ -218,15 +216,15 @@ export default function InternForm({
                         <div className="mt-1">
                             <Autocomplete
                                 id="study_program_id"
-                                url={route('admin.lookup.study-programs')}
+                                url={route("admin.lookup.study-programs")}
                                 value={data.study_program_id}
                                 displayValue={studyProgramDisplay}
                                 params={{ university_id: data.university_id }}
                                 disabled={!data.university_id}
                                 placeholder={
                                     data.university_id
-                                        ? 'Cari program studi...'
-                                        : 'Pilih perguruan tinggi dahulu'
+                                        ? "Cari program studi..."
+                                        : "Pilih perguruan tinggi dahulu"
                                 }
                                 onSelect={handleStudyProgram}
                             />
@@ -241,7 +239,7 @@ export default function InternForm({
                         <div className="mt-1">
                             <Autocomplete
                                 id="division_id"
-                                url={route('admin.lookup.divisions')}
+                                url={route("admin.lookup.divisions")}
                                 value={data.division_id}
                                 displayValue={divisionDisplay}
                                 placeholder="Cari divisi..."
@@ -259,7 +257,7 @@ export default function InternForm({
                             id="phone"
                             className="mt-1 block w-full"
                             value={data.phone}
-                            onChange={(e) => setData('phone', e.target.value)}
+                            onChange={(e) => setData("phone", e.target.value)}
                         />
                         <InputError className="mt-2" message={errors.phone} />
                     </div>
@@ -274,7 +272,7 @@ export default function InternForm({
                             className="mt-1 block w-full"
                             value={data.start_date}
                             onChange={(e) =>
-                                setData('start_date', e.target.value)
+                                setData("start_date", e.target.value)
                             }
                         />
                         <InputError
@@ -283,14 +281,17 @@ export default function InternForm({
                         />
                     </div>
                     <div>
-                        <InputLabel htmlFor="end_date" value="Tanggal Selesai" />
+                        <InputLabel
+                            htmlFor="end_date"
+                            value="Tanggal Selesai"
+                        />
                         <TextInput
                             id="end_date"
                             type="date"
                             className="mt-1 block w-full"
                             value={data.end_date}
                             onChange={(e) =>
-                                setData('end_date', e.target.value)
+                                setData("end_date", e.target.value)
                             }
                         />
                         <InputError
@@ -305,7 +306,7 @@ export default function InternForm({
                         <Checkbox
                             checked={data.is_active}
                             onChange={(e) =>
-                                setData('is_active', e.target.checked)
+                                setData("is_active", e.target.checked)
                             }
                         />
                         <span className="text-sm">
@@ -326,13 +327,13 @@ export default function InternForm({
 
             <div className="flex items-center justify-end gap-3">
                 <Link
-                    href={route('admin.interns.index')}
+                    href={route("admin.interns.index")}
                     className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
                 >
                     Batal
                 </Link>
                 <PrimaryButton disabled={processing}>
-                    {isEdit ? 'Simpan Perubahan' : 'Tambah Peserta'}
+                    {isEdit ? "Simpan Perubahan" : "Tambah Peserta"}
                 </PrimaryButton>
             </div>
         </form>

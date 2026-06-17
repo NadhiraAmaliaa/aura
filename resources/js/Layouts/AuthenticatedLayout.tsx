@@ -1,11 +1,11 @@
-import ApplicationLogo from '@/Components/ApplicationLogo';
-import Dropdown from '@/Components/Dropdown';
-import FlashMessages from '@/Components/FlashMessages';
-import NavLink from '@/Components/NavLink';
-import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
-import { AuthUser, PageProps } from '@/types';
-import { Link, usePage } from '@inertiajs/react';
-import { PropsWithChildren, ReactNode, useState } from 'react';
+import ApplicationLogo from "@/Components/ApplicationLogo";
+import Dropdown from "@/Components/Dropdown";
+import FlashMessages from "@/Components/FlashMessages";
+import NavLink from "@/Components/NavLink";
+import ResponsiveNavLink from "@/Components/ResponsiveNavLink";
+import { AuthUser, PageProps } from "@/types";
+import { Link, usePage } from "@inertiajs/react";
+import { PropsWithChildren, ReactNode, useState } from "react";
 
 interface NavItem {
     label: string;
@@ -14,20 +14,64 @@ interface NavItem {
 }
 
 const adminNav: NavItem[] = [
-    { label: 'Dashboard', routeName: 'admin.dashboard', activePattern: 'admin.dashboard' },
-    { label: 'Peserta Magang', routeName: 'admin.interns.index', activePattern: 'admin.interns.*' },
-    { label: 'Absensi', routeName: 'admin.attendances.index', activePattern: 'admin.attendances.index' },
-    { label: 'Rekap', routeName: 'admin.attendances.recap', activePattern: 'admin.attendances.recap' },
-    { label: 'Hari Libur', routeName: 'admin.non-working-days.index', activePattern: 'admin.non-working-days.*' },
-    { label: 'Pengajuan Izin', routeName: 'admin.leave-requests.index', activePattern: 'admin.leave-requests.*' },
-    { label: 'Program Magang', routeName: 'admin.intern-programs.index', activePattern: 'admin.intern-programs.*' },
-    { label: 'Divisi', routeName: 'admin.divisions.index', activePattern: 'admin.divisions.*' },
+    {
+        label: "Dashboard",
+        routeName: "admin.dashboard",
+        activePattern: "admin.dashboard",
+    },
+    {
+        label: "Peserta Magang",
+        routeName: "admin.interns.index",
+        activePattern: "admin.interns.*",
+    },
+    {
+        label: "Absensi",
+        routeName: "admin.attendances.index",
+        activePattern: "admin.attendances.index",
+    },
+    {
+        label: "Rekap",
+        routeName: "admin.attendances.recap",
+        activePattern: "admin.attendances.recap",
+    },
+    {
+        label: "Hari Libur",
+        routeName: "admin.non-working-days.index",
+        activePattern: "admin.non-working-days.*",
+    },
+    {
+        label: "Pengajuan Izin",
+        routeName: "admin.leave-requests.index",
+        activePattern: "admin.leave-requests.*",
+    },
+    {
+        label: "Program Magang",
+        routeName: "admin.intern-programs.index",
+        activePattern: "admin.intern-programs.*",
+    },
+    {
+        label: "Divisi",
+        routeName: "admin.divisions.index",
+        activePattern: "admin.divisions.*",
+    },
 ];
 
 const internNav: NavItem[] = [
-    { label: 'Dashboard', routeName: 'intern.dashboard', activePattern: 'intern.dashboard' },
-    { label: 'Absensi', routeName: 'intern.attendance.index', activePattern: 'intern.attendance.*' },
-    { label: 'Pengajuan Izin', routeName: 'intern.leave-requests.index', activePattern: 'intern.leave-requests.*' },
+    {
+        label: "Dashboard",
+        routeName: "intern.dashboard",
+        activePattern: "intern.dashboard",
+    },
+    {
+        label: "Absensi",
+        routeName: "intern.attendance.index",
+        activePattern: "intern.attendance.*",
+    },
+    {
+        label: "Pengajuan Izin",
+        routeName: "intern.leave-requests.index",
+        activePattern: "intern.leave-requests.*",
+    },
 ];
 
 export default function AuthenticatedLayout({
@@ -47,7 +91,13 @@ export default function AuthenticatedLayout({
                     <div className="flex h-16 justify-between">
                         <div className="flex">
                             <div className="flex shrink-0 items-center">
-                                <Link href={route(user.is_admin ? 'admin.dashboard' : 'intern.dashboard')}>
+                                <Link
+                                    href={route(
+                                        user.is_admin
+                                            ? "admin.dashboard"
+                                            : "intern.dashboard",
+                                    )}
+                                >
                                     <ApplicationLogo />
                                 </Link>
                             </div>
@@ -57,7 +107,9 @@ export default function AuthenticatedLayout({
                                     <NavLink
                                         key={item.routeName}
                                         href={route(item.routeName)}
-                                        active={route().current(item.activePattern)}
+                                        active={route().current(
+                                            item.activePattern,
+                                        )}
                                     >
                                         {item.label}
                                     </NavLink>
@@ -91,11 +143,11 @@ export default function AuthenticatedLayout({
                                 </Dropdown.Trigger>
 
                                 <Dropdown.Content>
-                                    <Dropdown.Link href={route('profile.edit')}>
+                                    <Dropdown.Link href={route("profile.edit")}>
                                         Profil
                                     </Dropdown.Link>
                                     <Dropdown.Link
-                                        href={route('logout')}
+                                        href={route("logout")}
                                         method="post"
                                         as="button"
                                     >
@@ -123,8 +175,8 @@ export default function AuthenticatedLayout({
                                     <path
                                         className={
                                             !showingNavigationDropdown
-                                                ? 'inline-flex'
-                                                : 'hidden'
+                                                ? "inline-flex"
+                                                : "hidden"
                                         }
                                         strokeLinecap="round"
                                         strokeLinejoin="round"
@@ -134,8 +186,8 @@ export default function AuthenticatedLayout({
                                     <path
                                         className={
                                             showingNavigationDropdown
-                                                ? 'inline-flex'
-                                                : 'hidden'
+                                                ? "inline-flex"
+                                                : "hidden"
                                         }
                                         strokeLinecap="round"
                                         strokeLinejoin="round"
@@ -150,8 +202,8 @@ export default function AuthenticatedLayout({
 
                 <div
                     className={
-                        (showingNavigationDropdown ? 'block' : 'hidden') +
-                        ' sm:hidden'
+                        (showingNavigationDropdown ? "block" : "hidden") +
+                        " sm:hidden"
                     }
                 >
                     <div className="space-y-1 pb-3 pt-2">
@@ -171,7 +223,7 @@ export default function AuthenticatedLayout({
                             <div className="text-base font-medium text-gray-800">
                                 {user.name}
                             </div>
-                            {user.role === 'admin' && user.nik && (
+                            {user.role === "admin" && user.nik && (
                                 <div className="text-sm font-medium text-gray-500">
                                     {user.nik}
                                 </div>
@@ -179,12 +231,12 @@ export default function AuthenticatedLayout({
                         </div>
 
                         <div className="mt-3 space-y-1">
-                            <ResponsiveNavLink href={route('profile.edit')}>
+                            <ResponsiveNavLink href={route("profile.edit")}>
                                 Profil
                             </ResponsiveNavLink>
                             <ResponsiveNavLink
                                 method="post"
-                                href={route('logout')}
+                                href={route("logout")}
                                 as="button"
                             >
                                 Keluar

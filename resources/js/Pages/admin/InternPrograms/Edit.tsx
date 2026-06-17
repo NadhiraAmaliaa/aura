@@ -1,7 +1,7 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { InternProgram } from '@/types';
-import { Head } from '@inertiajs/react';
-import InternProgramForm from './InternProgramForm';
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import { InternProgram } from "@/types";
+import { Head } from "@inertiajs/react";
+import InternProgramForm from "./InternProgramForm";
 
 export default function Edit({ program }: { program: InternProgram }) {
     return (

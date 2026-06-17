@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export interface AutocompleteOption {
     id: number;
@@ -32,11 +32,11 @@ export default function Autocomplete({
     id,
     url,
     value,
-    displayValue = '',
+    displayValue = "",
     params = {},
-    placeholder = 'Ketik untuk mencari...',
+    placeholder = "Ketik untuk mencari...",
     disabled = false,
-    className = '',
+    className = "",
     onSelect,
 }: AutocompleteProps) {
     const [query, setQuery] = useState(displayValue);
@@ -68,10 +68,10 @@ export default function Autocomplete({
 
         debounceRef.current = setTimeout(() => {
             const search = new URLSearchParams();
-            search.set('q', query);
+            search.set("q", query);
 
             Object.entries(params).forEach(([key, val]) => {
-                if (val !== null && val !== undefined && val !== '') {
+                if (val !== null && val !== undefined && val !== "") {
                     search.set(key, String(val));
                 }
             });
@@ -79,8 +79,8 @@ export default function Autocomplete({
             setLoading(true);
 
             fetch(`${url}?${search.toString()}`, {
-                headers: { Accept: 'application/json' },
-                credentials: 'same-origin',
+                headers: { Accept: "application/json" },
+                credentials: "same-origin",
             })
                 .then((response) => (response.ok ? response.json() : []))
                 .then((data: AutocompleteOption[]) => {
@@ -110,10 +110,10 @@ export default function Autocomplete({
             }
         };
 
-        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener("mousedown", handleClickOutside);
 
         return () =>
-            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
     const choose = (option: AutocompleteOption) => {
@@ -137,18 +137,18 @@ export default function Autocomplete({
             return;
         }
 
-        if (event.key === 'ArrowDown') {
+        if (event.key === "ArrowDown") {
             event.preventDefault();
             setHighlight((index) => Math.min(index + 1, options.length - 1));
-        } else if (event.key === 'ArrowUp') {
+        } else if (event.key === "ArrowUp") {
             event.preventDefault();
             setHighlight((index) => Math.max(index - 1, 0));
-        } else if (event.key === 'Enter') {
+        } else if (event.key === "Enter") {
             if (options[highlight]) {
                 event.preventDefault();
                 choose(options[highlight]);
             }
-        } else if (event.key === 'Escape') {
+        } else if (event.key === "Escape") {
             setOpen(false);
         }
     };
@@ -169,7 +169,7 @@ export default function Autocomplete({
                 onFocus={() => setOpen(true)}
                 onKeyDown={handleKeyDown}
                 className={
-                    'w-full rounded-md border-gray-300 shadow-sm focus:border-green-600 focus:ring-green-600 disabled:cursor-not-allowed disabled:bg-gray-100 ' +
+                    "w-full rounded-md border-gray-300 shadow-sm focus:border-green-600 focus:ring-green-600 disabled:cursor-not-allowed disabled:bg-gray-100 " +
                     className
                 }
             />
@@ -180,9 +180,9 @@ export default function Autocomplete({
                         <li className="px-3 py-2 text-gray-500">Memuat...</li>
                     ) : options.length === 0 ? (
                         <li className="px-3 py-2 text-gray-500">
-                            {query.trim() === ''
-                                ? 'Ketik untuk mencari...'
-                                : 'Tidak ada hasil.'}
+                            {query.trim() === ""
+                                ? "Ketik untuk mencari..."
+                                : "Tidak ada hasil."}
                         </li>
                     ) : (
                         options.map((option, index) => (
@@ -197,10 +197,10 @@ export default function Autocomplete({
                                     }}
                                     onMouseEnter={() => setHighlight(index)}
                                     className={
-                                        'flex w-full items-center justify-between px-3 py-2 text-left ' +
+                                        "flex w-full items-center justify-between px-3 py-2 text-left " +
                                         (index === highlight
-                                            ? 'bg-green-50 text-green-800'
-                                            : 'text-gray-700 hover:bg-gray-50')
+                                            ? "bg-green-50 text-green-800"
+                                            : "text-gray-700 hover:bg-gray-50")
                                     }
                                 >
                                     <span>{option.name}</span>
