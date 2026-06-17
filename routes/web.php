@@ -2,13 +2,16 @@
 
 use App\Http\Controllers\Admin\AttendanceController as AdminAttendanceController;
 use App\Http\Controllers\Admin\AttendanceRecapController;
+use App\Http\Controllers\Admin\DivisionController;
 use App\Http\Controllers\Admin\InternController;
+use App\Http\Controllers\Admin\InternProgramController;
 use App\Http\Controllers\Admin\LeaveRequestController as AdminLeaveRequestController;
 use App\Http\Controllers\Admin\NonWorkingDayController;
 use App\Http\Controllers\Intern\AttendanceController;
 use App\Http\Controllers\Intern\LeaveRequestController;
 use App\Http\Controllers\LeaveRequestPdfController;
 use App\Http\Controllers\LeaveRequestVerifyController;
+use App\Http\Controllers\LookupController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -18,14 +21,17 @@ Route::get('/', function () {
     return Inertia::render('Welcome');
 });
 
+// Public university lookup for the autocomplete on the login screen.
+Route::get('/lookup/universities', [LookupController::class, 'universities'])->name('lookup.universities');
+
 Route::get('/dashboard', function () {
     /** @var \App\Models\User $user */
     $user = Auth::user();
 
     return redirect()->route($user->dashboardRoute());
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth'])->name('dashboard');
 
-Route::middleware(['auth', 'verified', 'role:admin'])
+Route::middleware(['auth', 'role:admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
@@ -34,7 +40,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])
 
             $stats = [
                 'total_interns' => \App\Models\Intern::count(),
-                'active_interns' => \App\Models\Intern::where('status', 'active')->count(),
+                'active_interns' => \App\Models\Intern::activeOn($today)->count(),
                 'present_today' => \App\Models\Attendance::whereDate('attendance_date', $today)
                     ->whereIn('status', ['present', 'late'])
                     ->count(),
@@ -55,6 +61,16 @@ Route::middleware(['auth', 'verified', 'role:admin'])
 
         Route::resource('interns', InternController::class)->except(['show']);
 
+        // Master data managed by administrators.
+        Route::resource('intern-programs', InternProgramController::class)
+            ->except(['show'])
+            ->parameters(['intern-programs' => 'internProgram']);
+        Route::resource('divisions', DivisionController::class)->except(['show']);
+
+        // Autocomplete lookups for the intern form (admin only).
+        Route::get('/lookup/study-programs', [LookupController::class, 'studyPrograms'])->name('lookup.study-programs');
+        Route::get('/lookup/divisions', [LookupController::class, 'divisions'])->name('lookup.divisions');
+
         Route::get('/attendances', [AdminAttendanceController::class, 'index'])->name('attendances.index');
         Route::get('/attendances/recap', [AttendanceRecapController::class, 'index'])->name('attendances.recap');
         Route::get('/attendances/recap/excel', [AttendanceRecapController::class, 'exportExcel'])->name('attendances.recap.excel');
@@ -72,7 +88,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::patch('/leave-requests/{leaveRequest}/reject', [AdminLeaveRequestController::class, 'reject'])->name('leave-requests.reject');
     });
 
-Route::middleware(['auth', 'verified', 'role:intern', 'intern.active'])
+Route::middleware(['auth', 'role:intern', 'intern.active'])
     ->prefix('intern')
     ->name('intern.')
     ->group(function () {

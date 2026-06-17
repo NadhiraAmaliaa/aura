@@ -5,8 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreInternRequest;
 use App\Http\Requests\UpdateInternRequest;
+use App\Models\Division;
 use App\Models\Intern;
 use App\Models\InternProgram;
+use App\Models\StudyProgram;
+use App\Models\University;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +23,7 @@ class InternController extends Controller
      */
     public function index(): Response
     {
-        $interns = Intern::with(['user', 'internProgram'])
+        $interns = Intern::with(['user', 'internProgram', 'universityRef', 'studyProgram', 'divisionRef'])
             ->latest()
             ->paginate(10);
 
@@ -34,10 +37,8 @@ class InternController extends Controller
      */
     public function create(): Response
     {
-        $programs = InternProgram::orderBy('name')->get();
-
         return Inertia::render('admin/Interns/Create', [
-            'programs' => $programs,
+            'programs' => InternProgram::orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -51,22 +52,11 @@ class InternController extends Controller
         DB::transaction(function () use ($data): void {
             $user = User::create([
                 'name' => $data['name'],
-                'email' => $data['email'],
                 'password' => $data['password'],
                 'role' => 'intern',
             ]);
 
-            $user->intern()->create([
-                'intern_program_id' => $data['intern_program_id'],
-                'nim' => $data['nim'],
-                'phone' => $data['phone'],
-                'university' => $data['university'],
-                'major' => $data['major'],
-                'division' => $data['division'],
-                'start_date' => $data['start_date'],
-                'end_date' => $data['end_date'],
-                'status' => $data['status'],
-            ]);
+            $user->intern()->create($this->internAttributes($data));
         });
 
         return redirect()
@@ -79,12 +69,11 @@ class InternController extends Controller
      */
     public function edit(Intern $intern): Response
     {
-        $intern->load('user');
-        $programs = InternProgram::orderBy('name')->get();
+        $intern->load(['user', 'universityRef', 'studyProgram', 'divisionRef']);
 
         return Inertia::render('admin/Interns/Edit', [
             'intern' => $intern,
-            'programs' => $programs,
+            'programs' => InternProgram::orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -98,7 +87,6 @@ class InternController extends Controller
         DB::transaction(function () use ($data, $intern): void {
             $userData = [
                 'name' => $data['name'],
-                'email' => $data['email'],
             ];
 
             if (! empty($data['password'])) {
@@ -107,17 +95,7 @@ class InternController extends Controller
 
             $intern->user->update($userData);
 
-            $intern->update([
-                'intern_program_id' => $data['intern_program_id'],
-                'nim' => $data['nim'],
-                'phone' => $data['phone'],
-                'university' => $data['university'],
-                'major' => $data['major'],
-                'division' => $data['division'],
-                'start_date' => $data['start_date'],
-                'end_date' => $data['end_date'],
-                'status' => $data['status'],
-            ]);
+            $intern->update($this->internAttributes($data));
         });
 
         return redirect()
@@ -138,5 +116,61 @@ class InternController extends Controller
         return redirect()
             ->route('admin.interns.index')
             ->with('status', 'Peserta magang berhasil dihapus.');
+    }
+
+    /**
+     * Build the intern attributes from validated data.
+     *
+     * The master-data references are authoritative; the legacy free-text
+     * columns are also filled (denormalised) so existing reports and exports
+     * that read them keep working and historical records stay human-readable.
+     * The stored status is derived from the dates unless the administrator has
+     * explicitly deactivated the intern.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function internAttributes(array $data): array
+    {
+        $university = University::find($data['university_id']);
+        $studyProgram = StudyProgram::find($data['study_program_id']);
+        $division = Division::find($data['division_id']);
+
+        return [
+            'intern_program_id' => $data['intern_program_id'],
+            'university_id' => $data['university_id'],
+            'study_program_id' => $data['study_program_id'],
+            'division_id' => $data['division_id'],
+            'nim' => $data['nim'],
+            'phone' => $data['phone'],
+            'university' => $university?->name,
+            'major' => $studyProgram?->name,
+            'division' => $division?->name,
+            'start_date' => $data['start_date'],
+            'end_date' => $data['end_date'],
+            'status' => $this->resolveStatus($data),
+        ];
+    }
+
+    /**
+     * Derive the stored status from the active flag and the internship dates.
+     *
+     * A deactivated intern is stored as INACTIVE. Otherwise the status is the
+     * date-derived value (upcoming / active / completed) so it never needs to
+     * be maintained by hand.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function resolveStatus(array $data): string
+    {
+        if (! ($data['is_active'] ?? true)) {
+            return Intern::STATUS_INACTIVE;
+        }
+
+        return (new Intern([
+            'start_date' => $data['start_date'],
+            'end_date' => $data['end_date'],
+            'status' => Intern::STATUS_ACTIVE,
+        ]))->effectiveStatus();
     }
 }

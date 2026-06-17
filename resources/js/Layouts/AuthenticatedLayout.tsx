@@ -20,6 +20,8 @@ const adminNav: NavItem[] = [
     { label: 'Rekap', routeName: 'admin.attendances.recap', activePattern: 'admin.attendances.recap' },
     { label: 'Hari Libur', routeName: 'admin.non-working-days.index', activePattern: 'admin.non-working-days.*' },
     { label: 'Pengajuan Izin', routeName: 'admin.leave-requests.index', activePattern: 'admin.leave-requests.*' },
+    { label: 'Program Magang', routeName: 'admin.intern-programs.index', activePattern: 'admin.intern-programs.*' },
+    { label: 'Divisi', routeName: 'admin.divisions.index', activePattern: 'admin.divisions.*' },
 ];
 
 const internNav: NavItem[] = [
@@ -169,9 +171,11 @@ export default function AuthenticatedLayout({
                             <div className="text-base font-medium text-gray-800">
                                 {user.name}
                             </div>
-                            <div className="text-sm font-medium text-gray-500">
-                                {user.email}
-                            </div>
+                            {user.role === 'admin' && user.nik && (
+                                <div className="text-sm font-medium text-gray-500">
+                                    {user.nik}
+                                </div>
+                            )}
                         </div>
 
                         <div className="mt-3 space-y-1">

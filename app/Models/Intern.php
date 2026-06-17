@@ -2,24 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
-#[Fillable([
-    'intern_program_id',
-    'user_id',
-    'nim',
-    'phone',
-    'university',
-    'major',
-    'division',
-    'start_date',
-    'end_date',
-    'status',
-])]
 class Intern extends Model
 {
     /** @use HasFactory<\Database\Factories\InternFactory> */
@@ -27,12 +14,41 @@ class Intern extends Model
 
     /**
      * Internship participation statuses.
+     *
+     * Only INACTIVE is set manually by an administrator as an override that
+     * disables the intern regardless of the calendar. The remaining statuses
+     * are derived automatically from the internship dates (see effectiveStatus)
+     * and are also written back to the stored column by the daily schedule so
+     * that simple status-based reporting and filtering stay accurate.
      */
+    public const STATUS_UPCOMING = 'upcoming';
+
     public const STATUS_ACTIVE = 'active';
 
     public const STATUS_INACTIVE = 'inactive';
 
     public const STATUS_COMPLETED = 'completed';
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'intern_program_id',
+        'university_id',
+        'study_program_id',
+        'division_id',
+        'user_id',
+        'nim',
+        'phone',
+        'university',
+        'major',
+        'division',
+        'start_date',
+        'end_date',
+        'status',
+    ];
 
     /**
      * Get the attributes that should be cast.
@@ -48,15 +64,61 @@ class Intern extends Model
     }
 
     /**
-     * Whether the intern's account is flagged active by an administrator.
+     * Scope a query to interns that are currently active on the given date.
+     *
+     * Active means not manually deactivated and the date falls within the
+     * internship period. Expressed with the query builder only (no raw SQL) so
+     * it stays portable across SQL Server, MySQL and SQLite.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<Intern>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<Intern>
      */
-    public function isActive(): bool
+    public function scopeActiveOn(\Illuminate\Database\Eloquent\Builder $query, ?Carbon $date = null): \Illuminate\Database\Eloquent\Builder
     {
-        return $this->status === self::STATUS_ACTIVE;
+        $date = ($date ?? Carbon::today())->copy()->startOfDay();
+
+        return $query
+            ->where('status', '!=', self::STATUS_INACTIVE)
+            ->where(function ($q) use ($date): void {
+                $q->whereNull('start_date')->orWhereDate('start_date', '<=', $date);
+            })
+            ->where(function ($q) use ($date): void {
+                $q->whereNull('end_date')->orWhereDate('end_date', '>=', $date);
+            });
     }
 
     /**
-     * Whether the intern has been deactivated.
+     * Scope a query to interns whose period has ended on or before the given
+     * date and that are not manually deactivated (i.e. completed).
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<Intern>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<Intern>
+     */
+    public function scopeCompletedOn(\Illuminate\Database\Eloquent\Builder $query, ?Carbon $date = null): \Illuminate\Database\Eloquent\Builder
+    {
+        $date = ($date ?? Carbon::today())->copy()->startOfDay();
+
+        return $query
+            ->where('status', '!=', self::STATUS_INACTIVE)
+            ->whereNotNull('end_date')
+            ->whereDate('end_date', '<', $date);
+    }
+
+    /**
+     * Compute the status value that should be stored for the given date.
+     *
+     * Manually deactivated interns keep their INACTIVE status; everyone else is
+     * realigned to the date-derived status. Used by the daily schedule.
+     */
+    public function resolveStoredStatus(?Carbon $date = null): string
+    {
+        return $this->effectiveStatus($date);
+    }
+
+    /**
+     * Whether an administrator has manually deactivated this intern.
+     *
+     * This is the single manual override; everything else is date-driven.
      */
     public function isInactive(): bool
     {
@@ -64,11 +126,53 @@ class Intern extends Model
     }
 
     /**
-     * Whether the intern has been marked as completed.
+     * The effective status of the internship for the given date.
+     *
+     * A manual deactivation always wins. Otherwise the status is derived from
+     * the start and end dates so administrators never have to maintain it by
+     * hand. Because it is computed from the dates against the server clock, the
+     * value cannot be manipulated from the client.
      */
-    public function isCompleted(): bool
+    public function effectiveStatus(?Carbon $date = null): string
     {
-        return $this->status === self::STATUS_COMPLETED;
+        if ($this->isInactive()) {
+            return self::STATUS_INACTIVE;
+        }
+
+        if (! $this->hasStarted($date)) {
+            return self::STATUS_UPCOMING;
+        }
+
+        if ($this->hasEnded($date)) {
+            return self::STATUS_COMPLETED;
+        }
+
+        return self::STATUS_ACTIVE;
+    }
+
+    /**
+     * Whether the internship is currently running (within the period and not
+     * manually deactivated).
+     */
+    public function isActive(?Carbon $date = null): bool
+    {
+        return $this->effectiveStatus($date) === self::STATUS_ACTIVE;
+    }
+
+    /**
+     * Whether the internship has not started yet.
+     */
+    public function isUpcoming(?Carbon $date = null): bool
+    {
+        return $this->effectiveStatus($date) === self::STATUS_UPCOMING;
+    }
+
+    /**
+     * Whether the internship has been completed (its end date has passed).
+     */
+    public function isCompleted(?Carbon $date = null): bool
+    {
+        return $this->effectiveStatus($date) === self::STATUS_COMPLETED;
     }
 
     /**
@@ -108,14 +212,14 @@ class Intern extends Model
     /**
      * Whether the intern may access the intern portal at all.
      *
-     * Access is denied once the account is deactivated or completed, or once
-     * the internship period has ended. Interns whose period has not started yet
-     * may still sign in (e.g. to view their schedule) but cannot record
-     * attendance until the start date.
+     * Access is denied once the account is deactivated or once the internship
+     * period has ended. Interns whose period has not started yet may still sign
+     * in (e.g. to view their schedule) but cannot record attendance until the
+     * start date.
      */
     public function canAccessPortal(?Carbon $date = null): bool
     {
-        return $this->isActive() && ! $this->hasEnded($date);
+        return ! $this->isInactive() && ! $this->hasEnded($date);
     }
 
     /**
@@ -123,7 +227,7 @@ class Intern extends Model
      */
     public function canRecordAttendanceOn(?Carbon $date = null): bool
     {
-        return $this->isActive() && $this->isWithinPeriod($date);
+        return ! $this->isInactive() && $this->isWithinPeriod($date);
     }
 
     /**
@@ -131,7 +235,7 @@ class Intern extends Model
      */
     public function canSubmitLeave(?Carbon $date = null): bool
     {
-        return $this->isActive() && ! $this->hasEnded($date);
+        return ! $this->isInactive() && ! $this->hasEnded($date);
     }
 
     /**
@@ -142,8 +246,8 @@ class Intern extends Model
     {
         $date ??= Carbon::today();
 
-        if (! $this->isActive()) {
-            return 'Akun magang Anda tidak berstatus aktif, sehingga tidak dapat melakukan absensi. Silakan hubungi administrator.';
+        if ($this->isInactive()) {
+            return 'Akun magang Anda telah dinonaktifkan, sehingga tidak dapat melakukan absensi. Silakan hubungi administrator.';
         }
 
         if (! $this->hasStarted($date)) {
@@ -169,6 +273,42 @@ class Intern extends Model
     public function internProgram(): BelongsTo
     {
         return $this->belongsTo(InternProgram::class);
+    }
+
+    /**
+     * Get the university master-data record for this intern.
+     *
+     * Named with a "Ref" suffix to avoid colliding with the legacy free-text
+     * `university` column that is retained on the model.
+     *
+     * @return BelongsTo<University, $this>
+     */
+    public function universityRef(): BelongsTo
+    {
+        return $this->belongsTo(University::class, 'university_id');
+    }
+
+    /**
+     * Get the study program master-data record for this intern.
+     *
+     * @return BelongsTo<StudyProgram, $this>
+     */
+    public function studyProgram(): BelongsTo
+    {
+        return $this->belongsTo(StudyProgram::class, 'study_program_id');
+    }
+
+    /**
+     * Get the division master-data record for this intern.
+     *
+     * Named with a "Ref" suffix to avoid colliding with the legacy free-text
+     * `division` column that is retained on the model.
+     *
+     * @return BelongsTo<Division, $this>
+     */
+    public function divisionRef(): BelongsTo
+    {
+        return $this->belongsTo(Division::class, 'division_id');
     }
 
     /**

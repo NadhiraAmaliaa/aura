@@ -83,7 +83,9 @@ export default function Index({ interns }: { interns: Paginated<Intern> }) {
                                                 {intern.user?.name}
                                             </div>
                                             <div className="text-sm text-gray-500">
-                                                {intern.user?.email}
+                                                {intern.university_ref?.name ??
+                                                    intern.university ??
+                                                    '-'}
                                             </div>
                                         </td>
                                         <td className="px-4 py-3 text-sm text-gray-700">

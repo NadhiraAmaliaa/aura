@@ -52,12 +52,14 @@ export const nonWorkingDayTypeLabels: Record<NonWorkingDayType, string> = {
 };
 
 export const internStatusLabels: Record<string, string> = {
+    upcoming: 'Akan Datang',
     active: 'Aktif',
     inactive: 'Nonaktif',
     completed: 'Selesai',
 };
 
 export const internStatusBadge: Record<string, string> = {
+    upcoming: 'bg-amber-100 text-amber-800',
     active: 'bg-green-100 text-green-800',
     inactive: 'bg-gray-100 text-gray-800',
     completed: 'bg-blue-100 text-blue-800',

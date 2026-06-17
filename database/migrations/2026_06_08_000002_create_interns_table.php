@@ -22,7 +22,11 @@ return new class extends Migration
             $table->string('division');
             $table->date('start_date');
             $table->date('end_date');
-            $table->enum('status', ['active', 'inactive', 'completed'])->default('active');
+            // Stored as a plain string (not enum) for SQL Server portability:
+            // an enum becomes a CHECK constraint, which rejects new status
+            // values such as "upcoming". Allowed values are enforced in the
+            // Intern model (STATUS_* constants / effectiveStatus()).
+            $table->string('status')->default('active');
             $table->timestamps();
         });
     }

@@ -44,8 +44,7 @@ class AttendanceController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->whereHas('user', function ($q) use ($search): void {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                $q->where('name', 'like', "%{$search}%");
             })->orWhereHas('user.intern', function ($q) use ($search): void {
                 $q->where('nim', 'like', "%{$search}%");
             });

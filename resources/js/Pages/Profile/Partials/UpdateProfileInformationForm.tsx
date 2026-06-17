@@ -9,16 +9,16 @@ import { PageProps } from '@/types';
 export default function UpdateProfileInformation({
     className = '',
 }: {
-    mustVerifyEmail?: boolean;
     status?: string;
     className?: string;
 }) {
     const user = usePage<PageProps>().props.auth.user!;
+    const isAdmin = user.role === 'admin';
 
     const { data, setData, patch, errors, processing, recentlySuccessful } =
         useForm({
             name: user.name,
-            email: user.email,
+            nik: user.nik ?? '',
         });
 
     const submit: FormEventHandler = (e) => {
@@ -33,7 +33,7 @@ export default function UpdateProfileInformation({
                     Informasi Profil
                 </h2>
                 <p className="mt-1 text-sm text-gray-600">
-                    Perbarui informasi profil dan alamat email akun Anda.
+                    Perbarui informasi profil akun Anda.
                 </p>
             </header>
 
@@ -52,19 +52,21 @@ export default function UpdateProfileInformation({
                     <InputError className="mt-2" message={errors.name} />
                 </div>
 
-                <div>
-                    <InputLabel htmlFor="email" value="Email" />
-                    <TextInput
-                        id="email"
-                        type="email"
-                        className="mt-1 block w-full"
-                        value={data.email}
-                        onChange={(e) => setData('email', e.target.value)}
-                        required
-                        autoComplete="username"
-                    />
-                    <InputError className="mt-2" message={errors.email} />
-                </div>
+                {isAdmin && (
+                    <div>
+                        <InputLabel htmlFor="nik" value="NIK" />
+                        <TextInput
+                            id="nik"
+                            type="text"
+                            className="mt-1 block w-full"
+                            value={data.nik}
+                            onChange={(e) => setData('nik', e.target.value)}
+                            required
+                            autoComplete="username"
+                        />
+                        <InputError className="mt-2" message={errors.nik} />
+                    </div>
+                )}
 
                 <div className="flex items-center gap-4">
                     <PrimaryButton disabled={processing}>Simpan</PrimaryButton>

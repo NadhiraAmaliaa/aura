@@ -5,7 +5,7 @@ export type UserRole = 'admin' | 'intern';
 export interface AuthUser {
     id: number;
     name: string;
-    email: string;
+    nik: string | null;
     role: UserRole;
     is_admin: boolean;
     is_intern: boolean;
@@ -24,9 +24,8 @@ export interface AuthIntern {
 export interface User {
     id: number;
     name: string;
-    email: string;
+    nik: string | null;
     role: UserRole;
-    email_verified_at?: string | null;
     intern?: Intern | null;
 }
 
@@ -59,12 +58,34 @@ export interface InternProgram {
     description?: string | null;
 }
 
-export type InternStatus = 'active' | 'inactive' | 'completed';
+export interface University {
+    id: number;
+    name: string;
+    lldikti?: string | null;
+}
+
+export interface StudyProgram {
+    id: number;
+    university_id: number | null;
+    name: string;
+    level?: string | null;
+}
+
+export interface Division {
+    id: number;
+    name: string;
+    is_active: boolean;
+}
+
+export type InternStatus = 'upcoming' | 'active' | 'inactive' | 'completed';
 
 export interface Intern {
     id: number;
     user_id: number;
     intern_program_id: number | null;
+    university_id: number | null;
+    study_program_id: number | null;
+    division_id: number | null;
     nim: string | null;
     phone: string | null;
     university: string | null;
@@ -75,6 +96,9 @@ export interface Intern {
     status: InternStatus;
     user?: User;
     intern_program?: InternProgram | null;
+    university_ref?: University | null;
+    study_program?: StudyProgram | null;
+    division_ref?: Division | null;
 }
 
 export type AttendanceStatus =

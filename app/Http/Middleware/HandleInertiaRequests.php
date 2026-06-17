@@ -38,12 +38,12 @@ class HandleInertiaRequests extends Middleware
                 'user' => $user ? [
                     'id' => $user->id,
                     'name' => $user->name,
-                    'email' => $user->email,
+                    'nik' => $user->nik,
                     'role' => $user->role,
                     'is_admin' => $user->isAdmin(),
                     'is_intern' => $user->isIntern(),
                     'intern' => $intern ? [
-                        'status' => $intern->status,
+                        'status' => $intern->effectiveStatus(),
                         'start_date' => $intern->start_date?->toDateString(),
                         'end_date' => $intern->end_date?->toDateString(),
                         'can_record_attendance' => $intern->canRecordAttendanceOn(),

@@ -1,24 +1,48 @@
+import Autocomplete, {
+    AutocompleteOption,
+} from '@/Components/Autocomplete';
 import Checkbox from '@/Components/Checkbox';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
-import { FormEventHandler } from 'react';
+import { Head, useForm } from '@inertiajs/react';
+import { FormEventHandler, useState } from 'react';
 
-export default function Login({
-    status,
-    canResetPassword,
-}: {
-    status?: string;
-    canResetPassword: boolean;
-}) {
-    const { data, setData, post, processing, errors, reset } = useForm({
-        email: '',
-        password: '',
-        remember: false,
-    });
+type LoginTab = 'admin' | 'intern';
+
+export default function Login({ status }: { status?: string }) {
+    const [tab, setTab] = useState<LoginTab>('intern');
+
+    const { data, setData, post, processing, errors, reset, clearErrors } =
+        useForm({
+            login_as: 'intern',
+            // Admin field
+            nik: '',
+            // Intern fields
+            university_id: '' as number | string,
+            university_name: '',
+            nim: '',
+            // Shared
+            password: '',
+            remember: false,
+        });
+
+    const switchTab = (next: LoginTab) => {
+        setTab(next);
+        setData('login_as', next);
+        clearErrors();
+        reset('password');
+    };
+
+    const handleUniversity = (option: AutocompleteOption | null) => {
+        setData((previous) => ({
+            ...previous,
+            university_id: option ? option.id : '',
+            university_name: option ? option.name : '',
+        }));
+    };
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
@@ -27,6 +51,12 @@ export default function Login({
             onFinish: () => reset('password'),
         });
     };
+
+    const tabClass = (value: LoginTab) =>
+        'flex-1 rounded-md px-4 py-2 text-sm font-medium transition ' +
+        (tab === value
+            ? 'bg-green-600 text-white shadow'
+            : 'text-gray-600 hover:bg-gray-100');
 
     return (
         <GuestLayout>
@@ -38,21 +68,77 @@ export default function Login({
                 </div>
             )}
 
+            <div className="mb-6 flex gap-2 rounded-lg bg-gray-100 p-1">
+                <button
+                    type="button"
+                    className={tabClass('intern')}
+                    onClick={() => switchTab('intern')}
+                >
+                    Peserta Magang
+                </button>
+                <button
+                    type="button"
+                    className={tabClass('admin')}
+                    onClick={() => switchTab('admin')}
+                >
+                    Admin
+                </button>
+            </div>
+
             <form onSubmit={submit}>
-                <div>
-                    <InputLabel htmlFor="email" value="Email" />
-                    <TextInput
-                        id="email"
-                        type="email"
-                        name="email"
-                        value={data.email}
-                        className="mt-1 block w-full"
-                        autoComplete="username"
-                        isFocused={true}
-                        onChange={(e) => setData('email', e.target.value)}
-                    />
-                    <InputError message={errors.email} className="mt-2" />
-                </div>
+                {tab === 'intern' ? (
+                    <>
+                        <div>
+                            <InputLabel
+                                htmlFor="university_id"
+                                value="Perguruan Tinggi"
+                            />
+                            <div className="mt-1">
+                                <Autocomplete
+                                    id="university_id"
+                                    url={route('lookup.universities')}
+                                    value={data.university_id}
+                                    displayValue={data.university_name}
+                                    placeholder="Cari perguruan tinggi..."
+                                    onSelect={handleUniversity}
+                                />
+                            </div>
+                            <InputError
+                                message={errors.university_id}
+                                className="mt-2"
+                            />
+                        </div>
+
+                        <div className="mt-4">
+                            <InputLabel htmlFor="nim" value="NIM" />
+                            <TextInput
+                                id="nim"
+                                type="text"
+                                name="nim"
+                                value={data.nim}
+                                className="mt-1 block w-full"
+                                autoComplete="username"
+                                onChange={(e) => setData('nim', e.target.value)}
+                            />
+                            <InputError message={errors.nim} className="mt-2" />
+                        </div>
+                    </>
+                ) : (
+                    <div>
+                        <InputLabel htmlFor="nik" value="NIK" />
+                        <TextInput
+                            id="nik"
+                            type="text"
+                            name="nik"
+                            value={data.nik}
+                            className="mt-1 block w-full"
+                            autoComplete="username"
+                            isFocused={true}
+                            onChange={(e) => setData('nik', e.target.value)}
+                        />
+                        <InputError message={errors.nik} className="mt-2" />
+                    </div>
+                )}
 
                 <div className="mt-4">
                     <InputLabel htmlFor="password" value="Kata Sandi" />
@@ -84,15 +170,6 @@ export default function Login({
                 </div>
 
                 <div className="mt-4 flex items-center justify-end">
-                    {canResetPassword && (
-                        <Link
-                            href={route('password.request')}
-                            className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none"
-                        >
-                            Lupa kata sandi?
-                        </Link>
-                    )}
-
                     <PrimaryButton className="ms-4" disabled={processing}>
                         Masuk
                     </PrimaryButton>

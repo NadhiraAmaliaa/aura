@@ -2,8 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\Division;
 use App\Models\Intern;
 use App\Models\InternProgram;
+use App\Models\StudyProgram;
+use App\Models\University;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -24,27 +27,23 @@ class InternFactory extends Factory
 
         return [
             'intern_program_id' => InternProgram::factory(),
-            'user_id' => User::factory(),
+            'university_id' => University::factory(),
+            'study_program_id' => function (array $attributes): StudyProgram {
+                // Keep the study program within the intern's university.
+                return StudyProgram::factory()->create([
+                    'university_id' => $attributes['university_id'],
+                ]);
+            },
+            'division_id' => Division::factory(),
+            'user_id' => User::factory()->state(['role' => 'intern', 'nik' => null]),
             'nim' => fake()->unique()->numerify('##########'),
             'phone' => fake()->phoneNumber(),
-            'university' => fake()->company().' University',
-            'major' => fake()->randomElement([
-                'Informatika',
-                'Sistem Informasi',
-                'Teknik Elektro',
-                'Manajemen',
-                'Akuntansi',
-            ]),
-            'division' => fake()->randomElement([
-                'IT',
-                'Human Resources',
-                'Finance',
-                'Marketing',
-                'Operations',
-            ]),
+            'university' => null,
+            'major' => null,
+            'division' => null,
             'start_date' => $startDate,
             'end_date' => $endDate,
-            'status' => fake()->randomElement(['active', 'inactive', 'completed']),
+            'status' => Intern::STATUS_ACTIVE,
         ];
     }
 }

@@ -63,9 +63,11 @@ class InternPeriodTest extends TestCase
             ->assertOk();
     }
 
-    public function test_completed_intern_is_logged_out_of_portal(): void
+    public function test_inactive_intern_is_logged_out_of_portal(): void
     {
-        $user = $this->makeIntern(['status' => Intern::STATUS_COMPLETED]);
+        // A manual deactivation is the only status override that blocks access
+        // regardless of the calendar; the period itself is still current.
+        $user = $this->makeIntern(['status' => Intern::STATUS_INACTIVE]);
 
         $this->actingAs($user)
             ->get(route('intern.dashboard'))

@@ -10,16 +10,40 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 /*
- * Keep the stored internship status consistent with the calendar: once an
- * active intern's end date has passed, mark the internship completed. This
- * keeps status-based reporting and access control aligned with the dates even
- * if no one updates the record manually. Deactivated interns are left as-is.
+ * Keep the stored internship status aligned with the calendar so that simple
+ * status-based reporting and filtering stay accurate without anyone editing
+ * records by hand. The effective status (upcoming / active / completed) is
+ * always derived from the dates at read time; this schedule only writes the
+ * derived value back to the column. Manually deactivated interns are skipped
+ * so the administrator's override is preserved. Completed interns are retained
+ * in the database for historical attendance, leave requests and audit.
  */
 Schedule::call(function (): void {
+    $today = now()->startOfDay();
+
     Intern::query()
-        ->where('status', Intern::STATUS_ACTIVE)
+        ->where('status', '!=', Intern::STATUS_INACTIVE)
         ->whereNotNull('end_date')
-        ->whereDate('end_date', '<', now()->toDateString())
+        ->whereDate('end_date', '<', $today)
+        ->where('status', '!=', Intern::STATUS_COMPLETED)
         ->update(['status' => Intern::STATUS_COMPLETED]);
-})->dailyAt('00:05')->name('complete-ended-interns')->withoutOverlapping();
+
+    Intern::query()
+        ->where('status', '!=', Intern::STATUS_INACTIVE)
+        ->where(function ($q) use ($today): void {
+            $q->whereNull('start_date')->orWhereDate('start_date', '<=', $today);
+        })
+        ->where(function ($q) use ($today): void {
+            $q->whereNull('end_date')->orWhereDate('end_date', '>=', $today);
+        })
+        ->where('status', '!=', Intern::STATUS_ACTIVE)
+        ->update(['status' => Intern::STATUS_ACTIVE]);
+
+    Intern::query()
+        ->where('status', '!=', Intern::STATUS_INACTIVE)
+        ->whereNotNull('start_date')
+        ->whereDate('start_date', '>', $today)
+        ->where('status', '!=', Intern::STATUS_UPCOMING)
+        ->update(['status' => Intern::STATUS_UPCOMING]);
+})->dailyAt('00:05')->name('sync-intern-statuses')->withoutOverlapping();
 

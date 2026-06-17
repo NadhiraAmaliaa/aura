@@ -38,7 +38,9 @@ class LeaveRequestController extends Controller
                 $q->where('request_number', 'like', "%{$search}%")
                     ->orWhereHas('user', function ($u) use ($search): void {
                         $u->where('name', 'like', "%{$search}%")
-                            ->orWhere('email', 'like', "%{$search}%");
+                            ->orWhereHas('intern', function ($i) use ($search): void {
+                                $i->where('nim', 'like', "%{$search}%");
+                            });
                     });
             });
         }
