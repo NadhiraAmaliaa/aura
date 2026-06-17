@@ -54,11 +54,11 @@ export default function RecapPage({
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    Rekap Absensi
+                    Reporting Absensi
                 </h2>
             }
         >
-            <Head title="Rekap Absensi" />
+            <Head title="Reporting Absensi" />
 
             <form
                 onSubmit={applyFilters}

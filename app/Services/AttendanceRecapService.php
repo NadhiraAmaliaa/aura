@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Attendance;
 use App\Models\Intern;
 use App\Models\NonWorkingDay;
+use App\Models\WorkingHour;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -141,7 +142,7 @@ class AttendanceRecapService
         $dates = [];
 
         for ($date = $start->copy(); $date->lessThanOrEqualTo($end); $date->addDay()) {
-            if (Attendance::isWeekend($date)) {
+            if (! WorkingHour::isWorkingDay($date)) {
                 continue;
             }
 

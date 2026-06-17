@@ -262,7 +262,9 @@ export default function Autocomplete({
                                 disabled={creating}
                                 className="flex w-full items-center gap-2 px-3 py-2 text-left text-green-700 hover:bg-green-50 disabled:cursor-wait disabled:text-gray-400"
                             >
-                                <span className="text-base leading-none">+</span>
+                                <span className="text-base leading-none">
+                                    +
+                                </span>
                                 <span>
                                     {creating
                                         ? "Menyimpan..."

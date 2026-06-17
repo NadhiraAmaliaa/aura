@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AttendanceController as AdminAttendanceController;
+use App\Http\Controllers\Admin\AttendanceLocationController;
 use App\Http\Controllers\Admin\AttendanceRecapController;
 use App\Http\Controllers\Admin\DivisionController;
 use App\Http\Controllers\Admin\InternController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\Admin\LeaveRequestController as AdminLeaveRequestContro
 use App\Http\Controllers\Admin\NonWorkingDayController;
 use App\Http\Controllers\Admin\StudyProgramController;
 use App\Http\Controllers\Admin\UniversityController;
+use App\Http\Controllers\Admin\WorkingHourController;
 use App\Http\Controllers\Intern\AttendanceController;
 use App\Http\Controllers\Intern\LeaveRequestController;
 use App\Http\Controllers\LeaveRequestPdfController;
@@ -91,6 +93,14 @@ Route::middleware(['auth', 'role:admin'])
         Route::resource('non-working-days', NonWorkingDayController::class)
             ->except(['show'])
             ->parameters(['non-working-days' => 'nonWorkingDay']);
+
+        // Attendance settings (Master Absensi).
+        Route::resource('working-hours', WorkingHourController::class)
+            ->only(['index', 'edit', 'update'])
+            ->parameters(['working-hours' => 'workingHour']);
+        Route::resource('attendance-locations', AttendanceLocationController::class)
+            ->except(['show'])
+            ->parameters(['attendance-locations' => 'attendanceLocation']);
 
         Route::get('/leave-requests', [AdminLeaveRequestController::class, 'index'])->name('leave-requests.index');
         Route::get('/leave-requests/{leaveRequest}', [AdminLeaveRequestController::class, 'show'])->name('leave-requests.show');

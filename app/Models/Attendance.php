@@ -86,8 +86,9 @@ class Attendance extends Model
      * - WFO / WFH: late rules apply. A check-in after the work start time is
      *   late; otherwise present.
      *
-     * Non-working days (weekends, national holidays, collective leave and
-     * company holidays) carry no late rules and are always present.
+     * Non-working days (configured non-working days such as weekends, plus
+     * national holidays, collective leave and company holidays) carry no late
+     * rules and are always present.
      */
     public static function determineStatus(
         Carbon $checkInTime,
@@ -101,7 +102,8 @@ class Attendance extends Model
             return 'present';
         }
 
-        $start = $checkInTime->copy()->setTimeFromTimeString(self::WORK_START_TIME);
+        $startTime = WorkingHour::startTimeFor($checkInTime) ?? self::WORK_START_TIME;
+        $start = $checkInTime->copy()->setTimeFromTimeString($startTime);
 
         return $checkInTime->greaterThan($start) ? 'late' : 'present';
     }
@@ -117,13 +119,14 @@ class Attendance extends Model
     /**
      * Whether the given date is a non-working day.
      *
-     * A non-working day is a weekend or a date registered as a national
+     * A non-working day is any day configured as non-working in the working
+     * hours settings (weekends by default), or a date registered as a national
      * holiday, collective leave or company holiday. Such days carry no late
      * rules; valid attendance on them is treated as present.
      */
     public static function isNonWorkingDay(Carbon $date): bool
     {
-        if (self::isWeekend($date)) {
+        if (! WorkingHour::isWorkingDay($date)) {
             return true;
         }
 
@@ -199,8 +202,8 @@ class Attendance extends Model
     /**
      * The expected check-out time for a given date (information only).
      *
-     * Monday-Thursday 17:00, Friday 15:00. Non-working days have no fixed time
-     * because attendance is for overtime or special activities.
+     * Taken from the configurable working hours settings. Non-working days have
+     * no fixed time because attendance is for overtime or special activities.
      */
     public static function expectedCheckOutTime(Carbon $date): ?string
     {
@@ -208,11 +211,7 @@ class Attendance extends Model
             return null;
         }
 
-        return match ($date->dayOfWeekIso) {
-            1, 2, 3, 4 => '17:00',
-            5 => '15:00',
-            default => null,
-        };
+        return WorkingHour::endTimeFor($date);
     }
 
     /**

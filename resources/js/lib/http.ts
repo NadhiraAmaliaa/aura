@@ -5,7 +5,11 @@ import { AutocompleteOption } from "@/Components/Autocomplete";
  */
 function getCookie(name: string): string | null {
     const match = document.cookie.match(
-        new RegExp("(?:^|; )" + name.replace(/([.$?*|{}()[\]\\/+^])/g, "\\$1") + "=([^;]*)"),
+        new RegExp(
+            "(?:^|; )" +
+                name.replace(/([.$?*|{}()[\]\\/+^])/g, "\\$1") +
+                "=([^;]*)",
+        ),
     );
 
     return match ? decodeURIComponent(match[1]) : null;
@@ -40,9 +44,7 @@ export async function postJson(
 
         if (response.status === 422) {
             const data = await response.json();
-            const errors = data?.errors as
-                | Record<string, string[]>
-                | undefined;
+            const errors = data?.errors as Record<string, string[]> | undefined;
             const first = errors
                 ? Object.values(errors)[0]?.[0]
                 : data?.message;

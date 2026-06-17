@@ -57,6 +57,16 @@ export const nonWorkingDayTypeLabels: Record<NonWorkingDayType, string> = {
     company_holiday: "Libur Perusahaan",
 };
 
+export const dayOfWeekLabels: Record<number, string> = {
+    1: "Senin",
+    2: "Selasa",
+    3: "Rabu",
+    4: "Kamis",
+    5: "Jumat",
+    6: "Sabtu",
+    7: "Minggu",
+};
+
 export const internStatusLabels: Record<string, string> = {
     upcoming: "Akan Datang",
     active: "Aktif",

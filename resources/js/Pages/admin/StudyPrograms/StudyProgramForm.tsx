@@ -27,8 +27,7 @@ export default function StudyProgramForm({
 
     const { data, setData, post, put, processing, errors } =
         useForm<StudyProgramFormData>({
-            university_id:
-                studyProgram?.university_id ?? university?.id ?? "",
+            university_id: studyProgram?.university_id ?? university?.id ?? "",
             name: studyProgram?.name ?? "",
             level: studyProgram?.level ?? "",
             is_active: studyProgram ? (studyProgram.is_active ?? true) : true,
@@ -54,10 +53,7 @@ export default function StudyProgramForm({
     return (
         <form onSubmit={submit} className="space-y-6">
             <div>
-                <InputLabel
-                    htmlFor="university_id"
-                    value="Perguruan Tinggi"
-                />
+                <InputLabel htmlFor="university_id" value="Perguruan Tinggi" />
                 <div className="mt-1">
                     <Autocomplete
                         id="university_id"
@@ -68,10 +64,7 @@ export default function StudyProgramForm({
                         onSelect={handleUniversity}
                     />
                 </div>
-                <InputError
-                    className="mt-2"
-                    message={errors.university_id}
-                />
+                <InputError className="mt-2" message={errors.university_id} />
             </div>
 
             <div>

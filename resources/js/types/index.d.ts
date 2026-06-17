@@ -164,6 +164,23 @@ export interface NonWorkingDay {
     type: NonWorkingDayType;
 }
 
+export interface WorkingHour {
+    id: number;
+    day_of_week: number;
+    start_time: string | null;
+    end_time: string | null;
+    is_working_day: boolean;
+}
+
+export interface AttendanceLocation {
+    id: number;
+    name: string;
+    latitude: string;
+    longitude: string;
+    radius: number;
+    is_active: boolean;
+}
+
 export interface RecapRow {
     intern: Intern;
     effective_working_days: number;

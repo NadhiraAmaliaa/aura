@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
             InternProgramSeeder::class,
             DivisionSeeder::class,
+            WorkingHourSeeder::class,
             EducationDataSeeder::class,
         ]);
     }
