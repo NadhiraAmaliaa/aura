@@ -54,6 +54,16 @@ const adminNav: NavItem[] = [
         routeName: "admin.divisions.index",
         activePattern: "admin.divisions.*",
     },
+    {
+        label: "Perguruan Tinggi",
+        routeName: "admin.universities.index",
+        activePattern: "admin.universities.*",
+    },
+    {
+        label: "Program Studi",
+        routeName: "admin.study-programs.index",
+        activePattern: "admin.study-programs.*",
+    },
 ];
 
 const internNav: NavItem[] = [

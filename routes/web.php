@@ -7,6 +7,8 @@ use App\Http\Controllers\Admin\InternController;
 use App\Http\Controllers\Admin\InternProgramController;
 use App\Http\Controllers\Admin\LeaveRequestController as AdminLeaveRequestController;
 use App\Http\Controllers\Admin\NonWorkingDayController;
+use App\Http\Controllers\Admin\StudyProgramController;
+use App\Http\Controllers\Admin\UniversityController;
 use App\Http\Controllers\Intern\AttendanceController;
 use App\Http\Controllers\Intern\LeaveRequestController;
 use App\Http\Controllers\LeaveRequestPdfController;
@@ -66,10 +68,18 @@ Route::middleware(['auth', 'role:admin'])
             ->except(['show'])
             ->parameters(['intern-programs' => 'internProgram']);
         Route::resource('divisions', DivisionController::class)->except(['show']);
+        Route::resource('universities', UniversityController::class)->except(['show']);
+        Route::resource('study-programs', StudyProgramController::class)
+            ->except(['show'])
+            ->parameters(['study-programs' => 'study_program']);
 
         // Autocomplete lookups for the intern form (admin only).
         Route::get('/lookup/study-programs', [LookupController::class, 'studyPrograms'])->name('lookup.study-programs');
         Route::get('/lookup/divisions', [LookupController::class, 'divisions'])->name('lookup.divisions');
+
+        // Quick-create endpoints used by the autocomplete on the intern form.
+        Route::post('/lookup/universities', [LookupController::class, 'storeUniversity'])->name('lookup.universities.store');
+        Route::post('/lookup/study-programs', [LookupController::class, 'storeStudyProgram'])->name('lookup.study-programs.store');
 
         Route::get('/attendances', [AdminAttendanceController::class, 'index'])->name('attendances.index');
         Route::get('/attendances/recap', [AttendanceRecapController::class, 'index'])->name('attendances.recap');

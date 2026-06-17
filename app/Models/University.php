@@ -20,7 +20,31 @@ class University extends Model
     protected $fillable = [
         'name',
         'lldikti',
+        'is_active',
     ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'is_active' => 'boolean',
+        ];
+    }
+
+    /**
+     * Scope a query to only active universities.
+     *
+     * @param  Builder<University>  $query
+     * @return Builder<University>
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('is_active', true);
+    }
 
     /**
      * Get the study programs offered by this university.

@@ -5,6 +5,7 @@ import InputLabel from "@/Components/InputLabel";
 import PrimaryButton from "@/Components/PrimaryButton";
 import SelectInput from "@/Components/SelectInput";
 import TextInput from "@/Components/TextInput";
+import { postJson } from "@/lib/http";
 import { Intern, InternProgram } from "@/types";
 import { Link, useForm } from "@inertiajs/react";
 import { FormEventHandler } from "react";
@@ -76,6 +77,30 @@ export default function InternForm({
 
     const handleDivision = (option: AutocompleteOption | null) => {
         setData("division_id", option ? option.id : "");
+    };
+
+    // Quick-create a university from the autocomplete when it is missing. The
+    // created option is returned so the Autocomplete selects it immediately
+    // (which also resets the study program via handleUniversity).
+    const createUniversity = async (
+        name: string,
+    ): Promise<AutocompleteOption | null> => {
+        return postJson(route("admin.lookup.universities.store"), { name });
+    };
+
+    // Quick-create a study program under the currently selected university. A
+    // study program must always belong to a university.
+    const createStudyProgram = async (
+        name: string,
+    ): Promise<AutocompleteOption | null> => {
+        if (!data.university_id) {
+            return null;
+        }
+
+        return postJson(route("admin.lookup.study-programs.store"), {
+            name,
+            university_id: data.university_id,
+        });
     };
 
     const submit: FormEventHandler = (e) => {
@@ -201,6 +226,8 @@ export default function InternForm({
                                 displayValue={universityDisplay}
                                 placeholder="Cari perguruan tinggi..."
                                 onSelect={handleUniversity}
+                                onCreate={createUniversity}
+                                createLabel="Tambah perguruan tinggi"
                             />
                         </div>
                         <InputError
@@ -227,6 +254,8 @@ export default function InternForm({
                                         : "Pilih perguruan tinggi dahulu"
                                 }
                                 onSelect={handleStudyProgram}
+                                onCreate={createStudyProgram}
+                                createLabel="Tambah program studi"
                             />
                         </div>
                         <InputError

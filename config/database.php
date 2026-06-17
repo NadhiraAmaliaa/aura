@@ -110,6 +110,10 @@ return [
             'charset' => env('DB_CHARSET', 'utf8'),
             'prefix' => '',
             'prefix_indexes' => true,
+            // Tell Laravel to use the SQL Server 2008 query grammar which
+            // generates ROW_NUMBER()-based pagination instead of the
+            // OFFSET/FETCH syntax that was only introduced in SQL Server 2012.
+            'version' => 2008,
             // 'encrypt' => env('DB_ENCRYPT', 'yes'),
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],

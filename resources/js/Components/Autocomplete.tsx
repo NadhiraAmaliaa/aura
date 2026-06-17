@@ -21,6 +21,15 @@ interface AutocompleteProps {
     className?: string;
     /** Called when the user picks an option, or clears the field (null). */
     onSelect: (option: AutocompleteOption | null) => void;
+    /**
+     * Optional quick-create handler. When provided, an "add" row is shown for
+     * the typed text when it does not exactly match an existing option. It must
+     * create the record and resolve with the new option (which is then
+     * selected) or null on failure.
+     */
+    onCreate?: (name: string) => Promise<AutocompleteOption | null>;
+    /** Label prefix for the quick-create row (e.g. "Tambah perguruan tinggi"). */
+    createLabel?: string;
 }
 
 /**
@@ -38,11 +47,14 @@ export default function Autocomplete({
     disabled = false,
     className = "",
     onSelect,
+    onCreate,
+    createLabel = "Tambah",
 }: AutocompleteProps) {
     const [query, setQuery] = useState(displayValue);
     const [options, setOptions] = useState<AutocompleteOption[]>([]);
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [creating, setCreating] = useState(false);
     const [highlight, setHighlight] = useState(0);
 
     const containerRef = useRef<HTMLDivElement>(null);
@@ -122,6 +134,31 @@ export default function Autocomplete({
         onSelect(option);
     };
 
+    const trimmedQuery = query.trim();
+    const hasExactMatch = options.some(
+        (option) => option.name.toLowerCase() === trimmedQuery.toLowerCase(),
+    );
+    const canCreate =
+        Boolean(onCreate) && trimmedQuery !== "" && !hasExactMatch && !loading;
+
+    const handleCreate = async () => {
+        if (!onCreate || trimmedQuery === "" || creating) {
+            return;
+        }
+
+        setCreating(true);
+
+        try {
+            const created = await onCreate(trimmedQuery);
+
+            if (created) {
+                choose(created);
+            }
+        } finally {
+            setCreating(false);
+        }
+    };
+
     const handleChange = (text: string) => {
         setQuery(text);
         setOpen(true);
@@ -180,7 +217,7 @@ export default function Autocomplete({
                         <li className="px-3 py-2 text-gray-500">Memuat...</li>
                     ) : options.length === 0 ? (
                         <li className="px-3 py-2 text-gray-500">
-                            {query.trim() === ""
+                            {trimmedQuery === ""
                                 ? "Ketik untuk mencari..."
                                 : "Tidak ada hasil."}
                         </li>
@@ -212,6 +249,27 @@ export default function Autocomplete({
                                 </button>
                             </li>
                         ))
+                    )}
+
+                    {canCreate && (
+                        <li className="border-t border-gray-100">
+                            <button
+                                type="button"
+                                onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    handleCreate();
+                                }}
+                                disabled={creating}
+                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-green-700 hover:bg-green-50 disabled:cursor-wait disabled:text-gray-400"
+                            >
+                                <span className="text-base leading-none">+</span>
+                                <span>
+                                    {creating
+                                        ? "Menyimpan..."
+                                        : `${createLabel} "${trimmedQuery}"`}
+                                </span>
+                            </button>
+                        </li>
                     )}
                 </ul>
             )}

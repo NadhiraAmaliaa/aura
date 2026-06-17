@@ -62,6 +62,7 @@ export interface University {
     id: number;
     name: string;
     lldikti?: string | null;
+    is_active?: boolean;
 }
 
 export interface StudyProgram {
@@ -69,6 +70,8 @@ export interface StudyProgram {
     university_id: number | null;
     name: string;
     level?: string | null;
+    is_active?: boolean;
+    university?: University | null;
 }
 
 export interface Division {

@@ -22,6 +22,9 @@ return new class extends Migration
             $table->foreignId('university_id')->nullable()->constrained()->nullOnDelete();
             $table->string('name');
             $table->string('level', 20)->nullable();
+            // Soft-disable flag: inactive study programs are hidden from the
+            // autocomplete but remain available for existing intern records.
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
 
             $table->index('name');

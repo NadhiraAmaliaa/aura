@@ -19,6 +19,9 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('lldikti', 20)->nullable();
+            // Soft-disable flag: inactive universities are hidden from the
+            // autocomplete but remain available for existing intern records.
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
 
             // Supports prefix LIKE lookups for the autocomplete field. SQL Server

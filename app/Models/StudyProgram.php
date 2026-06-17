@@ -22,7 +22,31 @@ class StudyProgram extends Model
         'university_id',
         'name',
         'level',
+        'is_active',
     ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'is_active' => 'boolean',
+        ];
+    }
+
+    /**
+     * Scope a query to only active study programs.
+     *
+     * @param  Builder<StudyProgram>  $query
+     * @return Builder<StudyProgram>
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('is_active', true);
+    }
 
     /**
      * Get the university that offers this study program.

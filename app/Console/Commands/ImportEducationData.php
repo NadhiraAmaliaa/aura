@@ -91,13 +91,14 @@ class ImportEducationData extends Command
             $batch[] = [
                 'name' => $name,
                 'lldikti' => $this->clean($row[2] ?? '') ?: null,
+                'is_active' => true,
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
 
-            // 4 columns per row; keep each statement well under SQL Server's
+            // 5 columns per row; keep each statement well under SQL Server's
             // 2100-parameter limit.
-            if (count($batch) >= $this->maxRowsPerInsert(4)) {
+            if (count($batch) >= $this->maxRowsPerInsert(5)) {
                 DB::table('universities')->insert($batch);
                 $imported += count($batch);
                 $batch = [];
@@ -127,11 +128,13 @@ class ImportEducationData extends Command
             ->pluck('id', 'name')
             ->all();
 
-        // Track existing (university_id, name) pairs to avoid duplicates.
+        // Track existing (university_id, name, level) tuples to avoid duplicates.
+        // The level is part of the key because a university may offer the same
+        // program name at different levels (e.g. D-III and S1).
         $existing = StudyProgram::query()
-            ->select(['university_id', 'name'])
+            ->select(['university_id', 'name', 'level'])
             ->get()
-            ->map(fn ($program): string => $this->pairKey($program->university_id, $program->name))
+            ->map(fn ($program): string => $this->pairKey($program->university_id, $program->name, $program->level))
             ->flip()
             ->all();
 
@@ -148,7 +151,8 @@ class ImportEducationData extends Command
             }
 
             $universityId = $universityName !== '' ? ($universityIds[$universityName] ?? null) : null;
-            $key = $this->pairKey($universityId, $name);
+            $level = $this->clean($row[3] ?? '') ?: null;
+            $key = $this->pairKey($universityId, $name, $level);
 
             if (isset($existing[$key])) {
                 continue;
@@ -159,14 +163,15 @@ class ImportEducationData extends Command
             $batch[] = [
                 'university_id' => $universityId,
                 'name' => $name,
-                'level' => $this->clean($row[3] ?? '') ?: null,
+                'level' => $level,
+                'is_active' => true,
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
 
-            // 5 columns per row; keep each statement well under SQL Server's
+            // 6 columns per row; keep each statement well under SQL Server's
             // 2100-parameter limit.
-            if (count($batch) >= $this->maxRowsPerInsert(5)) {
+            if (count($batch) >= $this->maxRowsPerInsert(6)) {
                 DB::table('study_programs')->insert($batch);
                 $imported += count($batch);
                 $batch = [];
@@ -226,11 +231,11 @@ class ImportEducationData extends Command
     }
 
     /**
-     * Build a stable key for a (university_id, name) pair.
+     * Build a stable key for a (university_id, name, level) tuple.
      */
-    protected function pairKey(?int $universityId, string $name): string
+    protected function pairKey(?int $universityId, string $name, ?string $level = null): string
     {
-        return ($universityId ?? 0).'|'.mb_strtolower($name);
+        return ($universityId ?? 0).'|'.mb_strtolower($name).'|'.mb_strtolower((string) $level);
     }
 
     /**
