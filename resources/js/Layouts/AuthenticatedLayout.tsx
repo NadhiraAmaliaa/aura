@@ -39,11 +39,6 @@ const adminNav: NavEntry[] = [
                 activePattern: "admin.interns.*",
             },
             {
-                label: "Absensi",
-                routeName: "admin.attendances.index",
-                activePattern: "admin.attendances.index",
-            },
-            {
                 label: "Pengajuan Izin",
                 routeName: "admin.leave-requests.index",
                 activePattern: "admin.leave-requests.*",
@@ -75,8 +70,8 @@ const adminNav: NavEntry[] = [
         items: [
             {
                 label: "Reporting Absensi",
-                routeName: "admin.attendances.recap",
-                activePattern: "admin.attendances.recap",
+                routeName: "admin.attendances.index",
+                activePattern: "admin.attendances.*",
             },
         ],
     },

@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class AttendanceRecapRequest extends FormRequest
+class AttendanceReportRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,9 +22,9 @@ class AttendanceRecapRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'start_date' => ['nullable', 'date'],
-            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'date' => ['nullable', 'date'],
             'program' => ['nullable', 'integer', 'exists:intern_programs,id'],
+            'division' => ['nullable', 'integer', 'exists:divisions,id'],
         ];
     }
 
@@ -36,9 +36,7 @@ class AttendanceRecapRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'start_date.date' => 'Tanggal mulai tidak valid.',
-            'end_date.date' => 'Tanggal akhir tidak valid.',
-            'end_date.after_or_equal' => 'Tanggal akhir harus sama dengan atau setelah tanggal mulai.',
+            'date.date' => 'Tanggal tidak valid.',
         ];
     }
 }

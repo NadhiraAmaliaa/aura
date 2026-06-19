@@ -2,62 +2,72 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\AttendanceReportExport;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AttendanceReportRequest;
 use App\Http\Requests\UpdateAttendanceRequest;
 use App\Models\Attendance;
+use App\Models\Division;
 use App\Models\InternProgram;
+use App\Services\AttendanceReportService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class AttendanceController extends Controller
 {
-    /**
-     * Display a filtered, paginated listing of all attendance records.
-     */
-    public function index(Request $request): Response
+    public function __construct(private readonly AttendanceReportService $report)
     {
-        $query = Attendance::query()
-            ->with(['user.intern.internProgram'])
-            ->orderByDesc('attendance_date')
-            ->orderByDesc('check_in_time');
+    }
 
-        if ($request->filled('date')) {
-            $query->whereDate('attendance_date', $request->date);
-        }
+    /**
+     * Display the daily attendance report for administrators.
+     */
+    public function index(AttendanceReportRequest $request): Response
+    {
+        $date = $this->resolveDate($request);
+        $programId = $request->integer('program') ?: null;
+        $divisionId = $request->integer('division') ?: null;
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('work_mode')) {
-            $query->where('work_mode', $request->work_mode);
-        }
-
-        if ($request->filled('program')) {
-            $query->whereHas('user.intern', function ($q) use ($request): void {
-                $q->where('intern_program_id', $request->program);
-            });
-        }
-
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->whereHas('user', function ($q) use ($search): void {
-                $q->where('name', 'like', "%{$search}%");
-            })->orWhereHas('user.intern', function ($q) use ($search): void {
-                $q->where('nim', 'like', "%{$search}%");
-            });
-        }
-
-        $attendances = $query->paginate(15)->withQueryString();
-        $programs = InternProgram::orderBy('name')->get();
-
-        return Inertia::render('admin/Attendances/Index', [
-            'attendances' => $attendances,
-            'programs' => $programs,
-            'filters' => $request->only(['date', 'status', 'work_mode', 'program', 'search']),
+        return Inertia::render('admin/Attendances/Report', [
+            'report' => $this->report->build($date, $programId, $divisionId),
+            'programs' => InternProgram::orderBy('name')->get(['id', 'name']),
+            'divisions' => Division::orderBy('name')->get(['id', 'name']),
+            'filters' => [
+                'date' => $date->toDateString(),
+                'program' => $programId,
+                'division' => $divisionId,
+            ],
         ]);
+    }
+
+    /**
+     * Export the daily attendance report as a spreadsheet.
+     */
+    public function export(AttendanceReportRequest $request): BinaryFileResponse
+    {
+        $date = $this->resolveDate($request);
+        $programId = $request->integer('program') ?: null;
+        $divisionId = $request->integer('division') ?: null;
+
+        $report = $this->report->build($date, $programId, $divisionId);
+
+        $programName = $programId
+            ? InternProgram::whereKey($programId)->value('name')
+            : null;
+        $divisionName = $divisionId
+            ? Division::whereKey($divisionId)->value('name')
+            : null;
+
+        $fileName = 'reporting-absensi-'.$date->toDateString().'.xlsx';
+
+        return Excel::download(
+            new AttendanceReportExport($report, $programName, $divisionName),
+            $fileName
+        );
     }
 
     /**
@@ -84,7 +94,17 @@ class AttendanceController extends Controller
         ]);
 
         return redirect()
-            ->route('admin.attendances.index')
+            ->route('admin.attendances.index', ['date' => $attendance->attendance_date->toDateString()])
             ->with('status', 'Status absensi berhasil diperbarui.');
+    }
+
+    /**
+     * Resolve the report date from the request, defaulting to today.
+     */
+    private function resolveDate(AttendanceReportRequest $request): Carbon
+    {
+        $date = $request->validated('date');
+
+        return $date ? Carbon::parse($date)->startOfDay() : Carbon::today();
     }
 }

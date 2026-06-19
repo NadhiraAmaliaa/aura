@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Admin\AttendanceController as AdminAttendanceController;
 use App\Http\Controllers\Admin\AttendanceLocationController;
-use App\Http\Controllers\Admin\AttendanceRecapController;
 use App\Http\Controllers\Admin\DivisionController;
 use App\Http\Controllers\Admin\InternController;
 use App\Http\Controllers\Admin\InternProgramController;
@@ -84,9 +83,7 @@ Route::middleware(['auth', 'role:admin'])
         Route::post('/lookup/study-programs', [LookupController::class, 'storeStudyProgram'])->name('lookup.study-programs.store');
 
         Route::get('/attendances', [AdminAttendanceController::class, 'index'])->name('attendances.index');
-        Route::get('/attendances/recap', [AttendanceRecapController::class, 'index'])->name('attendances.recap');
-        Route::get('/attendances/recap/excel', [AttendanceRecapController::class, 'exportExcel'])->name('attendances.recap.excel');
-        Route::get('/attendances/recap/pdf', [AttendanceRecapController::class, 'exportPdf'])->name('attendances.recap.pdf');
+        Route::get('/attendances/export', [AdminAttendanceController::class, 'export'])->name('attendances.export');
         Route::get('/attendances/{attendance}/edit', [AdminAttendanceController::class, 'edit'])->name('attendances.edit');
         Route::patch('/attendances/{attendance}', [AdminAttendanceController::class, 'update'])->name('attendances.update');
 

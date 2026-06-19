@@ -181,26 +181,69 @@ export interface AttendanceLocation {
     is_active: boolean;
 }
 
-export interface RecapRow {
-    intern: Intern;
-    effective_working_days: number;
-    hadir: number;
+export type AttendanceReportCategory =
+    | "wfo"
+    | "wfh"
+    | "dinas"
+    | "izin"
+    | "sakit"
+    | "alpha"
+    | "tidak_absen";
+
+export interface AttendanceReportRow {
+    intern_id: number;
+    attendance_id: number | null;
+    nim: string | null;
+    nama: string | null;
+    tanggal: string;
+    program: string | null;
+    divisi: string | null;
+    hari: string;
+    hari_kerja: boolean;
+    category: AttendanceReportCategory;
+    jenis_absen: string;
+    is_late: boolean;
+    check_in_schedule: string | null;
+    check_in: string | null;
+    check_in_lat: string | null;
+    check_in_long: string | null;
+    check_out_schedule: string | null;
+    check_out: string | null;
+    check_out_lat: string | null;
+    check_out_long: string | null;
+    mood_in: string | null;
+    mood_out: string | null;
+}
+
+export interface AttendanceReportSummary {
+    total_peserta: number;
+    total_hadir: number;
+    terlambat: number;
+    izin: number;
+    tidak_hadir: number;
+}
+
+export interface AttendanceReportChart {
     wfo: number;
     wfh: number;
     dinas: number;
     izin: number;
-    tidak_absen: number;
-    terlambat: number;
-    tidak_co: number;
-    persen_terlambat: number;
-    persen_tidak_absen: number;
+    tidak_hadir: number;
 }
 
-export interface Recap {
-    start_date: string;
-    end_date: string;
-    effective_working_days: number;
-    rows: RecapRow[];
+export interface AttendanceReport {
+    date: string;
+    day_label: string;
+    is_working_day: boolean;
+    summary: AttendanceReportSummary;
+    chart: AttendanceReportChart;
+    rows: AttendanceReportRow[];
+}
+
+export interface AttendanceReportFilters {
+    date: string;
+    program: number | null;
+    division: number | null;
 }
 
 export type PageProps<
