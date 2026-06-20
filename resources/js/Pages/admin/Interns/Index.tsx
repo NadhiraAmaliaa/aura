@@ -5,6 +5,7 @@ import FilterCard, {
     FilterField,
     filterControlClass,
 } from "@/Components/admin/FilterCard";
+import FilterSelect from "@/Components/admin/FilterSelect";
 import PageHeader from "@/Components/admin/PageHeader";
 import RowActions, { IconAction } from "@/Components/admin/RowActions";
 import StatusBadge from "@/Components/admin/StatusBadge";
@@ -53,6 +54,23 @@ export default function Index({
 
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [deleting, setDeleting] = useState<Intern | null>(null);
+
+    const programOptions = programs.map((p) => ({
+        value: String(p.id),
+        label: p.name,
+    }));
+
+    const divisionOptions = divisions.map((d) => ({
+        value: String(d.id),
+        label: d.name,
+    }));
+
+    const statusOptions = [
+        { value: "upcoming", label: "Akan Datang", dot: "#f59e0b" },
+        { value: "active", label: "Aktif", dot: "#22c55e" },
+        { value: "inactive", label: "Nonaktif", dot: "#9ca3af" },
+        { value: "completed", label: "Selesai", dot: "#38bdf8" },
+    ];
 
     const applyFilters = (next: Partial<Record<string, string>>) => {
         router.get(
@@ -121,8 +139,7 @@ export default function Index({
         },
         {
             header: "Program Studi",
-            cell: (intern) =>
-                intern.study_program?.name ?? intern.major ?? "-",
+            cell: (intern) => intern.study_program?.name ?? intern.major ?? "-",
         },
         {
             header: "Divisi",
@@ -214,62 +231,42 @@ export default function Index({
                 </FilterField>
 
                 <FilterField label="Program Magang" htmlFor="program">
-                    <select
+                    <FilterSelect
                         id="program"
                         value={program}
-                        onChange={(event) => {
-                            setProgram(event.target.value);
-                            applyFilters({ program: event.target.value });
+                        options={programOptions}
+                        placeholder="Semua program"
+                        onChange={(val) => {
+                            setProgram(val);
+                            applyFilters({ program: val });
                         }}
-                        className={filterControlClass}
-                    >
-                        <option value="">Semua program</option>
-                        {programs.map((p) => (
-                            <option key={p.id} value={p.id}>
-                                {p.name}
-                            </option>
-                        ))}
-                    </select>
+                    />
                 </FilterField>
 
                 <FilterField label="Divisi" htmlFor="division">
-                    <select
+                    <FilterSelect
                         id="division"
                         value={division}
-                        onChange={(event) => {
-                            setDivision(event.target.value);
-                            applyFilters({ division: event.target.value });
+                        options={divisionOptions}
+                        placeholder="Semua divisi"
+                        onChange={(val) => {
+                            setDivision(val);
+                            applyFilters({ division: val });
                         }}
-                        className={filterControlClass}
-                    >
-                        <option value="">Semua divisi</option>
-                        {divisions.map((d) => (
-                            <option key={d.id} value={d.id}>
-                                {d.name}
-                            </option>
-                        ))}
-                    </select>
+                    />
                 </FilterField>
 
                 <FilterField label="Status" htmlFor="status">
-                    <select
+                    <FilterSelect
                         id="status"
                         value={status}
-                        onChange={(event) => {
-                            setStatus(event.target.value);
-                            applyFilters({ status: event.target.value });
+                        options={statusOptions}
+                        placeholder="Semua status"
+                        onChange={(val) => {
+                            setStatus(val);
+                            applyFilters({ status: val });
                         }}
-                        className={filterControlClass}
-                    >
-                        <option value="">Semua status</option>
-                        {Object.entries(internStatusLabels).map(
-                            ([value, label]) => (
-                                <option key={value} value={value}>
-                                    {label}
-                                </option>
-                            ),
-                        )}
-                    </select>
+                    />
                 </FilterField>
 
                 <FilterField label="Periode mulai dari" htmlFor="period_from">

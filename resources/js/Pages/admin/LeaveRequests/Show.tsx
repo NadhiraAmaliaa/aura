@@ -40,12 +40,9 @@ export default function Show({ leaveRequest }: { leaveRequest: LeaveRequest }) {
         (decision: "approve" | "reject"): FormEventHandler =>
         (event) => {
             event.preventDefault();
-            patch(
-                route(`admin.leave-requests.${decision}`, leaveRequest.id),
-                {
-                    preserveScroll: true,
-                },
-            );
+            patch(route(`admin.leave-requests.${decision}`, leaveRequest.id), {
+                preserveScroll: true,
+            });
         };
 
     return (

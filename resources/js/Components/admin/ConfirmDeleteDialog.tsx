@@ -59,7 +59,9 @@ export default function ConfirmDeleteDialog({
                         Batal
                     </AlertDialogCancel>
                     <AlertDialogAction
-                        className={cn(buttonVariants({ variant: "destructive" }))}
+                        className={cn(
+                            buttonVariants({ variant: "destructive" }),
+                        )}
                         disabled={processing}
                         onClick={(event) => {
                             event.preventDefault();

@@ -19,8 +19,7 @@ export default function TableFooter({
                 <span className="font-bold text-on-surface">
                     {from ?? 0} - {to ?? 0}
                 </span>{" "}
-                dari{" "}
-                <span className="font-bold text-on-surface">{total}</span>{" "}
+                dari <span className="font-bold text-on-surface">{total}</span>{" "}
                 entitas
             </p>
             <Pagination links={links} />

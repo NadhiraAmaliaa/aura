@@ -159,7 +159,10 @@ export default function Index({
                     </button>
                 }
             >
-                <FilterField label="Cari nama perguruan tinggi" htmlFor="search">
+                <FilterField
+                    label="Cari nama perguruan tinggi"
+                    htmlFor="search"
+                >
                     <input
                         id="search"
                         type="text"

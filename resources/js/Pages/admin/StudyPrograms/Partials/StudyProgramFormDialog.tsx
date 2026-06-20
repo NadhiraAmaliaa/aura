@@ -68,10 +68,7 @@ export default function StudyProgramFormDialog({
         };
 
         if (isEdit && studyProgram) {
-            put(
-                route("admin.study-programs.update", studyProgram.id),
-                options,
-            );
+            put(route("admin.study-programs.update", studyProgram.id), options);
         } else {
             post(route("admin.study-programs.store"), options);
         }

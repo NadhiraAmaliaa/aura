@@ -1,7 +1,7 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { InternProgram } from '@/types';
-import { Head } from '@inertiajs/react';
-import InternForm from './InternForm';
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import { InternProgram } from "@/types";
+import { Head } from "@inertiajs/react";
+import InternForm from "./InternForm";
 
 export default function Create({ programs }: { programs: InternProgram[] }) {
     return (

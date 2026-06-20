@@ -80,7 +80,10 @@ export default function InternProgramFormDialog({
             </div>
 
             <div>
-                <InputLabel htmlFor="description" value="Deskripsi (opsional)" />
+                <InputLabel
+                    htmlFor="description"
+                    value="Deskripsi (opsional)"
+                />
                 <TextareaInput
                     id="description"
                     className="mt-1 block w-full"

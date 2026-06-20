@@ -29,9 +29,7 @@ export function IconAction({
         "rounded-lg p-1.5 transition-all disabled:cursor-not-allowed disabled:bg-surface-container disabled:text-on-surface-variant/40 disabled:hover:bg-surface-container disabled:hover:text-on-surface-variant/40 " +
         TONE_CLASS[tone];
 
-    const content = (
-        <MaterialIcon name={icon} style={{ fontSize: "18px" }} />
-    );
+    const content = <MaterialIcon name={icon} style={{ fontSize: "18px" }} />;
 
     if (href && !disabled) {
         return (

@@ -216,9 +216,7 @@ export default function AuthenticatedLayout({
         }
     }, []);
 
-    const rememberSidebarScroll = (
-        event: React.UIEvent<HTMLElement>,
-    ) => {
+    const rememberSidebarScroll = (event: React.UIEvent<HTMLElement>) => {
         sessionStorage.setItem(
             SIDEBAR_SCROLL_KEY,
             String(event.currentTarget.scrollTop),

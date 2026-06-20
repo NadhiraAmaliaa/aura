@@ -1,7 +1,7 @@
-import { SelectHTMLAttributes } from 'react';
+import { SelectHTMLAttributes } from "react";
 
 export default function SelectInput({
-    className = '',
+    className = "",
     children,
     ...props
 }: SelectHTMLAttributes<HTMLSelectElement>) {
@@ -9,7 +9,7 @@ export default function SelectInput({
         <select
             {...props}
             className={
-                'rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary ' +
+                "rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary " +
                 className
             }
         >

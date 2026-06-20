@@ -73,9 +73,7 @@ export default function Index({
     ];
 
     return (
-        <AuthenticatedLayout
-            header={<PageHeader title="Jam Kerja" />}
-        >
+        <AuthenticatedLayout header={<PageHeader title="Jam Kerja" />}>
             <Head title="Jam Kerja" />
 
             <TableCard>

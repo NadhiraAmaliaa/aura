@@ -1,29 +1,29 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import SelectInput from '@/Components/SelectInput';
-import TextareaInput from '@/Components/TextareaInput';
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import InputError from "@/Components/InputError";
+import InputLabel from "@/Components/InputLabel";
+import PrimaryButton from "@/Components/PrimaryButton";
+import SelectInput from "@/Components/SelectInput";
+import TextareaInput from "@/Components/TextareaInput";
 import {
     attendanceStatusLabels,
     formatDate,
     formatTime,
     workModeLabels,
-} from '@/lib/labels';
-import { Attendance } from '@/types';
-import { Head, Link, useForm } from '@inertiajs/react';
-import { FormEventHandler } from 'react';
+} from "@/lib/labels";
+import { Attendance } from "@/types";
+import { Head, Link, useForm } from "@inertiajs/react";
+import { FormEventHandler } from "react";
 
 export default function Edit({ attendance }: { attendance: Attendance }) {
     const { data, setData, patch, processing, errors } = useForm({
         status: attendance.status,
-        work_mode: attendance.work_mode ?? '',
-        notes: attendance.notes ?? '',
+        work_mode: attendance.work_mode ?? "",
+        notes: attendance.notes ?? "",
     });
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        patch(route('admin.attendances.update', attendance.id));
+        patch(route("admin.attendances.update", attendance.id));
     };
 
     return (
@@ -73,8 +73,8 @@ export default function Edit({ attendance }: { attendance: Attendance }) {
                             value={data.status}
                             onChange={(e) =>
                                 setData(
-                                    'status',
-                                    e.target.value as Attendance['status'],
+                                    "status",
+                                    e.target.value as Attendance["status"],
                                 )
                             }
                         >
@@ -96,7 +96,7 @@ export default function Edit({ attendance }: { attendance: Attendance }) {
                             className="mt-1 block w-full"
                             value={data.work_mode}
                             onChange={(e) =>
-                                setData('work_mode', e.target.value)
+                                setData("work_mode", e.target.value)
                             }
                         >
                             <option value="">Tidak ada</option>
@@ -121,14 +121,14 @@ export default function Edit({ attendance }: { attendance: Attendance }) {
                             rows={3}
                             className="mt-1 block w-full"
                             value={data.notes}
-                            onChange={(e) => setData('notes', e.target.value)}
+                            onChange={(e) => setData("notes", e.target.value)}
                         />
                         <InputError className="mt-2" message={errors.notes} />
                     </div>
 
                     <div className="flex items-center justify-end gap-3">
                         <Link
-                            href={route('admin.attendances.index')}
+                            href={route("admin.attendances.index")}
                             className="rounded-lg border border-outline-variant bg-white px-4 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-surface-container-low"
                         >
                             Batal
