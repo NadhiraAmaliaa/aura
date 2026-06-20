@@ -1,10 +1,16 @@
-import MaterialIcon from "@/Components/MaterialIcon";
-import Pagination from "@/Components/Pagination";
+import ActionButton from "@/Components/admin/ActionButton";
+import ConfirmDeleteDialog from "@/Components/admin/ConfirmDeleteDialog";
+import DataTable, { Column } from "@/Components/admin/DataTable";
+import PageHeader from "@/Components/admin/PageHeader";
+import RowActions, { IconAction } from "@/Components/admin/RowActions";
+import StatusBadge from "@/Components/admin/StatusBadge";
+import TableCard from "@/Components/admin/TableCard";
+import TableFooter from "@/Components/admin/TableFooter";
+import TableToolbar from "@/Components/admin/TableToolbar";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { AttendanceLocation, Paginated } from "@/types";
 import { Head, router } from "@inertiajs/react";
 import { useMemo, useState } from "react";
-import DeleteLocationDialog from "./Partials/DeleteLocationDialog";
 import LocationFormDialog from "./Partials/LocationFormDialog";
 
 export default function Index({
@@ -58,187 +64,100 @@ export default function Index({
         );
     };
 
+    const columns: Column<AttendanceLocation>[] = [
+        {
+            header: "Nama",
+            cell: (location) => (
+                <span className="font-semibold text-on-surface">
+                    {location.name}
+                </span>
+            ),
+        },
+        {
+            header: "Latitude",
+            cell: (location) => (
+                <span className="font-mono">{location.latitude}</span>
+            ),
+        },
+        {
+            header: "Longitude",
+            cell: (location) => (
+                <span className="font-mono">{location.longitude}</span>
+            ),
+        },
+        {
+            header: "Radius",
+            cell: (location) => (
+                <StatusBadge tone="info">{location.radius}</StatusBadge>
+            ),
+        },
+        {
+            header: "Status",
+            cell: (location) => (
+                <StatusBadge tone={location.is_active ? "success" : "neutral"}>
+                    {location.is_active ? "Aktif" : "Nonaktif"}
+                </StatusBadge>
+            ),
+        },
+        {
+            header: "Aksi",
+            align: "center",
+            cell: (location) => (
+                <RowActions>
+                    <IconAction
+                        icon="edit"
+                        label="Ubah lokasi"
+                        tone="edit"
+                        onClick={() => openEdit(location)}
+                    />
+                    <IconAction
+                        icon="delete"
+                        label="Hapus lokasi"
+                        tone="delete"
+                        onClick={() => openDelete(location)}
+                    />
+                </RowActions>
+            ),
+        },
+    ];
+
     return (
         <AuthenticatedLayout
             header={
-                <>
-                    <h1 className="text-[28px] font-extrabold tracking-tight text-on-surface">
-                        Lokasi Absen
-                    </h1>
-                    <button
-                        type="button"
-                        onClick={openCreate}
-                        className="flex h-11 items-center justify-center gap-2 rounded-lg bg-[#28a745] px-6 font-bold text-white shadow-sm transition-all hover:brightness-95 active:scale-95"
-                    >
-                        <MaterialIcon
-                            name="add_circle"
-                            style={{ fontSize: "18px" }}
-                        />
-                        Tambah
-                    </button>
-                </>
+                <PageHeader title="Lokasi Absen">
+                    <ActionButton label="Tambah" onClick={openCreate} />
+                </PageHeader>
             }
         >
             <Head title="Lokasi Absen" />
 
-            <section className="overflow-hidden rounded-xl border border-outline-variant bg-white shadow-sm">
-                {/* Toolbar */}
-                <div className="flex flex-col items-center justify-between gap-4 border-b border-outline-variant bg-surface-container-lowest px-6 py-4 md:flex-row">
-                    <div className="flex items-center gap-2 text-sm text-on-surface-variant">
-                        <span>Tampilkan</span>
-                        <select
-                            value={perPage}
-                            onChange={(event) =>
-                                changePerPage(Number(event.target.value))
-                            }
-                            className="h-9 rounded-lg border-outline-variant bg-surface-container-low px-2 text-sm font-medium focus:border-primary focus:ring-primary"
-                        >
-                            <option value={10}>10</option>
-                            <option value={25}>25</option>
-                            <option value={50}>50</option>
-                            <option value={100}>100</option>
-                        </select>
-                        <span>data</span>
-                    </div>
+            <TableCard>
+                <TableToolbar
+                    search={search}
+                    onSearchChange={setSearch}
+                    perPage={perPage}
+                    onPerPageChange={changePerPage}
+                />
 
-                    <div className="relative w-full md:w-64">
-                        <MaterialIcon
-                            name="search"
-                            className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant"
-                            style={{ fontSize: "20px" }}
-                        />
-                        <input
-                            type="text"
-                            value={search}
-                            onChange={(event) => setSearch(event.target.value)}
-                            placeholder="Pencarian:"
-                            className="h-9 w-full rounded-lg border-outline-variant bg-surface-container-low pl-10 pr-4 text-sm focus:border-primary focus:ring-primary"
-                        />
-                    </div>
-                </div>
+                <DataTable
+                    columns={columns}
+                    rows={rows}
+                    getRowKey={(location) => location.id}
+                    emptyIcon="location_off"
+                    emptyText={
+                        search
+                            ? "Tidak ada lokasi yang cocok."
+                            : "Belum ada lokasi absensi."
+                    }
+                />
 
-                {/* Table */}
-                <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
-                        <thead>
-                            <tr className="bg-[#eab308] text-left text-xs font-semibold uppercase tracking-wider text-white">
-                                <th className="whitespace-nowrap border-r border-white/20 px-6 py-2">
-                                    Nama
-                                </th>
-                                <th className="whitespace-nowrap border-r border-white/20 px-6 py-2">
-                                    Latitude
-                                </th>
-                                <th className="whitespace-nowrap border-r border-white/20 px-6 py-2">
-                                    Longitude
-                                </th>
-                                <th className="whitespace-nowrap border-r border-white/20 px-6 py-2">
-                                    Radius
-                                </th>
-                                <th className="whitespace-nowrap px-6 py-2 text-center">
-                                    Aksi
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-outline-variant">
-                            {rows.length === 0 ? (
-                                <tr>
-                                    <td colSpan={5} className="px-6 py-16">
-                                        <div className="flex flex-col items-center justify-center gap-2 text-center">
-                                            <MaterialIcon
-                                                name="location_off"
-                                                className="text-on-surface-variant/40"
-                                                style={{ fontSize: "32px" }}
-                                            />
-                                            <p className="text-sm font-medium text-on-surface-variant">
-                                                {search
-                                                    ? "Tidak ada lokasi yang cocok."
-                                                    : "Belum ada lokasi absensi."}
-                                            </p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ) : (
-                                rows.map((location, index) => (
-                                    <tr
-                                        key={location.id}
-                                        className={
-                                            "group transition-colors hover:bg-surface-container-lowest " +
-                                            (index % 2 === 1
-                                                ? "bg-surface-container-low/30"
-                                                : "")
-                                        }
-                                    >
-                                        <td className="border-r border-outline-variant px-6 py-3 font-semibold text-on-surface">
-                                            {location.name}
-                                        </td>
-                                        <td className="border-r border-outline-variant px-6 py-3 font-mono text-sm text-on-surface">
-                                            {location.latitude}
-                                        </td>
-                                        <td className="border-r border-outline-variant px-6 py-3 font-mono text-sm text-on-surface">
-                                            {location.longitude}
-                                        </td>
-                                        <td className="border-r border-outline-variant px-6 py-3">
-                                            <span className="inline-flex items-center rounded-full bg-surface-container px-2.5 py-0.5 text-xs font-medium text-tertiary">
-                                                {location.radius}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-3">
-                                            <div className="flex justify-center gap-2 opacity-60 transition-opacity group-hover:opacity-100">
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        openEdit(location)
-                                                    }
-                                                    aria-label="Ubah lokasi"
-                                                    className="rounded-lg bg-tertiary/10 p-1.5 text-tertiary transition-all hover:bg-tertiary hover:text-white"
-                                                >
-                                                    <MaterialIcon
-                                                        name="edit"
-                                                        style={{
-                                                            fontSize: "18px",
-                                                        }}
-                                                    />
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        openDelete(location)
-                                                    }
-                                                    aria-label="Hapus lokasi"
-                                                    className="rounded-lg bg-error/10 p-1.5 text-error transition-all hover:bg-error hover:text-white"
-                                                >
-                                                    <MaterialIcon
-                                                        name="delete"
-                                                        style={{
-                                                            fontSize: "18px",
-                                                        }}
-                                                    />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-
-                {/* Footer */}
-                <div className="flex items-center justify-between border-t border-outline-variant bg-surface-container-lowest px-6 py-4">
-                    <p className="text-sm text-on-surface-variant">
-                        Menampilkan{" "}
-                        <span className="font-bold text-on-surface">
-                            {locations.from ?? 0} - {locations.to ?? 0}
-                        </span>{" "}
-                        dari{" "}
-                        <span className="font-bold text-on-surface">
-                            {locations.total}
-                        </span>{" "}
-                        entitas
-                    </p>
-                    <Pagination links={locations.links} />
-                </div>
-            </section>
+                <TableFooter
+                    from={locations.from}
+                    to={locations.to}
+                    total={locations.total}
+                    links={locations.links}
+                />
+            </TableCard>
 
             <LocationFormDialog
                 location={editing ?? undefined}
@@ -246,10 +165,27 @@ export default function Index({
                 onOpenChange={setFormOpen}
             />
 
-            <DeleteLocationDialog
-                location={deleting}
+            <ConfirmDeleteDialog
                 open={deleteOpen}
                 onOpenChange={setDeleteOpen}
+                title="Hapus lokasi ini?"
+                description={
+                    <>
+                        Lokasi{" "}
+                        <span className="font-semibold text-foreground">
+                            {deleting?.name}
+                        </span>{" "}
+                        akan dihapus permanen dan tidak dapat dikembalikan.
+                    </>
+                }
+                deleteUrl={
+                    deleting
+                        ? route(
+                              "admin.attendance-locations.destroy",
+                              deleting.id,
+                          )
+                        : null
+                }
             />
         </AuthenticatedLayout>
     );

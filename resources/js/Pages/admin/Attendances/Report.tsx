@@ -49,8 +49,8 @@ function SummaryCard({
     accent: string;
 }) {
     return (
-        <div className="rounded-lg bg-white p-5 shadow">
-            <p className="text-sm font-medium text-gray-500">{label}</p>
+        <div className="rounded-xl border border-outline-variant bg-white p-5 shadow-sm">
+            <p className="text-sm font-medium text-on-surface-variant">{label}</p>
             <p className={"mt-2 text-3xl font-bold " + accent}>{value}</p>
         </div>
     );
@@ -112,9 +112,9 @@ export default function Report({
     return (
         <AuthenticatedLayout
             header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
+                <h1 className="text-[28px] font-extrabold tracking-tight text-on-surface">
                     Reporting Absensi
-                </h2>
+                </h1>
             }
         >
             <Head title="Reporting Absensi" />
@@ -123,7 +123,7 @@ export default function Report({
                 {/* 1. Filter Section */}
                 <form
                     onSubmit={submit}
-                    className="rounded-lg bg-white p-5 shadow"
+                    className="rounded-xl border border-outline-variant bg-white p-5 shadow-sm"
                 >
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
                         <div>
@@ -217,19 +217,19 @@ export default function Report({
                         </div>
                     </div>
 
-                    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4">
-                        <p className="text-sm text-gray-500">
+                    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-outline-variant pt-4">
+                        <p className="text-sm text-on-surface-variant">
                             Periode:{" "}
-                            <span className="font-medium text-gray-800">
+                            <span className="font-medium text-on-surface">
                                 {periodLabel}
                             </span>
-                            <span className="ml-2 text-gray-400">
+                            <span className="ml-2 text-on-surface-variant/70">
                                 ({report.rows.length} baris)
                             </span>
                         </p>
                         <a
                             href={exportUrl}
-                            className="inline-flex items-center rounded-md border border-transparent bg-green-700 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                            className="inline-flex items-center gap-2 rounded-lg border border-transparent bg-[#28a745] px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[#22963e] focus:outline-none focus:ring-2 focus:ring-[#28a745] focus:ring-offset-2"
                         >
                             Export Excel
                         </a>
@@ -266,8 +266,8 @@ export default function Report({
                 </div>
 
                 {/* 3. Attendance Distribution Chart */}
-                <div className="rounded-lg bg-white p-6 shadow">
-                    <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500">
+                <div className="rounded-xl border border-outline-variant bg-white p-6 shadow-sm">
+                    <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-on-surface-variant">
                         Distribusi Kehadiran
                     </h3>
                     <DonutChart
@@ -277,10 +277,10 @@ export default function Report({
                 </div>
 
                 {/* 4. Reporting Table */}
-                <div className="overflow-hidden rounded-lg bg-white shadow">
+                <div className="overflow-hidden rounded-xl border border-outline-variant bg-white shadow-sm">
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200 text-sm">
-                            <thead className="bg-gray-50">
+                        <table className="min-w-full divide-y divide-outline-variant text-sm">
+                            <thead className="bg-[#eab308]">
                                 <tr>
                                     {[
                                         "NIM",
@@ -305,19 +305,19 @@ export default function Report({
                                     ].map((heading) => (
                                         <th
                                             key={heading}
-                                            className="whitespace-nowrap px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500"
+                                            className="whitespace-nowrap px-3 py-3 text-left text-xs font-bold uppercase tracking-wider text-on-surface"
                                         >
                                             {heading}
                                         </th>
                                     ))}
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-100">
+                            <tbody className="divide-y divide-outline-variant">
                                 {report.rows.length === 0 ? (
                                     <tr>
                                         <td
                                             colSpan={19}
-                                            className="px-3 py-8 text-center text-gray-500"
+                                            className="px-3 py-8 text-center text-on-surface-variant"
                                         >
                                             Tidak ada peserta untuk filter ini.
                                         </td>
@@ -415,7 +415,7 @@ function ReportRow({ row }: { row: AttendanceReportRow }) {
                             "admin.attendances.edit",
                             row.attendance_id,
                         )}
-                        className="text-sm font-medium text-green-700 hover:text-green-600"
+                        className="text-sm font-medium text-tertiary hover:underline"
                     >
                         Ubah
                     </Link>

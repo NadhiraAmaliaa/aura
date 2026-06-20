@@ -1,19 +1,19 @@
-import '../css/app.css';
-import './bootstrap';
+import "../css/app.css";
+import "./bootstrap";
 
-import { createInertiaApp } from '@inertiajs/react';
-import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
-import { createRoot } from 'react-dom/client';
-import { Toaster } from '@/Components/ui/sonner';
+import { createInertiaApp } from "@inertiajs/react";
+import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
+import { createRoot } from "react-dom/client";
+import { Toaster } from "@/Components/ui/sonner";
 
-const appName = import.meta.env.VITE_APP_NAME || 'PTPN Intern Attendance';
+const appName = import.meta.env.VITE_APP_NAME || "PTPN Intern Attendance";
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     resolve: (name) =>
         resolvePageComponent(
             `./Pages/${name}.tsx`,
-            import.meta.glob('./Pages/**/*.tsx'),
+            import.meta.glob("./Pages/**/*.tsx"),
         ),
     setup({ el, App, props }) {
         createRoot(el).render(
@@ -24,7 +24,6 @@ createInertiaApp({
         );
     },
     progress: {
-        color: '#16a34a',
+        color: "#16a34a",
     },
 });
-

@@ -1,21 +1,31 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head } from "@inertiajs/react";
-import UniversityForm from "./UniversityForm";
+import { Head, router } from "@inertiajs/react";
+import UniversityFormDialog from "./Partials/UniversityFormDialog";
 
+/**
+ * Standalone create route. Reuses the index dialog so the route stays functional.
+ */
 export default function Create() {
+    const backToIndex = () => router.visit(route("admin.universities.index"));
+
     return (
         <AuthenticatedLayout
             header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
+                <h1 className="text-[28px] font-extrabold tracking-tight text-on-surface">
                     Tambah Perguruan Tinggi
-                </h2>
+                </h1>
             }
         >
             <Head title="Tambah Perguruan Tinggi" />
 
-            <div className="rounded-lg bg-white p-6 shadow sm:p-8">
-                <UniversityForm />
-            </div>
+            <UniversityFormDialog
+                open
+                onOpenChange={(value) => {
+                    if (!value) {
+                        backToIndex();
+                    }
+                }}
+            />
         </AuthenticatedLayout>
     );
 }

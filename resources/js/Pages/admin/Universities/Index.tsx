@@ -1,12 +1,20 @@
-import Badge from "@/Components/Badge";
-import DangerButton from "@/Components/DangerButton";
-import Modal from "@/Components/Modal";
-import Pagination from "@/Components/Pagination";
-import SecondaryButton from "@/Components/SecondaryButton";
+import ActionButton from "@/Components/admin/ActionButton";
+import ConfirmDeleteDialog from "@/Components/admin/ConfirmDeleteDialog";
+import DataTable, { Column } from "@/Components/admin/DataTable";
+import FilterCard, {
+    FilterField,
+    filterControlClass,
+} from "@/Components/admin/FilterCard";
+import PageHeader from "@/Components/admin/PageHeader";
+import RowActions, { IconAction } from "@/Components/admin/RowActions";
+import StatusBadge from "@/Components/admin/StatusBadge";
+import TableCard from "@/Components/admin/TableCard";
+import TableFooter from "@/Components/admin/TableFooter";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Paginated, University } from "@/types";
 import { Head, Link, router } from "@inertiajs/react";
-import { FormEventHandler, useState } from "react";
+import { useState } from "react";
+import UniversityFormDialog from "./Partials/UniversityFormDialog";
 
 type UniversityRow = University & {
     interns_count: number;
@@ -27,6 +35,10 @@ export default function Index({
 }) {
     const [search, setSearch] = useState(filters.search ?? "");
     const [status, setStatus] = useState(filters.status ?? "");
+
+    const [formOpen, setFormOpen] = useState(false);
+    const [editing, setEditing] = useState<UniversityRow | null>(null);
+    const [deleteOpen, setDeleteOpen] = useState(false);
     const [deleting, setDeleting] = useState<UniversityRow | null>(null);
 
     const applyFilters = (next: Partial<Filters>) => {
@@ -40,214 +52,183 @@ export default function Index({
         );
     };
 
-    const submitSearch: FormEventHandler = (e) => {
-        e.preventDefault();
-        applyFilters({});
+    const openCreate = () => {
+        setEditing(null);
+        setFormOpen(true);
     };
 
-    const confirmDelete = () => {
-        if (!deleting) {
-            return;
-        }
+    const openEdit = (university: UniversityRow) => {
+        setEditing(university);
+        setFormOpen(true);
+    };
 
-        router.delete(route("admin.universities.destroy", deleting.id), {
-            onFinish: () => setDeleting(null),
-        });
+    const openDelete = (university: UniversityRow) => {
+        setDeleting(university);
+        setDeleteOpen(true);
     };
 
     const isUsed = (university: UniversityRow) =>
         university.interns_count > 0 || university.study_programs_count > 0;
 
+    const columns: Column<UniversityRow>[] = [
+        {
+            header: "Nama",
+            cell: (university) => (
+                <span className="font-semibold text-on-surface">
+                    {university.name}
+                </span>
+            ),
+        },
+        {
+            header: "LLDikti",
+            cell: (university) => university.lldikti ?? "-",
+        },
+        {
+            header: "Prodi",
+            align: "center",
+            cell: (university) => (
+                <Link
+                    href={route("admin.study-programs.index", {
+                        university_id: university.id,
+                    })}
+                    className="font-semibold text-tertiary hover:underline"
+                >
+                    {university.study_programs_count}
+                </Link>
+            ),
+        },
+        {
+            header: "Peserta",
+            align: "center",
+            cell: (university) => university.interns_count,
+        },
+        {
+            header: "Status",
+            align: "center",
+            cell: (university) =>
+                university.is_active ? (
+                    <StatusBadge tone="success">Aktif</StatusBadge>
+                ) : (
+                    <StatusBadge tone="neutral">Nonaktif</StatusBadge>
+                ),
+        },
+        {
+            header: "Aksi",
+            align: "center",
+            cell: (university) => (
+                <RowActions>
+                    <IconAction
+                        icon="edit"
+                        label="Ubah perguruan tinggi"
+                        tone="edit"
+                        onClick={() => openEdit(university)}
+                    />
+                    <IconAction
+                        icon="delete"
+                        label="Hapus perguruan tinggi"
+                        tone="delete"
+                        disabled={isUsed(university)}
+                        onClick={() => openDelete(university)}
+                    />
+                </RowActions>
+            ),
+        },
+    ];
+
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                        Perguruan Tinggi
-                    </h2>
-                    <Link
-                        href={route("admin.universities.create")}
-                        className="rounded-md bg-green-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-800"
-                    >
-                        Tambah Perguruan Tinggi
-                    </Link>
-                </div>
+                <PageHeader title="Perguruan Tinggi">
+                    <ActionButton label="Tambah" onClick={openCreate} />
+                </PageHeader>
             }
         >
             <Head title="Perguruan Tinggi" />
 
-            <form
-                onSubmit={submitSearch}
-                className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end"
+            <FilterCard
+                onSubmit={(event) => {
+                    event.preventDefault();
+                    applyFilters({});
+                }}
+                actions={
+                    <button
+                        type="submit"
+                        className="inline-flex h-10 items-center rounded-lg bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary/90"
+                    >
+                        Cari
+                    </button>
+                }
             >
-                <div className="flex-1">
-                    <label className="block text-xs font-medium text-gray-500">
-                        Cari nama perguruan tinggi
-                    </label>
+                <FilterField label="Cari nama perguruan tinggi" htmlFor="search">
                     <input
+                        id="search"
                         type="text"
                         value={search}
-                        onChange={(e) => setSearch(e.target.value)}
+                        onChange={(event) => setSearch(event.target.value)}
                         placeholder="Ketik nama lalu tekan Enter..."
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-600 focus:ring-green-600"
+                        className={filterControlClass}
                     />
-                </div>
-                <div>
-                    <label className="block text-xs font-medium text-gray-500">
-                        Status
-                    </label>
+                </FilterField>
+
+                <FilterField label="Status" htmlFor="status">
                     <select
+                        id="status"
                         value={status}
-                        onChange={(e) => {
-                            setStatus(e.target.value);
-                            applyFilters({ status: e.target.value });
+                        onChange={(event) => {
+                            setStatus(event.target.value);
+                            applyFilters({ status: event.target.value });
                         }}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-600 focus:ring-green-600 sm:w-40"
+                        className={filterControlClass}
                     >
                         <option value="">Semua</option>
                         <option value="active">Aktif</option>
                         <option value="inactive">Nonaktif</option>
                     </select>
-                </div>
-                <button
-                    type="submit"
-                    className="rounded-md bg-gray-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-900"
-                >
-                    Cari
-                </button>
-            </form>
+                </FilterField>
+            </FilterCard>
 
-            <div className="overflow-hidden rounded-lg bg-white shadow">
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    Nama
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    LLDikti
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    Prodi
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    Peserta
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    Status
-                                </th>
-                                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    Aksi
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100 bg-white">
-                            {universities.data.length === 0 ? (
-                                <tr>
-                                    <td
-                                        colSpan={6}
-                                        className="px-4 py-8 text-center text-sm text-gray-500"
-                                    >
-                                        Tidak ada perguruan tinggi yang cocok.
-                                    </td>
-                                </tr>
-                            ) : (
-                                universities.data.map((university) => (
-                                    <tr key={university.id}>
-                                        <td className="px-4 py-3 font-medium text-gray-900">
-                                            {university.name}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm text-gray-500">
-                                            {university.lldikti ?? "-"}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm text-gray-700">
-                                            <Link
-                                                href={route(
-                                                    "admin.study-programs.index",
-                                                    {
-                                                        university_id:
-                                                            university.id,
-                                                    },
-                                                )}
-                                                className="font-medium text-green-700 hover:underline"
-                                            >
-                                                {
-                                                    university.study_programs_count
-                                                }
-                                            </Link>
-                                        </td>
-                                        <td className="px-4 py-3 text-sm text-gray-700">
-                                            {university.interns_count}
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <Badge
-                                                className={
-                                                    university.is_active
-                                                        ? "bg-green-100 text-green-800"
-                                                        : "bg-gray-100 text-gray-800"
-                                                }
-                                            >
-                                                {university.is_active
-                                                    ? "Aktif"
-                                                    : "Nonaktif"}
-                                            </Badge>
-                                        </td>
-                                        <td className="px-4 py-3 text-right text-sm">
-                                            <Link
-                                                href={route(
-                                                    "admin.universities.edit",
-                                                    university.id,
-                                                )}
-                                                className="font-medium text-green-700 hover:underline"
-                                            >
-                                                Ubah
-                                            </Link>
-                                            <button
-                                                onClick={() =>
-                                                    setDeleting(university)
-                                                }
-                                                disabled={isUsed(university)}
-                                                title={
-                                                    isUsed(university)
-                                                        ? "Masih digunakan. Nonaktifkan saja."
-                                                        : undefined
-                                                }
-                                                className="ms-4 font-medium text-red-600 hover:underline disabled:cursor-not-allowed disabled:text-gray-300 disabled:no-underline"
-                                            >
-                                                Hapus
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+            <TableCard>
+                <DataTable
+                    columns={columns}
+                    rows={universities.data}
+                    getRowKey={(university) => university.id}
+                    emptyIcon="school"
+                    emptyText="Tidak ada perguruan tinggi yang cocok."
+                />
 
-                <div className="border-t border-gray-100 px-4 py-3">
-                    <Pagination links={universities.links} />
-                </div>
-            </div>
+                <TableFooter
+                    from={universities.from}
+                    to={universities.to}
+                    total={universities.total}
+                    links={universities.links}
+                />
+            </TableCard>
 
-            <Modal show={deleting !== null} onClose={() => setDeleting(null)}>
-                <div className="p-6">
-                    <h2 className="text-lg font-medium text-gray-900">
-                        Hapus perguruan tinggi ini?
-                    </h2>
-                    <p className="mt-1 text-sm text-gray-600">
-                        {deleting?.name} akan dihapus permanen.
-                    </p>
-                    <div className="mt-6 flex justify-end">
-                        <SecondaryButton onClick={() => setDeleting(null)}>
-                            Batal
-                        </SecondaryButton>
-                        <DangerButton className="ms-3" onClick={confirmDelete}>
-                            Hapus
-                        </DangerButton>
-                    </div>
-                </div>
-            </Modal>
+            <UniversityFormDialog
+                university={editing ?? undefined}
+                open={formOpen}
+                onOpenChange={setFormOpen}
+            />
+
+            <ConfirmDeleteDialog
+                open={deleteOpen}
+                onOpenChange={setDeleteOpen}
+                title="Hapus perguruan tinggi ini?"
+                description={
+                    <>
+                        Perguruan tinggi{" "}
+                        <span className="font-semibold text-foreground">
+                            {deleting?.name}
+                        </span>{" "}
+                        akan dihapus permanen.
+                    </>
+                }
+                deleteUrl={
+                    deleting
+                        ? route("admin.universities.destroy", deleting.id)
+                        : null
+                }
+            />
         </AuthenticatedLayout>
     );
 }

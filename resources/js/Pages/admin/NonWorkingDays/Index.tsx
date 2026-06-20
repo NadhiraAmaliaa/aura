@@ -1,146 +1,173 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import Badge from '@/Components/Badge';
-import DangerButton from '@/Components/DangerButton';
-import Modal from '@/Components/Modal';
-import Pagination from '@/Components/Pagination';
-import SecondaryButton from '@/Components/SecondaryButton';
-import { formatDate, nonWorkingDayTypeLabels } from '@/lib/labels';
-import { NonWorkingDay, Paginated } from '@/types';
-import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import ActionButton from "@/Components/admin/ActionButton";
+import ConfirmDeleteDialog from "@/Components/admin/ConfirmDeleteDialog";
+import DataTable, { Column } from "@/Components/admin/DataTable";
+import PageHeader from "@/Components/admin/PageHeader";
+import RowActions, { IconAction } from "@/Components/admin/RowActions";
+import StatusBadge from "@/Components/admin/StatusBadge";
+import TableCard from "@/Components/admin/TableCard";
+import TableFooter from "@/Components/admin/TableFooter";
+import TableToolbar from "@/Components/admin/TableToolbar";
+import { formatDate, nonWorkingDayTypeLabels } from "@/lib/labels";
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import { NonWorkingDay, Paginated } from "@/types";
+import { Head, router } from "@inertiajs/react";
+import { useMemo, useState } from "react";
+import NonWorkingDayFormDialog from "./Partials/NonWorkingDayFormDialog";
 
 export default function Index({
     nonWorkingDays,
+    perPage,
 }: {
     nonWorkingDays: Paginated<NonWorkingDay>;
+    perPage: number;
 }) {
+    const [search, setSearch] = useState("");
+    const [formOpen, setFormOpen] = useState(false);
+    const [editing, setEditing] = useState<NonWorkingDay | null>(null);
+    const [deleteOpen, setDeleteOpen] = useState(false);
     const [deleting, setDeleting] = useState<NonWorkingDay | null>(null);
 
-    const confirmDelete = () => {
-        if (!deleting) {
-            return;
+    const rows = useMemo(() => {
+        const term = search.trim().toLowerCase();
+
+        if (!term) {
+            return nonWorkingDays.data;
         }
 
-        router.delete(route('admin.non-working-days.destroy', deleting.id), {
-            onFinish: () => setDeleting(null),
-        });
+        return nonWorkingDays.data.filter((day) =>
+            [day.name, day.date].join(" ").toLowerCase().includes(term),
+        );
+    }, [nonWorkingDays.data, search]);
+
+    const openCreate = () => {
+        setEditing(null);
+        setFormOpen(true);
     };
+
+    const openEdit = (day: NonWorkingDay) => {
+        setEditing(day);
+        setFormOpen(true);
+    };
+
+    const openDelete = (day: NonWorkingDay) => {
+        setDeleting(day);
+        setDeleteOpen(true);
+    };
+
+    const changePerPage = (value: number) => {
+        router.get(
+            route("admin.non-working-days.index"),
+            { perPage: value },
+            { preserveScroll: true, preserveState: true, replace: true },
+        );
+    };
+
+    const columns: Column<NonWorkingDay>[] = [
+        {
+            header: "Tanggal",
+            cell: (day) => (
+                <span className="font-semibold text-on-surface">
+                    {formatDate(day.date)}
+                </span>
+            ),
+        },
+        {
+            header: "Nama",
+            cell: (day) => day.name,
+        },
+        {
+            header: "Jenis",
+            cell: (day) => (
+                <StatusBadge tone="info">
+                    {nonWorkingDayTypeLabels[day.type]}
+                </StatusBadge>
+            ),
+        },
+        {
+            header: "Aksi",
+            align: "center",
+            cell: (day) => (
+                <RowActions>
+                    <IconAction
+                        icon="edit"
+                        label="Ubah hari libur"
+                        tone="edit"
+                        onClick={() => openEdit(day)}
+                    />
+                    <IconAction
+                        icon="delete"
+                        label="Hapus hari libur"
+                        tone="delete"
+                        onClick={() => openDelete(day)}
+                    />
+                </RowActions>
+            ),
+        },
+    ];
 
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                        Hari Libur
-                    </h2>
-                    <Link
-                        href={route('admin.non-working-days.create')}
-                        className="rounded-md bg-green-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-800"
-                    >
-                        Tambah Hari Libur
-                    </Link>
-                </div>
+                <PageHeader title="Hari Libur">
+                    <ActionButton label="Tambah" onClick={openCreate} />
+                </PageHeader>
             }
         >
             <Head title="Hari Libur" />
 
-            <div className="overflow-hidden rounded-lg bg-white shadow">
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    Tanggal
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    Nama
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    Jenis
-                                </th>
-                                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    Aksi
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100 bg-white">
-                            {nonWorkingDays.data.length === 0 ? (
-                                <tr>
-                                    <td
-                                        colSpan={4}
-                                        className="px-4 py-8 text-center text-sm text-gray-500"
-                                    >
-                                        Belum ada hari libur terdaftar.
-                                    </td>
-                                </tr>
-                            ) : (
-                                nonWorkingDays.data.map((day) => (
-                                    <tr key={day.id}>
-                                        <td className="px-4 py-3 text-sm text-gray-700">
-                                            {formatDate(day.date)}
-                                        </td>
-                                        <td className="px-4 py-3 font-medium text-gray-900">
-                                            {day.name}
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <Badge className="bg-gray-100 text-gray-700">
-                                                {
-                                                    nonWorkingDayTypeLabels[
-                                                        day.type
-                                                    ]
-                                                }
-                                            </Badge>
-                                        </td>
-                                        <td className="px-4 py-3 text-right text-sm">
-                                            <Link
-                                                href={route(
-                                                    'admin.non-working-days.edit',
-                                                    day.id,
-                                                )}
-                                                className="font-medium text-green-700 hover:underline"
-                                            >
-                                                Ubah
-                                            </Link>
-                                            <button
-                                                onClick={() =>
-                                                    setDeleting(day)
-                                                }
-                                                className="ms-4 font-medium text-red-600 hover:underline"
-                                            >
-                                                Hapus
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+            <TableCard>
+                <TableToolbar
+                    search={search}
+                    onSearchChange={setSearch}
+                    perPage={perPage}
+                    onPerPageChange={changePerPage}
+                />
 
-                <div className="border-t border-gray-100 px-4 py-3">
-                    <Pagination links={nonWorkingDays.links} />
-                </div>
-            </div>
+                <DataTable
+                    columns={columns}
+                    rows={rows}
+                    getRowKey={(day) => day.id}
+                    emptyIcon="event_busy"
+                    emptyText={
+                        search
+                            ? "Tidak ada hari libur yang cocok."
+                            : "Belum ada hari libur."
+                    }
+                />
 
-            <Modal show={deleting !== null} onClose={() => setDeleting(null)}>
-                <div className="p-6">
-                    <h2 className="text-lg font-medium text-gray-900">
-                        Hapus hari libur ini?
-                    </h2>
-                    <p className="mt-1 text-sm text-gray-600">
-                        {deleting?.name} ({formatDate(deleting?.date)}) akan
-                        dihapus.
-                    </p>
-                    <div className="mt-6 flex justify-end">
-                        <SecondaryButton onClick={() => setDeleting(null)}>
-                            Batal
-                        </SecondaryButton>
-                        <DangerButton className="ms-3" onClick={confirmDelete}>
-                            Hapus
-                        </DangerButton>
-                    </div>
-                </div>
-            </Modal>
+                <TableFooter
+                    from={nonWorkingDays.from}
+                    to={nonWorkingDays.to}
+                    total={nonWorkingDays.total}
+                    links={nonWorkingDays.links}
+                />
+            </TableCard>
+
+            <NonWorkingDayFormDialog
+                nonWorkingDay={editing ?? undefined}
+                open={formOpen}
+                onOpenChange={setFormOpen}
+            />
+
+            <ConfirmDeleteDialog
+                open={deleteOpen}
+                onOpenChange={setDeleteOpen}
+                title="Hapus hari libur ini?"
+                description={
+                    <>
+                        Hari libur{" "}
+                        <span className="font-semibold text-foreground">
+                            {deleting?.name}
+                        </span>{" "}
+                        akan dihapus permanen.
+                    </>
+                }
+                deleteUrl={
+                    deleting
+                        ? route("admin.non-working-days.destroy", deleting.id)
+                        : null
+                }
+            />
         </AuthenticatedLayout>
     );
 }

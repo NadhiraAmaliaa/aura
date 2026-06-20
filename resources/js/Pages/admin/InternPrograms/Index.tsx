@@ -1,142 +1,180 @@
-import DangerButton from "@/Components/DangerButton";
-import Modal from "@/Components/Modal";
-import Pagination from "@/Components/Pagination";
-import SecondaryButton from "@/Components/SecondaryButton";
+import ActionButton from "@/Components/admin/ActionButton";
+import ConfirmDeleteDialog from "@/Components/admin/ConfirmDeleteDialog";
+import DataTable, { Column } from "@/Components/admin/DataTable";
+import PageHeader from "@/Components/admin/PageHeader";
+import RowActions, { IconAction } from "@/Components/admin/RowActions";
+import TableCard from "@/Components/admin/TableCard";
+import TableFooter from "@/Components/admin/TableFooter";
+import TableToolbar from "@/Components/admin/TableToolbar";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { InternProgram, Paginated } from "@/types";
-import { Head, Link, router } from "@inertiajs/react";
-import { useState } from "react";
+import { Head, router } from "@inertiajs/react";
+import { useMemo, useState } from "react";
+import InternProgramFormDialog from "./Partials/InternProgramFormDialog";
 
 type ProgramRow = InternProgram & { interns_count: number };
 
 export default function Index({
     programs,
+    perPage,
 }: {
     programs: Paginated<ProgramRow>;
+    perPage: number;
 }) {
+    const [search, setSearch] = useState("");
+    const [formOpen, setFormOpen] = useState(false);
+    const [editing, setEditing] = useState<ProgramRow | null>(null);
+    const [deleteOpen, setDeleteOpen] = useState(false);
     const [deleting, setDeleting] = useState<ProgramRow | null>(null);
 
-    const confirmDelete = () => {
-        if (!deleting) {
-            return;
+    const rows = useMemo(() => {
+        const term = search.trim().toLowerCase();
+
+        if (!term) {
+            return programs.data;
         }
 
-        router.delete(route("admin.intern-programs.destroy", deleting.id), {
-            onFinish: () => setDeleting(null),
-        });
+        return programs.data.filter((program) =>
+            [program.name, program.description ?? ""]
+                .join(" ")
+                .toLowerCase()
+                .includes(term),
+        );
+    }, [programs.data, search]);
+
+    const openCreate = () => {
+        setEditing(null);
+        setFormOpen(true);
     };
+
+    const openEdit = (program: ProgramRow) => {
+        setEditing(program);
+        setFormOpen(true);
+    };
+
+    const openDelete = (program: ProgramRow) => {
+        setDeleting(program);
+        setDeleteOpen(true);
+    };
+
+    const changePerPage = (value: number) => {
+        router.get(
+            route("admin.intern-programs.index"),
+            { perPage: value },
+            { preserveScroll: true, preserveState: true, replace: true },
+        );
+    };
+
+    const columns: Column<ProgramRow>[] = [
+        {
+            header: "Nama",
+            cell: (program) => (
+                <span className="font-semibold text-on-surface">
+                    {program.name}
+                </span>
+            ),
+        },
+        {
+            header: "Deskripsi",
+            cell: (program) => (
+                <span className="text-on-surface-variant">
+                    {program.description ?? "-"}
+                </span>
+            ),
+        },
+        {
+            header: "Peserta",
+            align: "center",
+            cell: (program) => (
+                <span className="font-medium">{program.interns_count}</span>
+            ),
+        },
+        {
+            header: "Aksi",
+            align: "center",
+            cell: (program) => (
+                <RowActions>
+                    <IconAction
+                        icon="edit"
+                        label="Ubah program"
+                        tone="edit"
+                        onClick={() => openEdit(program)}
+                    />
+                    <IconAction
+                        icon="delete"
+                        label="Hapus program"
+                        tone="delete"
+                        disabled={program.interns_count > 0}
+                        onClick={() => openDelete(program)}
+                    />
+                </RowActions>
+            ),
+        },
+    ];
 
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                        Program Magang
-                    </h2>
-                    <Link
-                        href={route("admin.intern-programs.create")}
-                        className="rounded-md bg-green-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-800"
-                    >
-                        Tambah Program
-                    </Link>
-                </div>
+                <PageHeader title="Program Magang">
+                    <ActionButton label="Tambah" onClick={openCreate} />
+                </PageHeader>
             }
         >
             <Head title="Program Magang" />
 
-            <div className="overflow-hidden rounded-lg bg-white shadow">
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    Nama
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    Deskripsi
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    Peserta
-                                </th>
-                                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    Aksi
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100 bg-white">
-                            {programs.data.length === 0 ? (
-                                <tr>
-                                    <td
-                                        colSpan={4}
-                                        className="px-4 py-8 text-center text-sm text-gray-500"
-                                    >
-                                        Belum ada program magang.
-                                    </td>
-                                </tr>
-                            ) : (
-                                programs.data.map((program) => (
-                                    <tr key={program.id}>
-                                        <td className="px-4 py-3 font-medium text-gray-900">
-                                            {program.name}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm text-gray-600">
-                                            {program.description ?? "-"}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm text-gray-700">
-                                            {program.interns_count}
-                                        </td>
-                                        <td className="px-4 py-3 text-right text-sm">
-                                            <Link
-                                                href={route(
-                                                    "admin.intern-programs.edit",
-                                                    program.id,
-                                                )}
-                                                className="font-medium text-green-700 hover:underline"
-                                            >
-                                                Ubah
-                                            </Link>
-                                            <button
-                                                onClick={() =>
-                                                    setDeleting(program)
-                                                }
-                                                disabled={
-                                                    program.interns_count > 0
-                                                }
-                                                className="ms-4 font-medium text-red-600 hover:underline disabled:cursor-not-allowed disabled:text-gray-300 disabled:no-underline"
-                                            >
-                                                Hapus
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+            <TableCard>
+                <TableToolbar
+                    search={search}
+                    onSearchChange={setSearch}
+                    perPage={perPage}
+                    onPerPageChange={changePerPage}
+                />
 
-                <div className="border-t border-gray-100 px-4 py-3">
-                    <Pagination links={programs.links} />
-                </div>
-            </div>
+                <DataTable
+                    columns={columns}
+                    rows={rows}
+                    getRowKey={(program) => program.id}
+                    emptyIcon="school"
+                    emptyText={
+                        search
+                            ? "Tidak ada program yang cocok."
+                            : "Belum ada program magang."
+                    }
+                />
 
-            <Modal show={deleting !== null} onClose={() => setDeleting(null)}>
-                <div className="p-6">
-                    <h2 className="text-lg font-medium text-gray-900">
-                        Hapus program magang ini?
-                    </h2>
-                    <p className="mt-1 text-sm text-gray-600">
-                        Program {deleting?.name} akan dihapus permanen.
-                    </p>
-                    <div className="mt-6 flex justify-end">
-                        <SecondaryButton onClick={() => setDeleting(null)}>
-                            Batal
-                        </SecondaryButton>
-                        <DangerButton className="ms-3" onClick={confirmDelete}>
-                            Hapus
-                        </DangerButton>
-                    </div>
-                </div>
-            </Modal>
+                <TableFooter
+                    from={programs.from}
+                    to={programs.to}
+                    total={programs.total}
+                    links={programs.links}
+                />
+            </TableCard>
+
+            <InternProgramFormDialog
+                program={editing ?? undefined}
+                open={formOpen}
+                onOpenChange={setFormOpen}
+            />
+
+            <ConfirmDeleteDialog
+                open={deleteOpen}
+                onOpenChange={setDeleteOpen}
+                title="Hapus program magang ini?"
+                description={
+                    <>
+                        Program{" "}
+                        <span className="font-semibold text-foreground">
+                            {deleting?.name}
+                        </span>{" "}
+                        akan dihapus permanen.
+                    </>
+                }
+                deleteUrl={
+                    deleting
+                        ? route("admin.intern-programs.destroy", deleting.id)
+                        : null
+                }
+            />
         </AuthenticatedLayout>
     );
 }

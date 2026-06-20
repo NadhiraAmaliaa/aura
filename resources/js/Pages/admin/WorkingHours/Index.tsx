@@ -1,93 +1,98 @@
-import Badge from "@/Components/Badge";
-import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import DataTable, { Column } from "@/Components/admin/DataTable";
+import PageHeader from "@/Components/admin/PageHeader";
+import RowActions, { IconAction } from "@/Components/admin/RowActions";
+import StatusBadge from "@/Components/admin/StatusBadge";
+import TableCard from "@/Components/admin/TableCard";
 import { dayOfWeekLabels, formatTime } from "@/lib/labels";
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { WorkingHour } from "@/types";
-import { Head, Link } from "@inertiajs/react";
+import { Head } from "@inertiajs/react";
+import { useState } from "react";
+import WorkingHourFormDialog from "./Partials/WorkingHourFormDialog";
 
 export default function Index({
     workingHours,
 }: {
     workingHours: WorkingHour[];
 }) {
+    const [formOpen, setFormOpen] = useState(false);
+    const [editing, setEditing] = useState<WorkingHour | null>(null);
+
+    const openEdit = (workingHour: WorkingHour) => {
+        setEditing(workingHour);
+        setFormOpen(true);
+    };
+
+    const columns: Column<WorkingHour>[] = [
+        {
+            header: "Hari",
+            cell: (day) => (
+                <span className="font-semibold text-on-surface">
+                    {dayOfWeekLabels[day.day_of_week] ??
+                        String(day.day_of_week)}
+                </span>
+            ),
+        },
+        {
+            header: "Status",
+            cell: (day) =>
+                day.is_working_day ? (
+                    <StatusBadge tone="success">Hari Kerja</StatusBadge>
+                ) : (
+                    <StatusBadge tone="neutral">Libur</StatusBadge>
+                ),
+        },
+        {
+            header: "Jam Masuk",
+            cell: (day) =>
+                day.is_working_day && day.start_time
+                    ? formatTime(day.start_time)
+                    : "-",
+        },
+        {
+            header: "Jam Pulang",
+            cell: (day) =>
+                day.is_working_day && day.end_time
+                    ? formatTime(day.end_time)
+                    : "-",
+        },
+        {
+            header: "Aksi",
+            align: "center",
+            cell: (day) => (
+                <RowActions>
+                    <IconAction
+                        icon="edit"
+                        label="Ubah jam kerja"
+                        tone="edit"
+                        onClick={() => openEdit(day)}
+                    />
+                </RowActions>
+            ),
+        },
+    ];
+
     return (
         <AuthenticatedLayout
-            header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    Jam Kerja
-                </h2>
-            }
+            header={<PageHeader title="Jam Kerja" />}
         >
             <Head title="Jam Kerja" />
 
-            <div className="overflow-hidden rounded-lg bg-white shadow">
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    Hari
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    Status
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    Jam Masuk
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    Jam Pulang
-                                </th>
-                                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    Aksi
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100 bg-white">
-                            {workingHours.map((hour) => (
-                                <tr key={hour.id}>
-                                    <td className="px-4 py-3 font-medium text-gray-900">
-                                        {dayOfWeekLabels[hour.day_of_week] ??
-                                            hour.day_of_week}
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <Badge
-                                            className={
-                                                hour.is_working_day
-                                                    ? "bg-green-100 text-green-800"
-                                                    : "bg-gray-100 text-gray-800"
-                                            }
-                                        >
-                                            {hour.is_working_day
-                                                ? "Hari Kerja"
-                                                : "Libur"}
-                                        </Badge>
-                                    </td>
-                                    <td className="px-4 py-3 text-sm text-gray-700">
-                                        {hour.is_working_day
-                                            ? formatTime(hour.start_time)
-                                            : "-"}
-                                    </td>
-                                    <td className="px-4 py-3 text-sm text-gray-700">
-                                        {hour.is_working_day
-                                            ? formatTime(hour.end_time)
-                                            : "-"}
-                                    </td>
-                                    <td className="px-4 py-3 text-right text-sm">
-                                        <Link
-                                            href={route(
-                                                "admin.working-hours.edit",
-                                                hour.id,
-                                            )}
-                                            className="font-medium text-green-700 hover:underline"
-                                        >
-                                            Ubah
-                                        </Link>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <TableCard>
+                <DataTable
+                    columns={columns}
+                    rows={workingHours}
+                    getRowKey={(day) => day.id}
+                    emptyIcon="schedule"
+                    emptyText="Belum ada konfigurasi jam kerja."
+                />
+            </TableCard>
+
+            <WorkingHourFormDialog
+                workingHour={editing}
+                open={formOpen}
+                onOpenChange={setFormOpen}
+            />
         </AuthenticatedLayout>
     );
 }

@@ -1,8 +1,9 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import Badge from '@/Components/Badge';
-import { leaveTypeLabels, formatDate } from '@/lib/labels';
-import { LeaveRequest } from '@/types';
-import { Head, Link } from '@inertiajs/react';
+import MaterialIcon from "@/Components/MaterialIcon";
+import StatusBadge from "@/Components/admin/StatusBadge";
+import { formatDate, leaveTypeLabels } from "@/lib/labels";
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import { LeaveRequest } from "@/types";
+import { Head, Link } from "@inertiajs/react";
 
 interface Stats {
     total_interns: number;
@@ -11,11 +12,36 @@ interface Stats {
     pending_leaves: number;
 }
 
-const cards: { key: keyof Stats; label: string; color: string }[] = [
-    { key: 'total_interns', label: 'Total Peserta', color: 'bg-green-700' },
-    { key: 'active_interns', label: 'Peserta Aktif', color: 'bg-sky-600' },
-    { key: 'present_today', label: 'Hadir Hari Ini', color: 'bg-emerald-600' },
-    { key: 'pending_leaves', label: 'Izin Menunggu', color: 'bg-amber-600' },
+const cards: {
+    key: keyof Stats;
+    label: string;
+    icon: string;
+    iconClass: string;
+}[] = [
+    {
+        key: "total_interns",
+        label: "Total Peserta",
+        icon: "groups",
+        iconClass: "bg-primary/10 text-primary",
+    },
+    {
+        key: "active_interns",
+        label: "Peserta Aktif",
+        icon: "how_to_reg",
+        iconClass: "bg-tertiary/10 text-tertiary",
+    },
+    {
+        key: "present_today",
+        label: "Hadir Hari Ini",
+        icon: "fact_check",
+        iconClass: "bg-green-100 text-green-700",
+    },
+    {
+        key: "pending_leaves",
+        label: "Izin Menunggu",
+        icon: "pending_actions",
+        iconClass: "bg-amber-100 text-amber-700",
+    },
 ];
 
 export default function Dashboard({
@@ -28,9 +54,9 @@ export default function Dashboard({
     return (
         <AuthenticatedLayout
             header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
+                <h1 className="text-[28px] font-extrabold tracking-tight text-on-surface">
                     Dashboard
-                </h2>
+                </h1>
             }
         >
             <Head title="Dashboard" />
@@ -39,14 +65,18 @@ export default function Dashboard({
                 {cards.map((card) => (
                     <div
                         key={card.key}
-                        className="overflow-hidden rounded-lg bg-white shadow"
+                        className="flex items-center gap-4 rounded-xl border border-outline-variant bg-white p-5 shadow-sm"
                     >
-                        <div className={`${card.color} h-1.5`} />
-                        <div className="p-5">
-                            <p className="text-sm text-gray-500">
+                        <span
+                            className={`flex h-12 w-12 items-center justify-center rounded-xl ${card.iconClass}`}
+                        >
+                            <MaterialIcon name={card.icon} />
+                        </span>
+                        <div>
+                            <p className="text-sm text-on-surface-variant">
                                 {card.label}
                             </p>
-                            <p className="mt-1 text-3xl font-bold text-gray-900">
+                            <p className="mt-0.5 text-3xl font-bold text-on-surface">
                                 {stats[card.key]}
                             </p>
                         </div>
@@ -54,25 +84,25 @@ export default function Dashboard({
                 ))}
             </div>
 
-            <div className="mt-6 rounded-lg bg-white p-6 shadow">
+            <div className="mt-6 rounded-xl border border-outline-variant bg-white p-6 shadow-sm">
                 <div className="mb-4 flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-800">
+                    <h3 className="text-lg font-semibold text-on-surface">
                         Pengajuan Izin Terbaru
                     </h3>
                     <Link
-                        href={route('admin.leave-requests.index')}
-                        className="text-sm font-medium text-green-700 hover:underline"
+                        href={route("admin.leave-requests.index")}
+                        className="text-sm font-semibold text-primary hover:underline"
                     >
                         Lihat semua
                     </Link>
                 </div>
 
                 {recentLeaves.length === 0 ? (
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-on-surface-variant">
                         Tidak ada pengajuan yang menunggu.
                     </p>
                 ) : (
-                    <ul className="divide-y divide-gray-100">
+                    <ul className="divide-y divide-outline-variant">
                         {recentLeaves.map((leave) => (
                             <li
                                 key={leave.id}
@@ -81,21 +111,21 @@ export default function Dashboard({
                                 <div>
                                     <Link
                                         href={route(
-                                            'admin.leave-requests.show',
+                                            "admin.leave-requests.show",
                                             leave.id,
                                         )}
-                                        className="font-medium text-gray-900 hover:underline"
+                                        className="font-medium text-on-surface hover:underline"
                                     >
                                         {leave.user?.name}
                                     </Link>
-                                    <p className="text-sm text-gray-500">
-                                        {formatDate(leave.start_date)} -{' '}
+                                    <p className="text-sm text-on-surface-variant">
+                                        {formatDate(leave.start_date)} -{" "}
                                         {formatDate(leave.end_date)}
                                     </p>
                                 </div>
-                                <Badge className="bg-indigo-100 text-indigo-800">
+                                <StatusBadge tone="info">
                                     {leaveTypeLabels[leave.type]}
-                                </Badge>
+                                </StatusBadge>
                             </li>
                         ))}
                     </ul>

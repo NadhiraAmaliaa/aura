@@ -14,7 +14,9 @@ export default function MaterialIcon({
     return (
         <span
             aria-hidden="true"
-            className={"material-symbols-outlined" + (className ? ` ${className}` : "")}
+            className={
+                "material-symbols-outlined" + (className ? ` ${className}` : "")
+            }
             style={{
                 fontVariationSettings: `'FILL' ${filled ? 1 : 0}`,
                 ...style,

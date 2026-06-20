@@ -1,16 +1,23 @@
-import Badge from "@/Components/Badge";
-import DangerButton from "@/Components/DangerButton";
-import Modal from "@/Components/Modal";
-import Pagination from "@/Components/Pagination";
-import SecondaryButton from "@/Components/SecondaryButton";
-import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import ActionButton from "@/Components/admin/ActionButton";
+import ConfirmDeleteDialog from "@/Components/admin/ConfirmDeleteDialog";
+import DataTable, { Column } from "@/Components/admin/DataTable";
+import FilterCard, {
+    FilterField,
+    filterControlClass,
+} from "@/Components/admin/FilterCard";
+import PageHeader from "@/Components/admin/PageHeader";
+import RowActions, { IconAction } from "@/Components/admin/RowActions";
+import StatusBadge from "@/Components/admin/StatusBadge";
+import TableCard from "@/Components/admin/TableCard";
+import TableFooter from "@/Components/admin/TableFooter";
 import {
     formatDate,
-    internStatusBadge,
+    internStatusBadgeTone,
     internStatusLabels,
 } from "@/lib/labels";
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Division, Intern, InternProgram, Paginated } from "@/types";
-import { Head, Link, router } from "@inertiajs/react";
+import { Head, router } from "@inertiajs/react";
 import { FormEventHandler, useState } from "react";
 
 interface Filters {
@@ -43,6 +50,8 @@ export default function Index({
     const [status, setStatus] = useState(filters.status ?? "");
     const [periodFrom, setPeriodFrom] = useState(filters.period_from ?? "");
     const [periodTo, setPeriodTo] = useState(filters.period_to ?? "");
+
+    const [deleteOpen, setDeleteOpen] = useState(false);
     const [deleting, setDeleting] = useState<Intern | null>(null);
 
     const applyFilters = (next: Partial<Record<string, string>>) => {
@@ -60,8 +69,8 @@ export default function Index({
         );
     };
 
-    const submitFilters: FormEventHandler = (e) => {
-        e.preventDefault();
+    const submitFilters: FormEventHandler = (event) => {
+        event.preventDefault();
         applyFilters({});
     };
 
@@ -79,14 +88,9 @@ export default function Index({
         );
     };
 
-    const confirmDelete = () => {
-        if (!deleting) {
-            return;
-        }
-
-        router.delete(route("admin.interns.destroy", deleting.id), {
-            onFinish: () => setDeleting(null),
-        });
+    const openDelete = (intern: Intern) => {
+        setDeleting(intern);
+        setDeleteOpen(true);
     };
 
     const periodText = (intern: Intern) => {
@@ -97,288 +101,240 @@ export default function Index({
         return `${formatDate(intern.start_date)} - ${formatDate(intern.end_date)}`;
     };
 
+    const columns: Column<Intern>[] = [
+        {
+            header: "Nama",
+            cell: (intern) => (
+                <span className="font-semibold text-on-surface">
+                    {intern.user?.name}
+                </span>
+            ),
+        },
+        {
+            header: "NIM",
+            cell: (intern) => intern.nim ?? "-",
+        },
+        {
+            header: "Perguruan Tinggi",
+            cell: (intern) =>
+                intern.university_ref?.name ?? intern.university ?? "-",
+        },
+        {
+            header: "Program Studi",
+            cell: (intern) =>
+                intern.study_program?.name ?? intern.major ?? "-",
+        },
+        {
+            header: "Divisi",
+            cell: (intern) =>
+                intern.division_ref?.name ?? intern.division ?? "-",
+        },
+        {
+            header: "Program Magang",
+            cell: (intern) => intern.intern_program?.name ?? "-",
+        },
+        {
+            header: "Periode Magang",
+            className: "whitespace-nowrap",
+            cell: (intern) => periodText(intern),
+        },
+        {
+            header: "Status",
+            align: "center",
+            cell: (intern) => (
+                <StatusBadge tone={internStatusBadgeTone[intern.status]}>
+                    {internStatusLabels[intern.status]}
+                </StatusBadge>
+            ),
+        },
+        {
+            header: "Aksi",
+            align: "center",
+            cell: (intern) => (
+                <RowActions>
+                    <IconAction
+                        icon="edit"
+                        label="Ubah peserta"
+                        tone="edit"
+                        href={route("admin.interns.edit", intern.id)}
+                    />
+                    <IconAction
+                        icon="delete"
+                        label="Hapus peserta"
+                        tone="delete"
+                        onClick={() => openDelete(intern)}
+                    />
+                </RowActions>
+            ),
+        },
+    ];
+
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                        Peserta Magang
-                    </h2>
-                    <Link
+                <PageHeader title="Peserta Magang">
+                    <ActionButton
+                        label="Tambah"
                         href={route("admin.interns.create")}
-                        className="rounded-md bg-green-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-800"
-                    >
-                        Tambah Peserta
-                    </Link>
-                </div>
+                    />
+                </PageHeader>
             }
         >
             <Head title="Peserta Magang" />
 
-            <form
+            <FilterCard
                 onSubmit={submitFilters}
-                className="mb-4 rounded-lg bg-white p-4 shadow"
+                actions={
+                    <>
+                        <button
+                            type="submit"
+                            className="inline-flex h-10 items-center rounded-lg bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary/90"
+                        >
+                            Terapkan
+                        </button>
+                        <button
+                            type="button"
+                            onClick={resetFilters}
+                            className="text-sm font-medium text-on-surface-variant hover:text-on-surface"
+                        >
+                            Reset
+                        </button>
+                    </>
+                }
             >
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    <div>
-                        <label className="block text-xs font-medium text-gray-500">
-                            Cari nama atau NIM
-                        </label>
-                        <input
-                            type="text"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Ketik lalu tekan Enter..."
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-600 focus:ring-green-600"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-medium text-gray-500">
-                            Program Magang
-                        </label>
-                        <select
-                            value={program}
-                            onChange={(e) => {
-                                setProgram(e.target.value);
-                                applyFilters({ program: e.target.value });
-                            }}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-600 focus:ring-green-600"
-                        >
-                            <option value="">Semua program</option>
-                            {programs.map((p) => (
-                                <option key={p.id} value={p.id}>
-                                    {p.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-xs font-medium text-gray-500">
-                            Divisi
-                        </label>
-                        <select
-                            value={division}
-                            onChange={(e) => {
-                                setDivision(e.target.value);
-                                applyFilters({ division: e.target.value });
-                            }}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-600 focus:ring-green-600"
-                        >
-                            <option value="">Semua divisi</option>
-                            {divisions.map((d) => (
-                                <option key={d.id} value={d.id}>
-                                    {d.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-xs font-medium text-gray-500">
-                            Status
-                        </label>
-                        <select
-                            value={status}
-                            onChange={(e) => {
-                                setStatus(e.target.value);
-                                applyFilters({ status: e.target.value });
-                            }}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-600 focus:ring-green-600"
-                        >
-                            <option value="">Semua status</option>
-                            {Object.entries(internStatusLabels).map(
-                                ([value, label]) => (
-                                    <option key={value} value={value}>
-                                        {label}
-                                    </option>
-                                ),
-                            )}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-xs font-medium text-gray-500">
-                            Periode mulai dari
-                        </label>
-                        <input
-                            type="date"
-                            value={periodFrom}
-                            onChange={(e) => {
-                                setPeriodFrom(e.target.value);
-                                applyFilters({ period_from: e.target.value });
-                            }}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-600 focus:ring-green-600"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-medium text-gray-500">
-                            Periode sampai
-                        </label>
-                        <input
-                            type="date"
-                            value={periodTo}
-                            onChange={(e) => {
-                                setPeriodTo(e.target.value);
-                                applyFilters({ period_to: e.target.value });
-                            }}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-600 focus:ring-green-600"
-                        />
-                    </div>
-                </div>
-                <div className="mt-3 flex items-center gap-3">
-                    <button
-                        type="submit"
-                        className="rounded-md bg-gray-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-900"
+                <FilterField label="Cari nama atau NIM" htmlFor="search">
+                    <input
+                        id="search"
+                        type="text"
+                        value={search}
+                        onChange={(event) => setSearch(event.target.value)}
+                        placeholder="Ketik lalu tekan Enter..."
+                        className={filterControlClass}
+                    />
+                </FilterField>
+
+                <FilterField label="Program Magang" htmlFor="program">
+                    <select
+                        id="program"
+                        value={program}
+                        onChange={(event) => {
+                            setProgram(event.target.value);
+                            applyFilters({ program: event.target.value });
+                        }}
+                        className={filterControlClass}
                     >
-                        Terapkan
-                    </button>
-                    <button
-                        type="button"
-                        onClick={resetFilters}
-                        className="text-sm font-medium text-gray-500 hover:text-gray-700"
+                        <option value="">Semua program</option>
+                        {programs.map((p) => (
+                            <option key={p.id} value={p.id}>
+                                {p.name}
+                            </option>
+                        ))}
+                    </select>
+                </FilterField>
+
+                <FilterField label="Divisi" htmlFor="division">
+                    <select
+                        id="division"
+                        value={division}
+                        onChange={(event) => {
+                            setDivision(event.target.value);
+                            applyFilters({ division: event.target.value });
+                        }}
+                        className={filterControlClass}
                     >
-                        Reset
-                    </button>
-                </div>
-            </form>
+                        <option value="">Semua divisi</option>
+                        {divisions.map((d) => (
+                            <option key={d.id} value={d.id}>
+                                {d.name}
+                            </option>
+                        ))}
+                    </select>
+                </FilterField>
 
-            <div className="overflow-hidden rounded-lg bg-white shadow">
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    Nama
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    NIM
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    Perguruan Tinggi
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    Program Studi
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    Divisi
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    Program Magang
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    Periode Magang
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    Status
-                                </th>
-                                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
-                                    Aksi
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100 bg-white">
-                            {interns.data.length === 0 ? (
-                                <tr>
-                                    <td
-                                        colSpan={9}
-                                        className="px-4 py-8 text-center text-sm text-gray-500"
-                                    >
-                                        Tidak ada peserta magang yang cocok.
-                                    </td>
-                                </tr>
-                            ) : (
-                                interns.data.map((intern) => (
-                                    <tr key={intern.id}>
-                                        <td className="px-4 py-3 font-medium text-gray-900">
-                                            {intern.user?.name}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm text-gray-700">
-                                            {intern.nim ?? "-"}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm text-gray-700">
-                                            {intern.university_ref?.name ??
-                                                intern.university ??
-                                                "-"}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm text-gray-700">
-                                            {intern.study_program?.name ??
-                                                intern.major ??
-                                                "-"}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm text-gray-700">
-                                            {intern.division_ref?.name ??
-                                                intern.division ??
-                                                "-"}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm text-gray-700">
-                                            {intern.intern_program?.name ?? "-"}
-                                        </td>
-                                        <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-700">
-                                            {periodText(intern)}
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <Badge
-                                                className={
-                                                    internStatusBadge[
-                                                        intern.status
-                                                    ]
-                                                }
-                                            >
-                                                {
-                                                    internStatusLabels[
-                                                        intern.status
-                                                    ]
-                                                }
-                                            </Badge>
-                                        </td>
-                                        <td className="px-4 py-3 text-right text-sm">
-                                            <Link
-                                                href={route(
-                                                    "admin.interns.edit",
-                                                    intern.id,
-                                                )}
-                                                className="font-medium text-green-700 hover:underline"
-                                            >
-                                                Ubah
-                                            </Link>
-                                            <button
-                                                onClick={() =>
-                                                    setDeleting(intern)
-                                                }
-                                                className="ms-4 font-medium text-red-600 hover:underline"
-                                            >
-                                                Hapus
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                <FilterField label="Status" htmlFor="status">
+                    <select
+                        id="status"
+                        value={status}
+                        onChange={(event) => {
+                            setStatus(event.target.value);
+                            applyFilters({ status: event.target.value });
+                        }}
+                        className={filterControlClass}
+                    >
+                        <option value="">Semua status</option>
+                        {Object.entries(internStatusLabels).map(
+                            ([value, label]) => (
+                                <option key={value} value={value}>
+                                    {label}
+                                </option>
+                            ),
+                        )}
+                    </select>
+                </FilterField>
 
-                <div className="border-t border-gray-100 px-4 py-3">
-                    <Pagination links={interns.links} />
-                </div>
-            </div>
+                <FilterField label="Periode mulai dari" htmlFor="period_from">
+                    <input
+                        id="period_from"
+                        type="date"
+                        value={periodFrom}
+                        onChange={(event) => {
+                            setPeriodFrom(event.target.value);
+                            applyFilters({ period_from: event.target.value });
+                        }}
+                        className={filterControlClass}
+                    />
+                </FilterField>
 
-            <Modal show={deleting !== null} onClose={() => setDeleting(null)}>
-                <div className="p-6">
-                    <h2 className="text-lg font-medium text-gray-900">
-                        Hapus peserta magang ini?
-                    </h2>
-                    <p className="mt-1 text-sm text-gray-600">
+                <FilterField label="Periode sampai" htmlFor="period_to">
+                    <input
+                        id="period_to"
+                        type="date"
+                        value={periodTo}
+                        onChange={(event) => {
+                            setPeriodTo(event.target.value);
+                            applyFilters({ period_to: event.target.value });
+                        }}
+                        className={filterControlClass}
+                    />
+                </FilterField>
+            </FilterCard>
+
+            <TableCard>
+                <DataTable
+                    columns={columns}
+                    rows={interns.data}
+                    getRowKey={(intern) => intern.id}
+                    emptyIcon="groups"
+                    emptyText="Tidak ada peserta magang yang cocok."
+                />
+
+                <TableFooter
+                    from={interns.from}
+                    to={interns.to}
+                    total={interns.total}
+                    links={interns.links}
+                />
+            </TableCard>
+
+            <ConfirmDeleteDialog
+                open={deleteOpen}
+                onOpenChange={setDeleteOpen}
+                title="Hapus peserta magang ini?"
+                description={
+                    <>
                         Akun pengguna dan seluruh data absensi{" "}
-                        {deleting?.user?.name} akan dihapus permanen.
-                    </p>
-                    <div className="mt-6 flex justify-end">
-                        <SecondaryButton onClick={() => setDeleting(null)}>
-                            Batal
-                        </SecondaryButton>
-                        <DangerButton className="ms-3" onClick={confirmDelete}>
-                            Hapus
-                        </DangerButton>
-                    </div>
-                </div>
-            </Modal>
+                        <span className="font-semibold text-foreground">
+                            {deleting?.user?.name}
+                        </span>{" "}
+                        akan dihapus permanen.
+                    </>
+                }
+                deleteUrl={
+                    deleting
+                        ? route("admin.interns.destroy", deleting.id)
+                        : null
+                }
+            />
         </AuthenticatedLayout>
     );
 }

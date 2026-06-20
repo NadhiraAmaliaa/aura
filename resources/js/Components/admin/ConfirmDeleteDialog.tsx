@@ -10,50 +10,48 @@ import {
 } from "@/Components/ui/alert-dialog";
 import { buttonVariants } from "@/Components/ui/button";
 import { cn } from "@/lib/utils";
-import { AttendanceLocation } from "@/types";
 import { router } from "@inertiajs/react";
-import { useState } from "react";
+import { ReactNode, useState } from "react";
 
-export default function DeleteLocationDialog({
-    location,
+export default function ConfirmDeleteDialog({
     open,
     onOpenChange,
+    title = "Hapus data ini?",
+    description,
+    deleteUrl,
+    confirmLabel = "Hapus",
 }: {
-    location: AttendanceLocation | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    title?: string;
+    description: ReactNode;
+    deleteUrl: string | null;
+    confirmLabel?: string;
 }) {
     const [processing, setProcessing] = useState(false);
 
     const confirmDelete = () => {
-        if (!location) {
+        if (!deleteUrl) {
             return;
         }
 
-        router.delete(
-            route("admin.attendance-locations.destroy", location.id),
-            {
-                preserveScroll: true,
-                onStart: () => setProcessing(true),
-                onFinish: () => {
-                    setProcessing(false);
-                    onOpenChange(false);
-                },
+        router.delete(deleteUrl, {
+            preserveScroll: true,
+            onStart: () => setProcessing(true),
+            onFinish: () => {
+                setProcessing(false);
+                onOpenChange(false);
             },
-        );
+        });
     };
 
     return (
         <AlertDialog open={open} onOpenChange={onOpenChange}>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Hapus lokasi ini?</AlertDialogTitle>
+                    <AlertDialogTitle>{title}</AlertDialogTitle>
                     <AlertDialogDescription>
-                        Lokasi{" "}
-                        <span className="font-semibold text-foreground">
-                            {location?.name}
-                        </span>{" "}
-                        akan dihapus permanen dan tidak dapat dikembalikan.
+                        {description}
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -63,12 +61,12 @@ export default function DeleteLocationDialog({
                     <AlertDialogAction
                         className={cn(buttonVariants({ variant: "destructive" }))}
                         disabled={processing}
-                        onClick={(e) => {
-                            e.preventDefault();
+                        onClick={(event) => {
+                            event.preventDefault();
                             confirmDelete();
                         }}
                     >
-                        Hapus
+                        {confirmLabel}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>

@@ -81,6 +81,16 @@ export const internStatusBadge: Record<string, string> = {
     completed: "bg-blue-100 text-blue-800",
 };
 
+export const internStatusBadgeTone: Record<
+    string,
+    "success" | "neutral" | "info" | "warning" | "danger"
+> = {
+    upcoming: "warning",
+    active: "success",
+    inactive: "neutral",
+    completed: "info",
+};
+
 export function formatDate(value: string | null | undefined): string {
     if (!value) {
         return "-";

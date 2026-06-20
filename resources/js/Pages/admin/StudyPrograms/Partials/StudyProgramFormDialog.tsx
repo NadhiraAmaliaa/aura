@@ -1,12 +1,12 @@
 import Autocomplete, { AutocompleteOption } from "@/Components/Autocomplete";
 import Checkbox from "@/Components/Checkbox";
+import FormDialog from "@/Components/admin/FormDialog";
 import InputError from "@/Components/InputError";
 import InputLabel from "@/Components/InputLabel";
-import PrimaryButton from "@/Components/PrimaryButton";
 import TextInput from "@/Components/TextInput";
 import { StudyProgram, University } from "@/types";
-import { Link, useForm } from "@inertiajs/react";
-import { FormEventHandler } from "react";
+import { useForm } from "@inertiajs/react";
+import { FormEventHandler, useEffect } from "react";
 
 interface StudyProgramFormData {
     university_id: number | string;
@@ -16,22 +16,41 @@ interface StudyProgramFormData {
     [key: string]: string | number | boolean;
 }
 
-export default function StudyProgramForm({
+function initialData(
+    studyProgram?: StudyProgram,
+    university?: University | null,
+): StudyProgramFormData {
+    return {
+        university_id: studyProgram?.university_id ?? university?.id ?? "",
+        name: studyProgram?.name ?? "",
+        level: studyProgram?.level ?? "",
+        is_active: studyProgram ? (studyProgram.is_active ?? true) : true,
+    };
+}
+
+export default function StudyProgramFormDialog({
     studyProgram,
     university,
+    open,
+    onOpenChange,
 }: {
     studyProgram?: StudyProgram;
     university?: University | null;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
 }) {
     const isEdit = Boolean(studyProgram);
 
-    const { data, setData, post, put, processing, errors } =
-        useForm<StudyProgramFormData>({
-            university_id: studyProgram?.university_id ?? university?.id ?? "",
-            name: studyProgram?.name ?? "",
-            level: studyProgram?.level ?? "",
-            is_active: studyProgram ? (studyProgram.is_active ?? true) : true,
-        });
+    const { data, setData, post, put, processing, errors, clearErrors } =
+        useForm<StudyProgramFormData>(initialData(studyProgram, university));
+
+    useEffect(() => {
+        if (open) {
+            setData(initialData(studyProgram, university));
+            clearErrors();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open]);
 
     const universityDisplay =
         studyProgram?.university?.name ?? university?.name ?? "";
@@ -40,18 +59,33 @@ export default function StudyProgramForm({
         setData("university_id", option ? option.id : "");
     };
 
-    const submit: FormEventHandler = (e) => {
-        e.preventDefault();
+    const submit: FormEventHandler = (event) => {
+        event.preventDefault();
+
+        const options = {
+            preserveScroll: true,
+            onSuccess: () => onOpenChange(false),
+        };
 
         if (isEdit && studyProgram) {
-            put(route("admin.study-programs.update", studyProgram.id));
+            put(
+                route("admin.study-programs.update", studyProgram.id),
+                options,
+            );
         } else {
-            post(route("admin.study-programs.store"));
+            post(route("admin.study-programs.store"), options);
         }
     };
 
     return (
-        <form onSubmit={submit} className="space-y-6">
+        <FormDialog
+            open={open}
+            onOpenChange={onOpenChange}
+            title={isEdit ? "Ubah Program Studi" : "Tambah Program Studi"}
+            onSubmit={submit}
+            processing={processing}
+            submitLabel={isEdit ? "Simpan Perubahan" : "Tambah Program Studi"}
+        >
             <div>
                 <InputLabel htmlFor="university_id" value="Perguruan Tinggi" />
                 <div className="mt-1">
@@ -73,7 +107,7 @@ export default function StudyProgramForm({
                     id="name"
                     className="mt-1 block w-full"
                     value={data.name}
-                    onChange={(e) => setData("name", e.target.value)}
+                    onChange={(event) => setData("name", event.target.value)}
                 />
                 <InputError className="mt-2" message={errors.name} />
             </div>
@@ -87,7 +121,7 @@ export default function StudyProgramForm({
                     id="level"
                     className="mt-1 block w-full"
                     value={data.level}
-                    onChange={(e) => setData("level", e.target.value)}
+                    onChange={(event) => setData("level", event.target.value)}
                 />
                 <InputError className="mt-2" message={errors.level} />
             </div>
@@ -95,25 +129,15 @@ export default function StudyProgramForm({
             <label className="flex items-center gap-3">
                 <Checkbox
                     checked={data.is_active}
-                    onChange={(e) => setData("is_active", e.target.checked)}
+                    onChange={(event) =>
+                        setData("is_active", event.target.checked)
+                    }
                 />
                 <span className="text-sm text-gray-700">
                     Aktif (tersedia untuk dipilih saat menambah peserta)
                 </span>
             </label>
             <InputError className="mt-2" message={errors.is_active} />
-
-            <div className="flex items-center justify-end gap-3">
-                <Link
-                    href={route("admin.study-programs.index")}
-                    className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
-                >
-                    Batal
-                </Link>
-                <PrimaryButton disabled={processing}>
-                    {isEdit ? "Simpan Perubahan" : "Tambah Program Studi"}
-                </PrimaryButton>
-            </div>
-        </form>
+        </FormDialog>
     );
 }

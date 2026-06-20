@@ -3,7 +3,15 @@ import FlashToaster from "@/Components/FlashToaster";
 import MaterialIcon from "@/Components/MaterialIcon";
 import { AuthUser, PageProps } from "@/types";
 import { Link, router, usePage } from "@inertiajs/react";
-import { PropsWithChildren, ReactNode, useState } from "react";
+import {
+    PropsWithChildren,
+    ReactNode,
+    useCallback,
+    useRef,
+    useState,
+} from "react";
+
+const SIDEBAR_SCROLL_KEY = "admin-sidebar-scroll";
 
 interface NavLeaf {
     label: string;
@@ -195,6 +203,28 @@ export default function AuthenticatedLayout({
     const user = usePage<PageProps>().props.auth.user as AuthUser;
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
+    // Preserve the sidebar scroll position across Inertia navigations so it
+    // doesn't jump back to the top when a menu item is clicked.
+    const setSidebarRef = useCallback((node: HTMLElement | null) => {
+        if (!node) {
+            return;
+        }
+
+        const stored = sessionStorage.getItem(SIDEBAR_SCROLL_KEY);
+        if (stored) {
+            node.scrollTop = Number(stored);
+        }
+    }, []);
+
+    const rememberSidebarScroll = (
+        event: React.UIEvent<HTMLElement>,
+    ) => {
+        sessionStorage.setItem(
+            SIDEBAR_SCROLL_KEY,
+            String(event.currentTarget.scrollTop),
+        );
+    };
+
     const navItems = user.is_admin ? adminNav : internNav;
     const homeRoute = route(
         user.is_admin ? "admin.dashboard" : "intern.dashboard",
@@ -308,6 +338,8 @@ export default function AuthenticatedLayout({
                     "fixed left-0 top-20 z-40 flex h-[calc(100vh-5rem)] w-56 flex-col overflow-y-auto border-r border-outline-variant bg-white py-4 transition-transform duration-200 md:translate-x-0 " +
                     (sidebarOpen ? "translate-x-0" : "-translate-x-full")
                 }
+                ref={setSidebarRef}
+                onScroll={rememberSidebarScroll}
             >
                 <div className="mb-8 px-4">
                     <div className="flex items-center gap-2 rounded-xl bg-primary-container/10 p-2">
@@ -368,7 +400,10 @@ export default function AuthenticatedLayout({
                         onClick={() => router.reload()}
                         className="mb-4 flex w-full items-center justify-center gap-2 rounded bg-primary py-2.5 text-sm font-semibold text-white transition-colors hover:brightness-110"
                     >
-                        <MaterialIcon name="sync" style={{ fontSize: "18px" }} />
+                        <MaterialIcon
+                            name="sync"
+                            style={{ fontSize: "18px" }}
+                        />
                         Sync Data
                     </button>
                     <Link

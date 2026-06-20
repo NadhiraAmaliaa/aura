@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreNonWorkingDayRequest;
 use App\Http\Requests\UpdateNonWorkingDayRequest;
 use App\Models\NonWorkingDay;
+use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -15,12 +16,21 @@ class NonWorkingDayController extends Controller
     /**
      * Display a listing of the non-working days.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $nonWorkingDays = NonWorkingDay::orderByDesc('date')->paginate(15);
+        $perPage = (int) $request->integer('perPage', 10);
+
+        if (! in_array($perPage, [10, 25, 50, 100], true)) {
+            $perPage = 10;
+        }
+
+        $nonWorkingDays = NonWorkingDay::orderByDesc('date')
+            ->paginate($perPage)
+            ->withQueryString();
 
         return Inertia::render('admin/NonWorkingDays/Index', [
             'nonWorkingDays' => $nonWorkingDays,
+            'perPage' => $perPage,
         ]);
     }
 

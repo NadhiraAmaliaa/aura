@@ -8,7 +8,7 @@ export default function TextareaInput({
         <textarea
             {...props}
             className={
-                'rounded-md border-gray-300 shadow-sm focus:border-green-600 focus:ring-green-600 ' +
+                'rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary ' +
                 className
             }
         />

@@ -29,36 +29,36 @@ export default function Edit({ attendance }: { attendance: Attendance }) {
     return (
         <AuthenticatedLayout
             header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
+                <h1 className="text-[28px] font-extrabold tracking-tight text-on-surface">
                     Koreksi Absensi
-                </h2>
+                </h1>
             }
         >
             <Head title="Koreksi Absensi" />
 
-            <div className="rounded-lg bg-white p-6 shadow sm:p-8">
-                <dl className="mb-6 grid grid-cols-2 gap-4 rounded-md bg-gray-50 p-4 text-sm">
+            <div className="rounded-xl border border-outline-variant bg-white p-6 shadow-sm sm:p-8">
+                <dl className="mb-6 grid grid-cols-2 gap-4 rounded-lg bg-surface-container-low p-4 text-sm">
                     <div>
-                        <dt className="text-gray-500">Nama</dt>
-                        <dd className="font-medium text-gray-900">
+                        <dt className="text-on-surface-variant">Nama</dt>
+                        <dd className="font-medium text-on-surface">
                             {attendance.user?.name}
                         </dd>
                     </div>
                     <div>
-                        <dt className="text-gray-500">Tanggal</dt>
-                        <dd className="font-medium text-gray-900">
+                        <dt className="text-on-surface-variant">Tanggal</dt>
+                        <dd className="font-medium text-on-surface">
                             {formatDate(attendance.attendance_date)}
                         </dd>
                     </div>
                     <div>
-                        <dt className="text-gray-500">Jam Masuk</dt>
-                        <dd className="font-medium text-gray-900">
+                        <dt className="text-on-surface-variant">Jam Masuk</dt>
+                        <dd className="font-medium text-on-surface">
                             {formatTime(attendance.check_in_time)}
                         </dd>
                     </div>
                     <div>
-                        <dt className="text-gray-500">Jam Pulang</dt>
-                        <dd className="font-medium text-gray-900">
+                        <dt className="text-on-surface-variant">Jam Pulang</dt>
+                        <dd className="font-medium text-on-surface">
                             {formatTime(attendance.check_out_time)}
                         </dd>
                     </div>
@@ -129,7 +129,7 @@ export default function Edit({ attendance }: { attendance: Attendance }) {
                     <div className="flex items-center justify-end gap-3">
                         <Link
                             href={route('admin.attendances.index')}
-                            className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+                            className="rounded-lg border border-outline-variant bg-white px-4 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-surface-container-low"
                         >
                             Batal
                         </Link>

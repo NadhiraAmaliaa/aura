@@ -1,21 +1,32 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
-import NonWorkingDayForm from './NonWorkingDayForm';
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import { Head, router } from "@inertiajs/react";
+import NonWorkingDayFormDialog from "./Partials/NonWorkingDayFormDialog";
 
+/**
+ * Standalone create route. Reuses the index dialog so the route stays functional.
+ */
 export default function Create() {
+    const backToIndex = () =>
+        router.visit(route("admin.non-working-days.index"));
+
     return (
         <AuthenticatedLayout
             header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
+                <h1 className="text-[28px] font-extrabold tracking-tight text-on-surface">
                     Tambah Hari Libur
-                </h2>
+                </h1>
             }
         >
             <Head title="Tambah Hari Libur" />
 
-            <div className="max-w-xl rounded-lg bg-white p-6 shadow sm:p-8">
-                <NonWorkingDayForm />
-            </div>
+            <NonWorkingDayFormDialog
+                open
+                onOpenChange={(value) => {
+                    if (!value) {
+                        backToIndex();
+                    }
+                }}
+            />
         </AuthenticatedLayout>
     );
 }

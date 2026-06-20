@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreInternProgramRequest;
 use App\Http\Requests\UpdateInternProgramRequest;
 use App\Models\InternProgram;
+use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -15,15 +16,23 @@ class InternProgramController extends Controller
     /**
      * Display a listing of the intern programs.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $perPage = (int) $request->integer('perPage', 10);
+
+        if (! in_array($perPage, [10, 25, 50, 100], true)) {
+            $perPage = 10;
+        }
+
         $programs = InternProgram::query()
             ->withCount('interns')
             ->orderBy('name')
-            ->paginate(15);
+            ->paginate($perPage)
+            ->withQueryString();
 
         return Inertia::render('admin/InternPrograms/Index', [
             'programs' => $programs,
+            'perPage' => $perPage,
         ]);
     }
 

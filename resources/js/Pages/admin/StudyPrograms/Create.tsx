@@ -1,26 +1,37 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { University } from "@/types";
-import { Head } from "@inertiajs/react";
-import StudyProgramForm from "./StudyProgramForm";
+import { Head, router } from "@inertiajs/react";
+import StudyProgramFormDialog from "./Partials/StudyProgramFormDialog";
 
+/**
+ * Standalone create route. Reuses the index dialog so the route stays functional.
+ */
 export default function Create({
     university,
 }: {
     university?: University | null;
 }) {
+    const backToIndex = () => router.visit(route("admin.study-programs.index"));
+
     return (
         <AuthenticatedLayout
             header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
+                <h1 className="text-[28px] font-extrabold tracking-tight text-on-surface">
                     Tambah Program Studi
-                </h2>
+                </h1>
             }
         >
             <Head title="Tambah Program Studi" />
 
-            <div className="rounded-lg bg-white p-6 shadow sm:p-8">
-                <StudyProgramForm university={university} />
-            </div>
+            <StudyProgramFormDialog
+                university={university}
+                open
+                onOpenChange={(value) => {
+                    if (!value) {
+                        backToIndex();
+                    }
+                }}
+            />
         </AuthenticatedLayout>
     );
 }

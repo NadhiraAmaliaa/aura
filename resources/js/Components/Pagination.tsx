@@ -1,6 +1,6 @@
-import MaterialIcon from '@/Components/MaterialIcon';
-import { PaginationLink } from '@/types';
-import { Link } from '@inertiajs/react';
+import MaterialIcon from "@/Components/MaterialIcon";
+import { PaginationLink } from "@/types";
+import { Link } from "@inertiajs/react";
 
 export default function Pagination({ links }: { links: PaginationLink[] }) {
     if (links.length <= 3) {
@@ -25,7 +25,7 @@ export default function Pagination({ links }: { links: PaginationLink[] }) {
         <nav className="flex items-center gap-1">
             {links.map((link, index) => {
                 const baseClass =
-                    'flex h-10 w-10 items-center justify-center rounded text-sm';
+                    "flex h-10 w-10 items-center justify-center rounded text-sm";
 
                 if (link.url === null) {
                     return (
@@ -45,8 +45,8 @@ export default function Pagination({ links }: { links: PaginationLink[] }) {
                         preserveScroll
                         className={`${baseClass} transition-colors ${
                             link.active
-                                ? 'bg-primary font-bold text-white'
-                                : 'font-medium text-on-surface-variant hover:bg-surface-container-low'
+                                ? "bg-primary font-bold text-white"
+                                : "font-medium text-on-surface-variant hover:bg-surface-container-low"
                         }`}
                     >
                         {renderLabel(link, index)}
