@@ -1,34 +1,58 @@
-import { Link } from '@inertiajs/react';
+import MaterialIcon from '@/Components/MaterialIcon';
 import { PaginationLink } from '@/types';
+import { Link } from '@inertiajs/react';
 
 export default function Pagination({ links }: { links: PaginationLink[] }) {
     if (links.length <= 3) {
         return null;
     }
 
+    const lastIndex = links.length - 1;
+
+    const renderLabel = (link: PaginationLink, index: number) => {
+        if (index === 0) {
+            return <MaterialIcon name="chevron_left" />;
+        }
+
+        if (index === lastIndex) {
+            return <MaterialIcon name="chevron_right" />;
+        }
+
+        return <span dangerouslySetInnerHTML={{ __html: link.label }} />;
+    };
+
     return (
-        <nav className="flex flex-wrap items-center gap-1">
-            {links.map((link, index) =>
-                link.url === null ? (
-                    <span
-                        key={index}
-                        className="cursor-default rounded-md px-3 py-2 text-sm text-gray-400"
-                        dangerouslySetInnerHTML={{ __html: link.label }}
-                    />
-                ) : (
+        <nav className="flex items-center gap-1">
+            {links.map((link, index) => {
+                const baseClass =
+                    'flex h-10 w-10 items-center justify-center rounded text-sm';
+
+                if (link.url === null) {
+                    return (
+                        <span
+                            key={index}
+                            className={`${baseClass} cursor-default text-on-surface-variant opacity-30`}
+                        >
+                            {renderLabel(link, index)}
+                        </span>
+                    );
+                }
+
+                return (
                     <Link
                         key={index}
                         href={link.url}
-                        className={`rounded-md px-3 py-2 text-sm transition ${
-                            link.active
-                                ? 'bg-green-700 text-white'
-                                : 'text-gray-600 hover:bg-gray-100'
-                        }`}
-                        dangerouslySetInnerHTML={{ __html: link.label }}
                         preserveScroll
-                    />
-                ),
-            )}
+                        className={`${baseClass} transition-colors ${
+                            link.active
+                                ? 'bg-primary font-bold text-white'
+                                : 'font-medium text-on-surface-variant hover:bg-surface-container-low'
+                        }`}
+                    >
+                        {renderLabel(link, index)}
+                    </Link>
+                );
+            })}
         </nav>
     );
 }

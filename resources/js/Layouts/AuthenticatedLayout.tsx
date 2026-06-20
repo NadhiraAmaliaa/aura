@@ -1,20 +1,20 @@
-import ApplicationLogo from "@/Components/ApplicationLogo";
 import Dropdown from "@/Components/Dropdown";
-import FlashMessages from "@/Components/FlashMessages";
-import NavLink from "@/Components/NavLink";
-import ResponsiveNavLink from "@/Components/ResponsiveNavLink";
+import FlashToaster from "@/Components/FlashToaster";
+import MaterialIcon from "@/Components/MaterialIcon";
 import { AuthUser, PageProps } from "@/types";
-import { Link, usePage } from "@inertiajs/react";
+import { Link, router, usePage } from "@inertiajs/react";
 import { PropsWithChildren, ReactNode, useState } from "react";
 
 interface NavLeaf {
     label: string;
+    icon: string;
     routeName: string;
     activePattern: string;
 }
 
 interface NavGroup {
     label: string;
+    icon: string;
     items: NavLeaf[];
 }
 
@@ -27,19 +27,23 @@ function isGroup(entry: NavEntry): entry is NavGroup {
 const adminNav: NavEntry[] = [
     {
         label: "Dashboard",
+        icon: "dashboard",
         routeName: "admin.dashboard",
         activePattern: "admin.dashboard",
     },
     {
         label: "Operasional",
+        icon: "work",
         items: [
             {
                 label: "Peserta Magang",
+                icon: "groups",
                 routeName: "admin.interns.index",
                 activePattern: "admin.interns.*",
             },
             {
                 label: "Pengajuan Izin",
+                icon: "event_available",
                 routeName: "admin.leave-requests.index",
                 activePattern: "admin.leave-requests.*",
             },
@@ -47,19 +51,23 @@ const adminNav: NavEntry[] = [
     },
     {
         label: "Master Absensi",
+        icon: "calendar_month",
         items: [
             {
                 label: "Jam Kerja",
+                icon: "schedule",
                 routeName: "admin.working-hours.index",
                 activePattern: "admin.working-hours.*",
             },
             {
                 label: "Lokasi Absensi",
+                icon: "location_on",
                 routeName: "admin.attendance-locations.index",
                 activePattern: "admin.attendance-locations.*",
             },
             {
                 label: "Hari Libur",
+                icon: "event_busy",
                 routeName: "admin.non-working-days.index",
                 activePattern: "admin.non-working-days.*",
             },
@@ -67,9 +75,11 @@ const adminNav: NavEntry[] = [
     },
     {
         label: "Reporting",
+        icon: "assessment",
         items: [
             {
                 label: "Reporting Absensi",
+                icon: "summarize",
                 routeName: "admin.attendances.index",
                 activePattern: "admin.attendances.*",
             },
@@ -77,24 +87,29 @@ const adminNav: NavEntry[] = [
     },
     {
         label: "Master Data",
+        icon: "database",
         items: [
             {
                 label: "Program Magang",
+                icon: "school",
                 routeName: "admin.intern-programs.index",
                 activePattern: "admin.intern-programs.*",
             },
             {
                 label: "Divisi",
+                icon: "apartment",
                 routeName: "admin.divisions.index",
                 activePattern: "admin.divisions.*",
             },
             {
                 label: "Perguruan Tinggi",
+                icon: "account_balance",
                 routeName: "admin.universities.index",
                 activePattern: "admin.universities.*",
             },
             {
                 label: "Program Studi",
+                icon: "menu_book",
                 routeName: "admin.study-programs.index",
                 activePattern: "admin.study-programs.*",
             },
@@ -105,65 +120,71 @@ const adminNav: NavEntry[] = [
 const internNav: NavEntry[] = [
     {
         label: "Dashboard",
+        icon: "dashboard",
         routeName: "intern.dashboard",
         activePattern: "intern.dashboard",
     },
     {
         label: "Absensi",
+        icon: "fingerprint",
         routeName: "intern.attendance.index",
         activePattern: "intern.attendance.*",
     },
     {
         label: "Pengajuan Izin",
+        icon: "event_available",
         routeName: "intern.leave-requests.index",
         activePattern: "intern.leave-requests.*",
     },
 ];
 
-function NavGroupDropdown({ group }: { group: NavGroup }) {
-    const active = group.items.some((child) =>
-        route().current(child.activePattern),
-    );
+function entryRoute(entry: NavEntry): string {
+    return route(isGroup(entry) ? entry.items[0].routeName : entry.routeName);
+}
 
+function isEntryActive(entry: NavEntry): boolean {
+    if (isGroup(entry)) {
+        return entry.items.some((child) =>
+            route().current(child.activePattern),
+        );
+    }
+
+    return route().current(entry.activePattern);
+}
+
+function initials(name: string): string {
+    return name
+        .split(" ")
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0]?.toUpperCase() ?? "")
+        .join("");
+}
+
+function SidebarLink({
+    icon,
+    label,
+    href,
+    active,
+}: {
+    icon: string;
+    label: string;
+    href: string;
+    active: boolean;
+}) {
     return (
-        <Dropdown>
-            <Dropdown.Trigger>
-                <button
-                    type="button"
-                    className={
-                        "inline-flex h-full items-center border-b-2 px-1 pt-1 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none " +
-                        (active
-                            ? "border-green-600 text-gray-900"
-                            : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700")
-                    }
-                >
-                    {group.label}
-                    <svg
-                        className="-me-0.5 ms-1 h-4 w-4"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                    >
-                        <path
-                            fillRule="evenodd"
-                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                            clipRule="evenodd"
-                        />
-                    </svg>
-                </button>
-            </Dropdown.Trigger>
-
-            <Dropdown.Content align="left">
-                {group.items.map((child) => (
-                    <Dropdown.Link
-                        key={child.routeName}
-                        href={route(child.routeName)}
-                    >
-                        {child.label}
-                    </Dropdown.Link>
-                ))}
-            </Dropdown.Content>
-        </Dropdown>
+        <Link
+            href={href}
+            className={
+                "flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 " +
+                (active
+                    ? "border-l-4 border-primary bg-surface-container-high text-primary"
+                    : "border-l-4 border-transparent text-on-surface-variant hover:translate-x-1 hover:bg-surface-container-low")
+            }
+        >
+            <MaterialIcon name={icon} filled={active} />
+            <span>{label}</span>
+        </Link>
     );
 }
 
@@ -172,212 +193,213 @@ export default function AuthenticatedLayout({
     children,
 }: PropsWithChildren<{ header?: ReactNode }>) {
     const user = usePage<PageProps>().props.auth.user as AuthUser;
-    const [showingNavigationDropdown, setShowingNavigationDropdown] =
-        useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const navItems = user.is_admin ? adminNav : internNav;
+    const homeRoute = route(
+        user.is_admin ? "admin.dashboard" : "intern.dashboard",
+    );
 
     return (
-        <div className="min-h-screen bg-gray-100">
-            <nav className="border-b border-gray-100 bg-white">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="flex h-16 justify-between">
-                        <div className="flex">
-                            <div className="flex shrink-0 items-center">
+        <div className="min-h-screen bg-slate-100 text-on-surface">
+            {/* Top navigation bar */}
+            <header className="fixed left-0 top-0 z-50 flex h-20 w-full items-center justify-between border-b border-outline-variant bg-primary px-4 shadow-sm sm:px-8">
+                <div className="flex items-center gap-4 sm:gap-8">
+                    <button
+                        type="button"
+                        onClick={() => setSidebarOpen((open) => !open)}
+                        className="rounded-lg p-1 text-white/90 transition-colors hover:bg-white/10 md:hidden"
+                        aria-label="Buka menu"
+                    >
+                        <MaterialIcon name="menu" />
+                    </button>
+
+                    <Link
+                        href={homeRoute}
+                        className="text-2xl font-extrabold tracking-tight text-white"
+                    >
+                        aghris
+                    </Link>
+
+                    <nav className="hidden items-center gap-1 md:flex">
+                        {navItems.map((entry) => {
+                            const active = isEntryActive(entry);
+
+                            return (
                                 <Link
-                                    href={route(
-                                        user.is_admin
-                                            ? "admin.dashboard"
-                                            : "intern.dashboard",
-                                    )}
+                                    key={entry.label}
+                                    href={entryRoute(entry)}
+                                    className={
+                                        "cursor-pointer rounded px-3 py-1 text-sm transition-colors " +
+                                        (active
+                                            ? "border-b-2 border-white font-bold text-white"
+                                            : "font-medium text-white/80 hover:bg-white/10")
+                                    }
                                 >
-                                    <ApplicationLogo />
+                                    {entry.label}
                                 </Link>
-                            </div>
-
-                            <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                {navItems.map((item) =>
-                                    isGroup(item) ? (
-                                        <NavGroupDropdown
-                                            key={item.label}
-                                            group={item}
-                                        />
-                                    ) : (
-                                        <NavLink
-                                            key={item.routeName}
-                                            href={route(item.routeName)}
-                                            active={route().current(
-                                                item.activePattern,
-                                            )}
-                                        >
-                                            {item.label}
-                                        </NavLink>
-                                    ),
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="hidden sm:ms-6 sm:flex sm:items-center">
-                            <Dropdown>
-                                <Dropdown.Trigger>
-                                    <span className="inline-flex rounded-md">
-                                        <button
-                                            type="button"
-                                            className="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none"
-                                        >
-                                            {user.name}
-                                            <svg
-                                                className="-me-0.5 ms-2 h-4 w-4"
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                viewBox="0 0 20 20"
-                                                fill="currentColor"
-                                            >
-                                                <path
-                                                    fillRule="evenodd"
-                                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                    clipRule="evenodd"
-                                                />
-                                            </svg>
-                                        </button>
-                                    </span>
-                                </Dropdown.Trigger>
-
-                                <Dropdown.Content>
-                                    <Dropdown.Link href={route("profile.edit")}>
-                                        Profil
-                                    </Dropdown.Link>
-                                    <Dropdown.Link
-                                        href={route("logout")}
-                                        method="post"
-                                        as="button"
-                                    >
-                                        Keluar
-                                    </Dropdown.Link>
-                                </Dropdown.Content>
-                            </Dropdown>
-                        </div>
-
-                        <div className="-me-2 flex items-center sm:hidden">
-                            <button
-                                onClick={() =>
-                                    setShowingNavigationDropdown(
-                                        (previousState) => !previousState,
-                                    )
-                                }
-                                className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-500 focus:bg-gray-100 focus:text-gray-500 focus:outline-none"
-                            >
-                                <svg
-                                    className="h-6 w-6"
-                                    stroke="currentColor"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        className={
-                                            !showingNavigationDropdown
-                                                ? "inline-flex"
-                                                : "hidden"
-                                        }
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M4 6h16M4 12h16M4 18h16"
-                                    />
-                                    <path
-                                        className={
-                                            showingNavigationDropdown
-                                                ? "inline-flex"
-                                                : "hidden"
-                                        }
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M6 18L18 6M6 6l12 12"
-                                    />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
+                            );
+                        })}
+                    </nav>
                 </div>
 
-                <div
-                    className={
-                        (showingNavigationDropdown ? "block" : "hidden") +
-                        " sm:hidden"
-                    }
-                >
-                    <div className="space-y-1 pb-3 pt-2">
-                        {navItems.map((item) =>
-                            isGroup(item) ? (
-                                <div key={item.label} className="mt-2">
-                                    <div className="px-4 py-1 text-xs font-semibold uppercase tracking-wider text-gray-400">
-                                        {item.label}
-                                    </div>
-                                    {item.items.map((child) => (
-                                        <ResponsiveNavLink
-                                            key={child.routeName}
-                                            href={route(child.routeName)}
-                                            active={route().current(
-                                                child.activePattern,
-                                            )}
-                                        >
-                                            {child.label}
-                                        </ResponsiveNavLink>
-                                    ))}
-                                </div>
-                            ) : (
-                                <ResponsiveNavLink
-                                    key={item.routeName}
-                                    href={route(item.routeName)}
-                                    active={route().current(item.activePattern)}
-                                >
-                                    {item.label}
-                                </ResponsiveNavLink>
-                            ),
-                        )}
+                <div className="flex items-center gap-4">
+                    <div className="hidden items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 sm:flex">
+                        <MaterialIcon
+                            name="notifications"
+                            filled
+                            className="text-white"
+                        />
+                        <div className="h-4 w-px bg-white/20" />
+                        <MaterialIcon name="help" className="text-white" />
                     </div>
 
-                    <div className="border-t border-gray-200 pb-1 pt-4">
-                        <div className="px-4">
-                            <div className="text-base font-medium text-gray-800">
-                                {user.name}
-                            </div>
-                            {user.role === "admin" && user.nik && (
-                                <div className="text-sm font-medium text-gray-500">
-                                    {user.nik}
+                    <Dropdown>
+                        <Dropdown.Trigger>
+                            <button
+                                type="button"
+                                className="flex items-center gap-3 pl-2 active:opacity-80"
+                            >
+                                <div className="hidden text-right sm:block">
+                                    <p className="text-xs font-bold uppercase tracking-wide text-white">
+                                        {user.name}
+                                    </p>
+                                    <p className="text-[10px] uppercase tracking-wider text-white/80">
+                                        {user.is_admin
+                                            ? "Administrator"
+                                            : "Peserta Magang"}
+                                    </p>
                                 </div>
-                            )}
-                        </div>
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-white/30 bg-white/15 text-sm font-bold text-white">
+                                    {initials(user.name)}
+                                </div>
+                            </button>
+                        </Dropdown.Trigger>
 
-                        <div className="mt-3 space-y-1">
-                            <ResponsiveNavLink href={route("profile.edit")}>
+                        <Dropdown.Content>
+                            <Dropdown.Link href={route("profile.edit")}>
                                 Profil
-                            </ResponsiveNavLink>
-                            <ResponsiveNavLink
-                                method="post"
+                            </Dropdown.Link>
+                            <Dropdown.Link
                                 href={route("logout")}
+                                method="post"
                                 as="button"
                             >
                                 Keluar
-                            </ResponsiveNavLink>
+                            </Dropdown.Link>
+                        </Dropdown.Content>
+                    </Dropdown>
+                </div>
+            </header>
+
+            {/* Mobile sidebar overlay */}
+            {sidebarOpen && (
+                <button
+                    type="button"
+                    aria-label="Tutup menu"
+                    onClick={() => setSidebarOpen(false)}
+                    className="fixed inset-0 top-20 z-30 bg-black/30 md:hidden"
+                />
+            )}
+
+            {/* Sidebar */}
+            <aside
+                className={
+                    "fixed left-0 top-20 z-40 flex h-[calc(100vh-5rem)] w-56 flex-col overflow-y-auto border-r border-outline-variant bg-white py-4 transition-transform duration-200 md:translate-x-0 " +
+                    (sidebarOpen ? "translate-x-0" : "-translate-x-full")
+                }
+            >
+                <div className="mb-8 px-4">
+                    <div className="flex items-center gap-2 rounded-xl bg-primary-container/10 p-2">
+                        <div className="flex h-8 w-8 items-center justify-center rounded bg-primary-container text-white">
+                            <MaterialIcon
+                                name="corporate_fare"
+                                style={{ fontSize: "20px" }}
+                            />
+                        </div>
+                        <div>
+                            <p className="text-sm font-bold leading-tight text-primary">
+                                Enterprise HR
+                            </p>
+                            <p className="text-[10px] text-on-surface-variant">
+                                Attendance System
+                            </p>
                         </div>
                     </div>
                 </div>
-            </nav>
 
-            {header && (
-                <header className="bg-white shadow">
-                    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+                <nav
+                    className="flex-1 space-y-1"
+                    onClick={() => setSidebarOpen(false)}
+                >
+                    {navItems.map((entry) =>
+                        isGroup(entry) ? (
+                            <div key={entry.label} className="pt-2">
+                                <p className="px-4 pb-1 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/70">
+                                    {entry.label}
+                                </p>
+                                {entry.items.map((child) => (
+                                    <SidebarLink
+                                        key={child.routeName}
+                                        icon={child.icon}
+                                        label={child.label}
+                                        href={route(child.routeName)}
+                                        active={route().current(
+                                            child.activePattern,
+                                        )}
+                                    />
+                                ))}
+                            </div>
+                        ) : (
+                            <SidebarLink
+                                key={entry.routeName}
+                                icon={entry.icon}
+                                label={entry.label}
+                                href={route(entry.routeName)}
+                                active={route().current(entry.activePattern)}
+                            />
+                        ),
+                    )}
+                </nav>
+
+                <div className="mt-auto border-t border-outline-variant px-4 pt-6">
+                    <button
+                        type="button"
+                        onClick={() => router.reload()}
+                        className="mb-4 flex w-full items-center justify-center gap-2 rounded bg-primary py-2.5 text-sm font-semibold text-white transition-colors hover:brightness-110"
+                    >
+                        <MaterialIcon name="sync" style={{ fontSize: "18px" }} />
+                        Sync Data
+                    </button>
+                    <Link
+                        href={route("profile.edit")}
+                        className="flex items-center gap-3 py-2 text-sm font-medium text-on-surface-variant transition-colors hover:text-primary"
+                    >
+                        <MaterialIcon name="support" />
+                        <span>Bantuan</span>
+                    </Link>
+                    <Link
+                        href={route("logout")}
+                        method="post"
+                        as="button"
+                        className="flex w-full items-center gap-3 py-2 text-sm font-medium text-error transition-colors hover:opacity-80"
+                    >
+                        <MaterialIcon name="logout" />
+                        <span>Keluar</span>
+                    </Link>
+                </div>
+            </aside>
+
+            <FlashToaster />
+
+            {/* Main content */}
+            <main className="min-h-screen p-4 pt-24 sm:p-8 sm:pt-24 md:ml-56">
+                {header && (
+                    <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center">
                         {header}
                     </div>
-                </header>
-            )}
-
-            <main className="py-8">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <FlashMessages />
-                    {children}
-                </div>
+                )}
+                {children}
             </main>
         </div>
     );

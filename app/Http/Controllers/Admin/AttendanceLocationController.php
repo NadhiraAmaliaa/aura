@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreAttendanceLocationRequest;
 use App\Http\Requests\UpdateAttendanceLocationRequest;
 use App\Models\AttendanceLocation;
+use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -15,12 +16,21 @@ class AttendanceLocationController extends Controller
     /**
      * Display a listing of the attendance locations.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $locations = AttendanceLocation::orderBy('name')->paginate(15);
+        $perPage = (int) $request->integer('perPage', 10);
+
+        if (! in_array($perPage, [10, 25, 50, 100], true)) {
+            $perPage = 10;
+        }
+
+        $locations = AttendanceLocation::orderBy('name')
+            ->paginate($perPage)
+            ->withQueryString();
 
         return Inertia::render('admin/AttendanceLocations/Index', [
             'locations' => $locations,
+            'perPage' => $perPage,
         ]);
     }
 

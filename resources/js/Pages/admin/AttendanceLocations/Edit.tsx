@@ -1,22 +1,35 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { AttendanceLocation } from "@/types";
-import { Head } from "@inertiajs/react";
-import AttendanceLocationForm from "./AttendanceLocationForm";
+import { Head, router } from "@inertiajs/react";
+import LocationFormDialog from "./Partials/LocationFormDialog";
 
+/**
+ * Standalone edit route. The primary entry point is the dialog on the index
+ * page; this page reuses the same dialog so the route stays functional.
+ */
 export default function Edit({ location }: { location: AttendanceLocation }) {
+    const backToIndex = () =>
+        router.visit(route("admin.attendance-locations.index"));
+
     return (
         <AuthenticatedLayout
             header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
+                <h2 className="text-2xl font-extrabold tracking-tight text-gray-900">
                     Ubah Lokasi Absensi
                 </h2>
             }
         >
             <Head title="Ubah Lokasi Absensi" />
 
-            <div className="rounded-lg bg-white p-6 shadow sm:p-8">
-                <AttendanceLocationForm location={location} />
-            </div>
+            <LocationFormDialog
+                location={location}
+                open
+                onOpenChange={(value) => {
+                    if (!value) {
+                        backToIndex();
+                    }
+                }}
+            />
         </AuthenticatedLayout>
     );
 }
