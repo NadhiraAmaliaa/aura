@@ -22,7 +22,8 @@ class AttendanceReportRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'date' => ['nullable', 'date'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'program' => ['nullable', 'integer', 'exists:intern_programs,id'],
             'division' => ['nullable', 'integer', 'exists:divisions,id'],
         ];
@@ -36,7 +37,9 @@ class AttendanceReportRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'date.date' => 'Tanggal tidak valid.',
+            'start_date.date' => 'Tanggal awal tidak valid.',
+            'end_date.date' => 'Tanggal akhir tidak valid.',
+            'end_date.after_or_equal' => 'Tanggal akhir harus sama atau setelah tanggal awal.',
         ];
     }
 }

@@ -211,6 +211,11 @@ export interface AttendanceReportRow {
     check_out: string | null;
     check_out_lat: string | null;
     check_out_long: string | null;
+    jam_bekerja: string | null;
+    jarak: number | null;
+    status_kedatangan: string;
+    status_kepulangan: string;
+    keterlambatan: string;
     mood_in: string | null;
     mood_out: string | null;
 }
@@ -232,16 +237,16 @@ export interface AttendanceReportChart {
 }
 
 export interface AttendanceReport {
-    date: string;
-    day_label: string;
-    is_working_day: boolean;
+    start_date: string;
+    end_date: string;
     summary: AttendanceReportSummary;
     chart: AttendanceReportChart;
     rows: AttendanceReportRow[];
 }
 
 export interface AttendanceReportFilters {
-    date: string;
+    start_date: string;
+    end_date: string;
     program: number | null;
     division: number | null;
 }

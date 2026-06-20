@@ -34,8 +34,9 @@ const categoryBadge: Record<AttendanceReportCategory, string> = {
     tidak_absen: "bg-gray-100 text-gray-700",
 };
 
-function dash(value: string | null): string {
-    return value && value !== "" ? value : "-";
+function dash(value: string | number | null | undefined): string {
+    if (value === null || value === undefined || value === "") return "-";
+    return String(value);
 }
 
 function SummaryCard({
@@ -62,7 +63,8 @@ export default function Report({
     filters,
 }: ReportPageProps) {
     const { data, setData, get, processing } = useForm({
-        date: filters.date,
+        start_date: filters.start_date,
+        end_date: filters.end_date,
         program: filters.program ? String(filters.program) : "",
         division: filters.division ? String(filters.division) : "",
     });
@@ -84,10 +86,16 @@ export default function Report({
     };
 
     const exportUrl = route("admin.attendances.export", {
-        date: data.date,
+        start_date: data.start_date,
+        end_date: data.end_date,
         program: data.program || undefined,
         division: data.division || undefined,
     });
+
+    const isSameDay = report.start_date === report.end_date;
+    const periodLabel = isSameDay
+        ? formatDate(report.start_date)
+        : `${formatDate(report.start_date)} — ${formatDate(report.end_date)}`;
 
     const chartSlices: DonutSlice[] = [
         { label: "WFO", value: report.chart.wfo, color: "#16a34a" },
@@ -117,16 +125,36 @@ export default function Report({
                     onSubmit={submit}
                     className="rounded-lg bg-white p-5 shadow"
                 >
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
                         <div>
-                            <InputLabel htmlFor="date" value="Tanggal" />
+                            <InputLabel
+                                htmlFor="start_date"
+                                value="Tanggal Awal"
+                            />
                             <TextInput
-                                id="date"
+                                id="start_date"
                                 type="date"
                                 className="mt-1 block w-full"
-                                value={data.date}
+                                value={data.start_date}
                                 onChange={(e) =>
-                                    setData("date", e.target.value)
+                                    setData("start_date", e.target.value)
+                                }
+                            />
+                        </div>
+
+                        <div>
+                            <InputLabel
+                                htmlFor="end_date"
+                                value="Tanggal Akhir"
+                            />
+                            <TextInput
+                                id="end_date"
+                                type="date"
+                                className="mt-1 block w-full"
+                                value={data.end_date}
+                                min={data.start_date}
+                                onChange={(e) =>
+                                    setData("end_date", e.target.value)
                                 }
                             />
                         </div>
@@ -191,18 +219,12 @@ export default function Report({
 
                     <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4">
                         <p className="text-sm text-gray-500">
-                            {report.day_label}, {formatDate(report.date)}
-                            <span
-                                className={
-                                    "ml-2 inline-flex rounded-full px-2 py-0.5 text-xs font-medium " +
-                                    (report.is_working_day
-                                        ? "bg-green-100 text-green-800"
-                                        : "bg-gray-100 text-gray-600")
-                                }
-                            >
-                                {report.is_working_day
-                                    ? "Hari Kerja"
-                                    : "Bukan Hari Kerja"}
+                            Periode:{" "}
+                            <span className="font-medium text-gray-800">
+                                {periodLabel}
+                            </span>
+                            <span className="ml-2 text-gray-400">
+                                ({report.rows.length} baris)
                             </span>
                         </p>
                         <a
@@ -250,11 +272,7 @@ export default function Report({
                     </h3>
                     <DonutChart
                         data={chartSlices}
-                        emptyMessage={
-                            report.is_working_day
-                                ? "Belum ada data kehadiran untuk tanggal ini."
-                                : "Bukan hari kerja — tidak ada kehadiran tercatat."
-                        }
+                        emptyMessage="Belum ada data kehadiran untuk periode ini."
                     />
                 </div>
 
@@ -307,7 +325,7 @@ export default function Report({
                                 ) : (
                                     report.rows.map((row) => (
                                         <ReportRow
-                                            key={row.intern_id}
+                                            key={`${row.intern_id}-${row.tanggal}`}
                                             row={row}
                                         />
                                     ))

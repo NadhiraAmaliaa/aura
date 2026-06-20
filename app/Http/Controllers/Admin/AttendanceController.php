@@ -28,16 +28,17 @@ class AttendanceController extends Controller
      */
     public function index(AttendanceReportRequest $request): Response
     {
-        $date = $this->resolveDate($request);
+        [$startDate, $endDate] = $this->resolveDateRange($request);
         $programId = $request->integer('program') ?: null;
         $divisionId = $request->integer('division') ?: null;
 
         return Inertia::render('admin/Attendances/Report', [
-            'report' => $this->report->build($date, $programId, $divisionId),
+            'report' => $this->report->build($startDate, $endDate, $programId, $divisionId),
             'programs' => InternProgram::orderBy('name')->get(['id', 'name']),
             'divisions' => Division::orderBy('name')->get(['id', 'name']),
             'filters' => [
-                'date' => $date->toDateString(),
+                'start_date' => $startDate->toDateString(),
+                'end_date' => $endDate->toDateString(),
                 'program' => $programId,
                 'division' => $divisionId,
             ],
@@ -45,27 +46,20 @@ class AttendanceController extends Controller
     }
 
     /**
-     * Export the daily attendance report as a spreadsheet.
+     * Export the attendance report as a spreadsheet.
      */
     public function export(AttendanceReportRequest $request): BinaryFileResponse
     {
-        $date = $this->resolveDate($request);
+        [$startDate, $endDate] = $this->resolveDateRange($request);
         $programId = $request->integer('program') ?: null;
         $divisionId = $request->integer('division') ?: null;
 
-        $report = $this->report->build($date, $programId, $divisionId);
+        $report = $this->report->build($startDate, $endDate, $programId, $divisionId);
 
-        $programName = $programId
-            ? InternProgram::whereKey($programId)->value('name')
-            : null;
-        $divisionName = $divisionId
-            ? Division::whereKey($divisionId)->value('name')
-            : null;
-
-        $fileName = 'reporting-absensi-'.$date->toDateString().'.xlsx';
+        $fileName = 'laporan-absensi-'.$startDate->toDateString().'-sd-'.$endDate->toDateString().'.xlsx';
 
         return Excel::download(
-            new AttendanceReportExport($report, $programName, $divisionName),
+            new AttendanceReportExport($report),
             $fileName
         );
     }
@@ -94,17 +88,32 @@ class AttendanceController extends Controller
         ]);
 
         return redirect()
-            ->route('admin.attendances.index', ['date' => $attendance->attendance_date->toDateString()])
+            ->route('admin.attendances.index', [
+                'start_date' => $attendance->attendance_date->toDateString(),
+                'end_date' => $attendance->attendance_date->toDateString(),
+            ])
             ->with('status', 'Status absensi berhasil diperbarui.');
     }
 
     /**
-     * Resolve the report date from the request, defaulting to today.
+     * Resolve start and end dates from the request, both defaulting to today.
+     *
+     * @return array{0: Carbon, 1: Carbon}
      */
-    private function resolveDate(AttendanceReportRequest $request): Carbon
+    private function resolveDateRange(AttendanceReportRequest $request): array
     {
-        $date = $request->validated('date');
+        $today = Carbon::today();
+        $start = $request->validated('start_date')
+            ? Carbon::parse($request->validated('start_date'))->startOfDay()
+            : $today->copy()->startOfDay();
+        $end = $request->validated('end_date')
+            ? Carbon::parse($request->validated('end_date'))->startOfDay()
+            : $today->copy()->startOfDay();
 
-        return $date ? Carbon::parse($date)->startOfDay() : Carbon::today();
+        if ($end->lt($start)) {
+            $end = $start->copy();
+        }
+
+        return [$start, $end];
     }
 }
