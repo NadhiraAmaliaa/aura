@@ -151,4 +151,31 @@ class LookupController extends Controller
             'level' => $program->level,
         ], 201);
     }
+
+    /**
+     * Quick-create a division directly from the autocomplete flow.
+     *
+     * Used by the intern form so an administrator can add a missing division
+     * without leaving the page. Returns the created record so the frontend can
+     * select it immediately.
+     */
+    public function storeDivision(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255', Rule::unique('divisions', 'name')],
+        ], [
+            'name.required' => 'Nama divisi wajib diisi.',
+            'name.unique' => 'Divisi tersebut sudah terdaftar.',
+        ]);
+
+        $division = Division::create([
+            'name' => trim($validated['name']),
+            'is_active' => true,
+        ]);
+
+        return response()->json([
+            'id' => $division->id,
+            'name' => $division->name,
+        ], 201);
+    }
 }

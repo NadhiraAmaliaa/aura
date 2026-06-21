@@ -2,13 +2,14 @@ import Autocomplete, { AutocompleteOption } from "@/Components/Autocomplete";
 import Checkbox from "@/Components/Checkbox";
 import InputError from "@/Components/InputError";
 import InputLabel from "@/Components/InputLabel";
+import MaterialIcon from "@/Components/MaterialIcon";
 import PrimaryButton from "@/Components/PrimaryButton";
 import SelectInput from "@/Components/SelectInput";
 import TextInput from "@/Components/TextInput";
 import { postJson } from "@/lib/http";
 import { Intern, InternProgram } from "@/types";
 import { Link, useForm } from "@inertiajs/react";
-import { FormEventHandler } from "react";
+import { FormEventHandler, useState } from "react";
 
 interface InternFormData {
     name: string;
@@ -34,6 +35,10 @@ export default function InternForm({
     intern?: Intern;
 }) {
     const isEdit = Boolean(intern);
+
+    const [showPassword, setShowPassword] = useState(false);
+    const [showPasswordConfirmation, setShowPasswordConfirmation] =
+        useState(false);
 
     const { data, setData, post, put, processing, errors } =
         useForm<InternFormData>({
@@ -103,6 +108,14 @@ export default function InternForm({
         });
     };
 
+    // Quick-create a division from the autocomplete when it is missing. The
+    // created option is returned so the Autocomplete selects it immediately.
+    const createDivision = async (
+        name: string,
+    ): Promise<AutocompleteOption | null> => {
+        return postJson(route("admin.lookup.divisions.store"), { name });
+    };
+
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
 
@@ -131,6 +144,20 @@ export default function InternForm({
                         <InputError className="mt-2" message={errors.name} />
                     </div>
                     <div>
+                        <InputLabel htmlFor="username" value="Username" />
+                        <TextInput
+                            id="username"
+                            className="mt-1 block w-full cursor-not-allowed bg-surface-container-low text-on-surface-variant"
+                            value={data.nim}
+                            readOnly
+                            tabIndex={-1}
+                            placeholder="Mengikuti NIM"
+                        />
+                        <p className="mt-1 text-xs text-on-surface-variant">
+                            Username otomatis mengikuti NIM peserta.
+                        </p>
+                    </div>
+                    <div>
                         <InputLabel
                             htmlFor="password"
                             value={
@@ -139,16 +166,37 @@ export default function InternForm({
                                     : "Kata Sandi"
                             }
                         />
-                        <TextInput
-                            id="password"
-                            type="password"
-                            className="mt-1 block w-full"
-                            value={data.password}
-                            autoComplete="new-password"
-                            onChange={(e) =>
-                                setData("password", e.target.value)
-                            }
-                        />
+                        <div className="relative mt-1">
+                            <TextInput
+                                id="password"
+                                type={showPassword ? "text" : "password"}
+                                className="block w-full pr-10"
+                                value={data.password}
+                                autoComplete="new-password"
+                                onChange={(e) =>
+                                    setData("password", e.target.value)
+                                }
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword((prev) => !prev)}
+                                aria-label={
+                                    showPassword
+                                        ? "Sembunyikan kata sandi"
+                                        : "Tampilkan kata sandi"
+                                }
+                                className="absolute inset-y-0 right-0 flex items-center pr-3 text-on-surface-variant transition-colors hover:text-primary"
+                            >
+                                <MaterialIcon
+                                    name={
+                                        showPassword
+                                            ? "visibility_off"
+                                            : "visibility"
+                                    }
+                                    style={{ fontSize: 20 }}
+                                />
+                            </button>
+                        </div>
                         <InputError
                             className="mt-2"
                             message={errors.password}
@@ -159,16 +207,46 @@ export default function InternForm({
                             htmlFor="password_confirmation"
                             value="Konfirmasi Kata Sandi"
                         />
-                        <TextInput
-                            id="password_confirmation"
-                            type="password"
-                            className="mt-1 block w-full"
-                            value={data.password_confirmation}
-                            autoComplete="new-password"
-                            onChange={(e) =>
-                                setData("password_confirmation", e.target.value)
-                            }
-                        />
+                        <div className="relative mt-1">
+                            <TextInput
+                                id="password_confirmation"
+                                type={
+                                    showPasswordConfirmation
+                                        ? "text"
+                                        : "password"
+                                }
+                                className="block w-full pr-10"
+                                value={data.password_confirmation}
+                                autoComplete="new-password"
+                                onChange={(e) =>
+                                    setData(
+                                        "password_confirmation",
+                                        e.target.value,
+                                    )
+                                }
+                            />
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setShowPasswordConfirmation((prev) => !prev)
+                                }
+                                aria-label={
+                                    showPasswordConfirmation
+                                        ? "Sembunyikan kata sandi"
+                                        : "Tampilkan kata sandi"
+                                }
+                                className="absolute inset-y-0 right-0 flex items-center pr-3 text-on-surface-variant transition-colors hover:text-primary"
+                            >
+                                <MaterialIcon
+                                    name={
+                                        showPasswordConfirmation
+                                            ? "visibility_off"
+                                            : "visibility"
+                                    }
+                                    style={{ fontSize: 20 }}
+                                />
+                            </button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -273,6 +351,8 @@ export default function InternForm({
                                 displayValue={divisionDisplay}
                                 placeholder="Cari divisi..."
                                 onSelect={handleDivision}
+                                onCreate={createDivision}
+                                createLabel="Tambah divisi"
                             />
                         </div>
                         <InputError

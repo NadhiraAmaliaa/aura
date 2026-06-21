@@ -29,7 +29,7 @@ class StoreInternRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'password' => ['required', 'confirmed', Password::defaults()],
+            'password' => ['required', 'confirmed', Password::min(3)],
             'intern_program_id' => ['required', 'exists:intern_programs,id'],
             'university_id' => ['required', 'integer', 'exists:universities,id'],
             'study_program_id' => [

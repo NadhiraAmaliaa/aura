@@ -36,7 +36,14 @@ export default function Index({
         }
 
         return divisions.data.filter((division) =>
-            division.name.toLowerCase().includes(term),
+            [
+                division.name,
+                division.is_active ? "Aktif" : "Nonaktif",
+                String(division.interns_count),
+            ]
+                .join(" ")
+                .toLowerCase()
+                .includes(term),
         );
     }, [divisions.data, search]);
 

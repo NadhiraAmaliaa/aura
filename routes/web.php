@@ -81,6 +81,7 @@ Route::middleware(['auth', 'role:admin'])
         // Quick-create endpoints used by the autocomplete on the intern form.
         Route::post('/lookup/universities', [LookupController::class, 'storeUniversity'])->name('lookup.universities.store');
         Route::post('/lookup/study-programs', [LookupController::class, 'storeStudyProgram'])->name('lookup.study-programs.store');
+        Route::post('/lookup/divisions', [LookupController::class, 'storeDivision'])->name('lookup.divisions.store');
 
         Route::get('/attendances', [AdminAttendanceController::class, 'index'])->name('attendances.index');
         Route::get('/attendances/export', [AdminAttendanceController::class, 'export'])->name('attendances.export');

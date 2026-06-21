@@ -35,7 +35,15 @@ export default function Index({
         }
 
         return nonWorkingDays.data.filter((day) =>
-            [day.name, day.date].join(" ").toLowerCase().includes(term),
+            [
+                day.name,
+                day.date,
+                formatDate(day.date),
+                nonWorkingDayTypeLabels[day.type],
+            ]
+                .join(" ")
+                .toLowerCase()
+                .includes(term),
         );
     }, [nonWorkingDays.data, search]);
 

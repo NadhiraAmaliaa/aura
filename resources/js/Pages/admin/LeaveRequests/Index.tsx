@@ -8,11 +8,12 @@ import RowActions, { IconAction } from "@/Components/admin/RowActions";
 import StatusBadge from "@/Components/admin/StatusBadge";
 import TableCard from "@/Components/admin/TableCard";
 import TableFooter from "@/Components/admin/TableFooter";
+import TableToolbar from "@/Components/admin/TableToolbar";
 import { formatDate, leaveStatusLabels, leaveTypeLabels } from "@/lib/labels";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { LeaveRequest, LeaveStatus, Paginated } from "@/types";
 import { Head, router } from "@inertiajs/react";
-import { FormEventHandler, useState } from "react";
+import { FormEventHandler, useMemo, useState } from "react";
 
 interface Filters {
     status?: string;
@@ -32,9 +33,11 @@ const statusTone: Record<
 export default function Index({
     leaveRequests,
     filters,
+    perPage,
 }: {
     leaveRequests: Paginated<LeaveRequest>;
     filters: Filters;
+    perPage: number;
 }) {
     const [form, setForm] = useState<Filters>({
         status: filters.status ?? "",
@@ -42,12 +45,42 @@ export default function Index({
         search: filters.search ?? "",
     });
 
+    const [tableSearch, setTableSearch] = useState("");
+
+    const rows = useMemo(() => {
+        const term = tableSearch.trim().toLowerCase();
+        if (!term) return leaveRequests.data;
+
+        return leaveRequests.data.filter((leave) =>
+            [
+                leave.request_number,
+                leave.user?.name,
+                leave.user?.intern?.nim,
+                leaveTypeLabels[leave.type],
+                `${formatDate(leave.start_date)} - ${formatDate(leave.end_date)}`,
+                leaveStatusLabels[leave.status],
+            ]
+                .join(" ")
+                .toLowerCase()
+                .includes(term),
+        );
+    }, [leaveRequests.data, tableSearch]);
+
+    const changePerPage = (value: number) => {
+        router.get(
+            route("admin.leave-requests.index"),
+            { ...form, perPage: value },
+            { preserveState: true, replace: true },
+        );
+    };
+
     const applyFilters: FormEventHandler = (event) => {
         event.preventDefault();
-        router.get(route("admin.leave-requests.index"), form, {
-            preserveState: true,
-            replace: true,
-        });
+        router.get(
+            route("admin.leave-requests.index"),
+            { ...form, perPage },
+            { preserveState: true, replace: true },
+        );
     };
 
     const columns: Column<LeaveRequest>[] = [
@@ -177,9 +210,16 @@ export default function Index({
             </FilterCard>
 
             <TableCard>
+                <TableToolbar
+                    search={tableSearch}
+                    onSearchChange={setTableSearch}
+                    perPage={perPage}
+                    onPerPageChange={changePerPage}
+                />
+
                 <DataTable
                     columns={columns}
-                    rows={leaveRequests.data}
+                    rows={rows}
                     getRowKey={(leave) => leave.id}
                     emptyIcon="mail"
                     emptyText="Tidak ada pengajuan."

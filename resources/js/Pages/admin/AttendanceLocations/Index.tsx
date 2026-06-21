@@ -34,7 +34,13 @@ export default function Index({
         }
 
         return locations.data.filter((location) =>
-            [location.name, location.latitude, location.longitude]
+            [
+                location.name,
+                location.latitude,
+                location.longitude,
+                location.radius,
+                location.is_active ? "Aktif" : "Nonaktif",
+            ]
                 .join(" ")
                 .toLowerCase()
                 .includes(term),

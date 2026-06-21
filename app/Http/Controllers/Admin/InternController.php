@@ -37,6 +37,12 @@ class InternController extends Controller
         $periodFrom = $request->filled('period_from') ? $request->date('period_from') : null;
         $periodTo = $request->filled('period_to') ? $request->date('period_to') : null;
 
+        $perPage = (int) $request->integer('perPage', 10);
+
+        if (! in_array($perPage, [10, 25, 50, 100], true)) {
+            $perPage = 10;
+        }
+
         $interns = Intern::with(['user', 'internProgram', 'universityRef', 'studyProgram', 'divisionRef'])
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($q) use ($search): void {
@@ -60,13 +66,14 @@ class InternController extends Controller
                 });
             })
             ->latest()
-            ->paginate(10)
+            ->paginate($perPage)
             ->withQueryString();
 
         return Inertia::render('admin/Interns/Index', [
             'interns' => $interns,
             'programs' => InternProgram::orderBy('name')->get(['id', 'name']),
             'divisions' => Division::orderBy('name')->get(['id', 'name']),
+            'perPage' => $perPage,
             'filters' => [
                 'search' => $search,
                 'program' => $programId,

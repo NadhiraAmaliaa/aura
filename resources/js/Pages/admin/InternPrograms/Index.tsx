@@ -35,7 +35,11 @@ export default function Index({
         }
 
         return programs.data.filter((program) =>
-            [program.name, program.description ?? ""]
+            [
+                program.name,
+                program.description ?? "",
+                String(program.interns_count),
+            ]
                 .join(" ")
                 .toLowerCase()
                 .includes(term),

@@ -1,16 +1,19 @@
 import ActionButton from "@/Components/admin/ActionButton";
 import ConfirmDeleteDialog from "@/Components/admin/ConfirmDeleteDialog";
 import DataTable, { Column } from "@/Components/admin/DataTable";
+import DatePicker from "@/Components/admin/DatePicker";
 import FilterCard, {
     FilterField,
     filterControlClass,
 } from "@/Components/admin/FilterCard";
 import FilterSelect from "@/Components/admin/FilterSelect";
+import MaterialIcon from "@/Components/MaterialIcon";
 import PageHeader from "@/Components/admin/PageHeader";
 import RowActions, { IconAction } from "@/Components/admin/RowActions";
 import StatusBadge from "@/Components/admin/StatusBadge";
 import TableCard from "@/Components/admin/TableCard";
 import TableFooter from "@/Components/admin/TableFooter";
+import TableToolbar from "@/Components/admin/TableToolbar";
 import {
     formatDate,
     internStatusBadgeTone,
@@ -19,7 +22,7 @@ import {
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Division, Intern, InternProgram, Paginated } from "@/types";
 import { Head, router } from "@inertiajs/react";
-import { FormEventHandler, useState } from "react";
+import { FormEventHandler, useMemo, useState } from "react";
 
 interface Filters {
     search: string;
@@ -35,11 +38,13 @@ export default function Index({
     programs,
     divisions,
     filters,
+    perPage,
 }: {
     interns: Paginated<Intern>;
     programs: Pick<InternProgram, "id" | "name">[];
     divisions: Pick<Division, "id" | "name">[];
     filters: Filters;
+    perPage: number;
 }) {
     const [search, setSearch] = useState(filters.search ?? "");
     const [program, setProgram] = useState(
@@ -54,6 +59,41 @@ export default function Index({
 
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [deleting, setDeleting] = useState<Intern | null>(null);
+
+    const [tableSearch, setTableSearch] = useState("");
+
+    const periodText = (intern: Intern) => {
+        if (!intern.start_date && !intern.end_date) {
+            return "-";
+        }
+
+        return `${formatDate(intern.start_date)} - ${formatDate(intern.end_date)}`;
+    };
+
+    const rows = useMemo(() => {
+        const term = tableSearch.trim().toLowerCase();
+        if (!term) return interns.data;
+
+        return interns.data.filter((intern) =>
+            [
+                intern.user?.name,
+                intern.nim,
+                intern.university_ref?.name ?? intern.university,
+                intern.study_program?.name ?? intern.major,
+                intern.division_ref?.name ?? intern.division,
+                intern.intern_program?.name,
+                periodText(intern),
+                internStatusLabels[intern.status],
+            ]
+                .join(" ")
+                .toLowerCase()
+                .includes(term),
+        );
+    }, [interns.data, tableSearch]);
+
+    const changePerPage = (value: number) => {
+        applyFilters({ perPage: String(value) });
+    };
 
     const programOptions = programs.map((p) => ({
         value: String(p.id),
@@ -82,6 +122,7 @@ export default function Index({
                 status: next.status ?? status,
                 period_from: next.period_from ?? periodFrom,
                 period_to: next.period_to ?? periodTo,
+                perPage: next.perPage ?? String(perPage),
             },
             { preserveState: true, replace: true },
         );
@@ -109,14 +150,6 @@ export default function Index({
     const openDelete = (intern: Intern) => {
         setDeleting(intern);
         setDeleteOpen(true);
-    };
-
-    const periodText = (intern: Intern) => {
-        if (!intern.start_date && !intern.end_date) {
-            return "-";
-        }
-
-        return `${formatDate(intern.start_date)} - ${formatDate(intern.end_date)}`;
     };
 
     const columns: Column<Intern>[] = [
@@ -205,15 +238,17 @@ export default function Index({
                     <>
                         <button
                             type="submit"
-                            className="inline-flex h-10 items-center rounded-lg bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary/90"
+                            className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary/90"
                         >
-                            Terapkan
+                            <MaterialIcon name="search" style={{ fontSize: 18 }} />
+                            Filter
                         </button>
                         <button
                             type="button"
                             onClick={resetFilters}
-                            className="text-sm font-medium text-on-surface-variant hover:text-on-surface"
+                            className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-outline-variant px-4 text-sm font-medium text-on-surface-variant transition hover:border-primary/50 hover:text-on-surface"
                         >
+                            <MaterialIcon name="restart_alt" style={{ fontSize: 18 }} />
                             Reset
                         </button>
                     </>
@@ -270,36 +305,48 @@ export default function Index({
                 </FilterField>
 
                 <FilterField label="Periode mulai dari" htmlFor="period_from">
-                    <input
+                    <DatePicker
                         id="period_from"
-                        type="date"
                         value={periodFrom}
-                        onChange={(event) => {
-                            setPeriodFrom(event.target.value);
-                            applyFilters({ period_from: event.target.value });
+                        onChange={(val) => {
+                            const nextPeriodTo =
+                                periodTo && val && periodTo < val ? "" : periodTo;
+                            setPeriodFrom(val);
+                            if (nextPeriodTo !== periodTo) {
+                                setPeriodTo(nextPeriodTo);
+                            }
+                            applyFilters({
+                                period_from: val,
+                                period_to: nextPeriodTo,
+                            });
                         }}
-                        className={filterControlClass}
                     />
                 </FilterField>
 
                 <FilterField label="Periode sampai" htmlFor="period_to">
-                    <input
+                    <DatePicker
                         id="period_to"
-                        type="date"
                         value={periodTo}
-                        onChange={(event) => {
-                            setPeriodTo(event.target.value);
-                            applyFilters({ period_to: event.target.value });
+                        min={periodFrom}
+                        onChange={(val) => {
+                            setPeriodTo(val);
+                            applyFilters({ period_to: val });
                         }}
-                        className={filterControlClass}
                     />
                 </FilterField>
             </FilterCard>
 
             <TableCard>
+                <TableToolbar
+                    search={tableSearch}
+                    onSearchChange={setTableSearch}
+                    perPage={perPage}
+                    onPerPageChange={changePerPage}
+                />
+
                 <DataTable
                     columns={columns}
-                    rows={interns.data}
+                    rows={rows}
                     getRowKey={(intern) => intern.id}
                     emptyIcon="groups"
                     emptyText="Tidak ada peserta magang yang cocok."
