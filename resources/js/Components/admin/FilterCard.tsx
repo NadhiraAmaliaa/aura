@@ -22,7 +22,9 @@ export default function FilterCard({
                     {children}
                 </div>
                 {actions && (
-                    <div className="flex items-center gap-3">{actions}</div>
+                    <div className="flex items-center justify-end gap-3">
+                        {actions}
+                    </div>
                 )}
             </div>
         </form>
@@ -33,13 +35,15 @@ export function FilterField({
     label,
     htmlFor,
     children,
+    className,
 }: {
     label: string;
     htmlFor?: string;
     children: ReactNode;
+    className?: string;
 }) {
     return (
-        <div>
+        <div className={className}>
             <label
                 htmlFor={htmlFor}
                 className="mb-1 block text-xs font-medium text-on-surface-variant"

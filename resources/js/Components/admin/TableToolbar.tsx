@@ -31,7 +31,7 @@ export default function TableToolbar({
                         onChange={(event: ChangeEvent<HTMLSelectElement>) =>
                             onPerPageChange(Number(event.target.value))
                         }
-                        className="h-9 rounded-lg border-outline-variant bg-surface-container-low px-2 text-sm font-medium focus:border-primary focus:ring-primary"
+                        className="appearance-none h-9 rounded-lg border border-outline-variant bg-surface-container-low pl-3 pr-7 text-sm font-medium focus:border-primary focus:ring-primary bg-[url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%229ca3af%22 stroke-width=%222%22%3e%3cpolyline points=%226 9 12 15 18 9%22%3e%3c/polyline%3e%3c/svg%3e')] bg-no-repeat bg-right bg-[length:18px]"
                     >
                         {PER_PAGE_OPTIONS.map((option) => (
                             <option key={option} value={option}>

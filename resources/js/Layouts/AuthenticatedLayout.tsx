@@ -2,7 +2,7 @@ import Dropdown from "@/Components/Dropdown";
 import FlashToaster from "@/Components/FlashToaster";
 import MaterialIcon from "@/Components/MaterialIcon";
 import { AuthUser, PageProps } from "@/types";
-import { Link, router, usePage } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react";
 import {
     PropsWithChildren,
     ReactNode,
@@ -146,20 +146,6 @@ const internNav: NavEntry[] = [
     },
 ];
 
-function entryRoute(entry: NavEntry): string {
-    return route(isGroup(entry) ? entry.items[0].routeName : entry.routeName);
-}
-
-function isEntryActive(entry: NavEntry): boolean {
-    if (isGroup(entry)) {
-        return entry.items.some((child) =>
-            route().current(child.activePattern),
-        );
-    }
-
-    return route().current(entry.activePattern);
-}
-
 function initials(name: string): string {
     return name
         .split(" ")
@@ -248,27 +234,6 @@ export default function AuthenticatedLayout({
                     >
                         aghris
                     </Link>
-
-                    <nav className="hidden items-center gap-1 md:flex">
-                        {navItems.map((entry) => {
-                            const active = isEntryActive(entry);
-
-                            return (
-                                <Link
-                                    key={entry.label}
-                                    href={entryRoute(entry)}
-                                    className={
-                                        "cursor-pointer rounded px-3 py-1 text-sm transition-colors " +
-                                        (active
-                                            ? "border-b-2 border-white font-bold text-white"
-                                            : "font-medium text-white/80 hover:bg-white/10")
-                                    }
-                                >
-                                    {entry.label}
-                                </Link>
-                            );
-                        })}
-                    </nav>
                 </div>
 
                 <div className="flex items-center gap-4">
@@ -393,32 +358,17 @@ export default function AuthenticatedLayout({
                 </nav>
 
                 <div className="mt-auto border-t border-outline-variant px-4 pt-6">
-                    <button
-                        type="button"
-                        onClick={() => router.reload()}
-                        className="mb-4 flex w-full items-center justify-center gap-2 rounded bg-primary py-2.5 text-sm font-semibold text-white transition-colors hover:brightness-110"
-                    >
-                        <MaterialIcon
-                            name="sync"
-                            style={{ fontSize: "18px" }}
-                        />
-                        Sync Data
-                    </button>
-                    <Link
-                        href={route("profile.edit")}
-                        className="flex items-center gap-3 py-2 text-sm font-medium text-on-surface-variant transition-colors hover:text-primary"
-                    >
-                        <MaterialIcon name="support" />
-                        <span>Bantuan</span>
-                    </Link>
                     <Link
                         href={route("logout")}
                         method="post"
                         as="button"
-                        className="flex w-full items-center gap-3 py-2 text-sm font-medium text-error transition-colors hover:opacity-80"
+                        className="mb-2 flex w-full items-center justify-center gap-2 rounded bg-error py-2.5 text-sm font-semibold text-white transition-colors hover:brightness-110"
                     >
-                        <MaterialIcon name="logout" />
-                        <span>Keluar</span>
+                        <MaterialIcon
+                            name="logout"
+                            style={{ fontSize: "18px" }}
+                        />
+                        Logout
                     </Link>
                 </div>
             </aside>

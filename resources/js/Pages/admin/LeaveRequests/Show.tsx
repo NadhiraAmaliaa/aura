@@ -1,4 +1,5 @@
 import StatusBadge from "@/Components/admin/StatusBadge";
+import MaterialIcon from "@/Components/MaterialIcon";
 import DangerButton from "@/Components/DangerButton";
 import InputLabel from "@/Components/InputLabel";
 import PrimaryButton from "@/Components/PrimaryButton";
@@ -48,13 +49,13 @@ export default function Show({ leaveRequest }: { leaveRequest: LeaveRequest }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-6">
                     <h1 className="text-[28px] font-extrabold tracking-tight text-on-surface">
                         Detail Pengajuan
                     </h1>
                     <Link
                         href={route("admin.leave-requests.index")}
-                        className="text-sm font-semibold text-primary hover:underline"
+                        className="shrink-0 text-sm font-semibold text-primary hover:underline"
                     >
                         Kembali
                     </Link>
@@ -116,6 +117,24 @@ export default function Show({ leaveRequest }: { leaveRequest: LeaveRequest }) {
                         <h3 className="mb-4 text-lg font-semibold text-on-surface">
                             Keputusan
                         </h3>
+
+                        {leaveRequest.status === "approved" && (
+                            <a
+                                href={route(
+                                    "leave-requests.pdf",
+                                    leaveRequest.id,
+                                )}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mb-4 flex items-center justify-center gap-2 rounded-lg border border-primary bg-primary/5 px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/10"
+                            >
+                                <MaterialIcon
+                                    name="picture_as_pdf"
+                                    style={{ fontSize: 18 }}
+                                />
+                                Cetak PDF Surat
+                            </a>
+                        )}
 
                         {isPending ? (
                             <form className="space-y-4">

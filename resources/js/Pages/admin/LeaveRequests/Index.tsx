@@ -3,6 +3,8 @@ import FilterCard, {
     FilterField,
     filterControlClass,
 } from "@/Components/admin/FilterCard";
+import FilterSelect from "@/Components/admin/FilterSelect";
+import MaterialIcon from "@/Components/MaterialIcon";
 import PageHeader from "@/Components/admin/PageHeader";
 import RowActions, { IconAction } from "@/Components/admin/RowActions";
 import StatusBadge from "@/Components/admin/StatusBadge";
@@ -74,6 +76,20 @@ export default function Index({
         );
     };
 
+    const statusOptions = Object.entries(leaveStatusLabels).map(
+        ([value, label]) => ({
+            value,
+            label,
+        }),
+    );
+
+    const typeOptions = Object.entries(leaveTypeLabels).map(
+        ([value, label]) => ({
+            value,
+            label,
+        }),
+    );
+
     const applyFilters: FormEventHandler = (event) => {
         event.preventDefault();
         router.get(
@@ -83,26 +99,42 @@ export default function Index({
         );
     };
 
+    const resetFilters = () => {
+        setForm({
+            status: "",
+            type: "",
+            search: "",
+        });
+        router.get(
+            route("admin.leave-requests.index"),
+            {},
+            { preserveState: true, replace: true },
+        );
+    };
+
     const columns: Column<LeaveRequest>[] = [
         {
             header: "Nomor",
             cell: (leave) => (
-                <span className="font-mono text-xs text-on-surface-variant">
+                <span className="font-mono text-sm font-bold text-on-surface">
                     {leave.request_number}
+                </span>
+            ),
+        },
+        {
+            header: "NIM",
+            cell: (leave) => (
+                <span className="font-mono text-sm text-on-surface-variant">
+                    {leave.user?.intern?.nim ?? "-"}
                 </span>
             ),
         },
         {
             header: "Nama",
             cell: (leave) => (
-                <div>
-                    <div className="font-semibold text-on-surface">
-                        {leave.user?.name}
-                    </div>
-                    <div className="text-xs text-on-surface-variant">
-                        {leave.user?.intern?.nim}
-                    </div>
-                </div>
+                <span className="font-semibold text-on-surface">
+                    {leave.user?.name}
+                </span>
             ),
         },
         {
@@ -147,55 +179,56 @@ export default function Index({
             <FilterCard
                 onSubmit={applyFilters}
                 actions={
-                    <button
-                        type="submit"
-                        className="inline-flex h-10 items-center rounded-lg bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary/90"
-                    >
-                        Filter
-                    </button>
+                    <>
+                        <button
+                            type="submit"
+                            className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary/90"
+                        >
+                            <MaterialIcon
+                                name="search"
+                                style={{ fontSize: 18 }}
+                            />
+                            Filter
+                        </button>
+                        <button
+                            type="button"
+                            onClick={resetFilters}
+                            className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-outline-variant px-4 text-sm font-medium text-on-surface-variant transition hover:border-primary/50 hover:text-on-surface"
+                        >
+                            <MaterialIcon
+                                name="restart_alt"
+                                style={{ fontSize: 18 }}
+                            />
+                            Reset
+                        </button>
+                    </>
                 }
             >
                 <FilterField label="Status" htmlFor="status">
-                    <select
+                    <FilterSelect
                         id="status"
                         value={form.status}
-                        onChange={(event) =>
-                            setForm({ ...form, status: event.target.value })
-                        }
-                        className={filterControlClass}
-                    >
-                        <option value="">Semua Status</option>
-                        {Object.entries(leaveStatusLabels).map(
-                            ([value, label]) => (
-                                <option key={value} value={value}>
-                                    {label}
-                                </option>
-                            ),
-                        )}
-                    </select>
+                        options={statusOptions}
+                        placeholder="Semua Status"
+                        onChange={(val) => setForm({ ...form, status: val })}
+                    />
                 </FilterField>
 
                 <FilterField label="Jenis" htmlFor="type">
-                    <select
+                    <FilterSelect
                         id="type"
                         value={form.type}
-                        onChange={(event) =>
-                            setForm({ ...form, type: event.target.value })
-                        }
-                        className={filterControlClass}
-                    >
-                        <option value="">Semua Jenis</option>
-                        {Object.entries(leaveTypeLabels).map(
-                            ([value, label]) => (
-                                <option key={value} value={value}>
-                                    {label}
-                                </option>
-                            ),
-                        )}
-                    </select>
+                        options={typeOptions}
+                        placeholder="Semua Jenis"
+                        onChange={(val) => setForm({ ...form, type: val })}
+                    />
                 </FilterField>
 
-                <FilterField label="Cari nomor / nama" htmlFor="search">
+                <FilterField
+                    label="Cari nomor / nama"
+                    htmlFor="search"
+                    className="col-span-2"
+                >
                     <input
                         id="search"
                         type="text"

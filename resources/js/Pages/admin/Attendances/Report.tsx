@@ -1,9 +1,10 @@
-import DonutChart, { DonutSlice } from "@/Components/DonutChart";
-import InputLabel from "@/Components/InputLabel";
-import PrimaryButton from "@/Components/PrimaryButton";
-import SecondaryButton from "@/Components/SecondaryButton";
-import SelectInput from "@/Components/SelectInput";
-import TextInput from "@/Components/TextInput";
+import DatePicker from "@/Components/admin/DatePicker";
+import FilterCard, { FilterField } from "@/Components/admin/FilterCard";
+import FilterSelect, {
+    FilterSelectOption,
+} from "@/Components/admin/FilterSelect";
+import MaterialIcon from "@/Components/MaterialIcon";
+import TableToolbar from "@/Components/admin/TableToolbar";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { formatDate } from "@/lib/labels";
 import {
@@ -15,7 +16,57 @@ import {
     InternProgram,
 } from "@/types";
 import { Head, Link, router, useForm } from "@inertiajs/react";
-import { FormEventHandler } from "react";
+import { FormEventHandler, lazy, Suspense, useMemo, useState } from "react";
+
+const AttendanceChart = lazy(() => import("@/Components/AttendanceChart"));
+
+const animationStyles = `
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes float {
+        0%, 100% {
+            transform: translateY(0px);
+        }
+        50% {
+            transform: translateY(-8px);
+        }
+    }
+
+    @keyframes progressBarFill {
+        from {
+            width: 0% !important;
+        }
+    }
+
+    .card-fade-in {
+        animation: fadeInUp 0.6s ease-out forwards;
+        opacity: 0;
+    }
+
+    .card-fade-in:nth-child(1) { animation-delay: 0.1s; }
+    .card-fade-in:nth-child(2) { animation-delay: 0.2s; }
+    .card-fade-in:nth-child(3) { animation-delay: 0.3s; }
+    .card-fade-in:nth-child(4) { animation-delay: 0.4s; }
+    .card-fade-in:nth-child(5) { animation-delay: 0.5s; }
+
+    .icon-float {
+        animation: float 3s ease-in-out infinite;
+    }
+
+    .progress-bar-fill {
+        animation: progressBarFill 1s ease-out 0.3s forwards;
+        width: 0% !important;
+    }
+`;
 
 interface ReportPageProps {
     report: AttendanceReport;
@@ -42,18 +93,53 @@ function dash(value: string | number | null | undefined): string {
 function SummaryCard({
     label,
     value,
-    accent,
+    total = 0,
+    icon,
+    bgGradient,
 }: {
     label: string;
     value: number;
-    accent: string;
+    total?: number;
+    icon: string;
+    bgGradient: string;
 }) {
+    const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+    const showBar = total > 0;
     return (
-        <div className="rounded-xl border border-outline-variant bg-white p-5 shadow-sm">
-            <p className="text-sm font-medium text-on-surface-variant">
-                {label}
-            </p>
-            <p className={"mt-2 text-3xl font-bold " + accent}>{value}</p>
+        <div
+            className={`relative overflow-hidden rounded-2xl px-5 py-4 text-white shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105 ${
+                bgGradient
+            } before:absolute before:right-0 before:top-1/2 before:-translate-y-1/2 before:text-white before:opacity-20 before:-mr-4`}
+        >
+            {/* Background Icon (large, semi-transparent, animated float) */}
+            <div className="absolute right-0 top-4 text-white opacity-20 icon-float">
+                <MaterialIcon name={icon} filled style={{ fontSize: 120 }} />
+            </div>
+
+            {/* Content */}
+            <div className="relative z-10">
+                <p className="truncate text-xs font-semibold uppercase tracking-wider text-white/80">
+                    {label}
+                </p>
+                <p className="mt-2 text-4xl font-extrabold tabular-nums text-white">
+                    {value}
+                </p>
+                <div className="mt-4 space-y-1.5 h-10">
+                    {showBar ? (
+                        <>
+                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/30">
+                                <div
+                                    className="h-full rounded-full bg-white/70 progress-bar-fill transition-all duration-1000"
+                                    style={{ width: `${Math.min(pct, 100)}%` }}
+                                />
+                            </div>
+                            <p className="text-xs text-white/70">
+                                {pct}% dari total
+                            </p>
+                        </>
+                    ) : null}
+                </div>
+            </div>
         </div>
     );
 }
@@ -64,12 +150,22 @@ export default function Report({
     divisions,
     filters,
 }: ReportPageProps) {
-    const { data, setData, get, processing } = useForm({
+    const { data, setData, get } = useForm({
         start_date: filters.start_date,
         end_date: filters.end_date,
         program: filters.program ? String(filters.program) : "",
         division: filters.division ? String(filters.division) : "",
     });
+
+    const programOptions: FilterSelectOption[] = programs.map((p) => ({
+        value: String(p.id),
+        label: p.name,
+    }));
+
+    const divisionOptions: FilterSelectOption[] = divisions.map((d) => ({
+        value: String(d.id),
+        label: d.name,
+    }));
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
@@ -94,22 +190,51 @@ export default function Report({
         division: data.division || undefined,
     });
 
+    const [tableSearch, setTableSearch] = useState("");
+    const [tablePerPage, setTablePerPage] = useState(10);
+    const [tablePage, setTablePage] = useState(1);
+
+    const filteredRows = useMemo(() => {
+        const term = tableSearch.trim().toLowerCase();
+        if (!term) return report.rows;
+        return report.rows.filter((row) =>
+            [
+                row.nim,
+                row.nama,
+                row.program,
+                row.divisi,
+                row.hari,
+                row.jenis_absen,
+                row.check_in,
+                row.check_out,
+            ]
+                .join(" ")
+                .toLowerCase()
+                .includes(term),
+        );
+    }, [report.rows, tableSearch]);
+
+    const totalFiltered = filteredRows.length;
+    const totalPages = Math.max(1, Math.ceil(totalFiltered / tablePerPage));
+    const safePage = Math.min(tablePage, totalPages);
+    const from = totalFiltered === 0 ? 0 : (safePage - 1) * tablePerPage + 1;
+    const to = Math.min(safePage * tablePerPage, totalFiltered);
+    const pagedRows = filteredRows.slice(from - 1, to);
+
+    const handleSearchChange = (value: string) => {
+        setTableSearch(value);
+        setTablePage(1);
+    };
+
+    const handlePerPageChange = (value: number) => {
+        setTablePerPage(value);
+        setTablePage(1);
+    };
+
     const isSameDay = report.start_date === report.end_date;
     const periodLabel = isSameDay
         ? formatDate(report.start_date)
         : `${formatDate(report.start_date)} — ${formatDate(report.end_date)}`;
-
-    const chartSlices: DonutSlice[] = [
-        { label: "WFO", value: report.chart.wfo, color: "#16a34a" },
-        { label: "WFH", value: report.chart.wfh, color: "#0ea5e9" },
-        { label: "Dinas", value: report.chart.dinas, color: "#9333ea" },
-        { label: "Izin", value: report.chart.izin, color: "#6366f1" },
-        {
-            label: "Tidak Hadir",
-            value: report.chart.tidak_hadir,
-            color: "#ef4444",
-        },
-    ];
 
     return (
         <AuthenticatedLayout
@@ -120,170 +245,169 @@ export default function Report({
             }
         >
             <Head title="Reporting Absensi" />
+            <style>{animationStyles}</style>
 
             <div className="space-y-6">
                 {/* 1. Filter Section */}
-                <form
+                <FilterCard
                     onSubmit={submit}
-                    className="rounded-xl border border-outline-variant bg-white p-5 shadow-sm"
-                >
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
-                        <div>
-                            <InputLabel
-                                htmlFor="start_date"
-                                value="Tanggal Awal"
-                            />
-                            <TextInput
-                                id="start_date"
-                                type="date"
-                                className="mt-1 block w-full"
-                                value={data.start_date}
-                                onChange={(e) =>
-                                    setData("start_date", e.target.value)
-                                }
-                            />
-                        </div>
-
-                        <div>
-                            <InputLabel
-                                htmlFor="end_date"
-                                value="Tanggal Akhir"
-                            />
-                            <TextInput
-                                id="end_date"
-                                type="date"
-                                className="mt-1 block w-full"
-                                value={data.end_date}
-                                min={data.start_date}
-                                onChange={(e) =>
-                                    setData("end_date", e.target.value)
-                                }
-                            />
-                        </div>
-
-                        <div>
-                            <InputLabel
-                                htmlFor="program"
-                                value="Program Magang"
-                            />
-                            <SelectInput
-                                id="program"
-                                className="mt-1 block w-full"
-                                value={data.program}
-                                onChange={(e) =>
-                                    setData("program", e.target.value)
-                                }
+                    actions={
+                        <>
+                            <button
+                                type="submit"
+                                className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary/90"
                             >
-                                <option value="">Semua Program</option>
-                                {programs.map((program) => (
-                                    <option key={program.id} value={program.id}>
-                                        {program.name}
-                                    </option>
-                                ))}
-                            </SelectInput>
-                        </div>
-
-                        <div>
-                            <InputLabel htmlFor="division" value="Divisi" />
-                            <SelectInput
-                                id="division"
-                                className="mt-1 block w-full"
-                                value={data.division}
-                                onChange={(e) =>
-                                    setData("division", e.target.value)
-                                }
-                            >
-                                <option value="">Semua Divisi</option>
-                                {divisions.map((division) => (
-                                    <option
-                                        key={division.id}
-                                        value={division.id}
-                                    >
-                                        {division.name}
-                                    </option>
-                                ))}
-                            </SelectInput>
-                        </div>
-
-                        <div className="flex items-end gap-2">
-                            <PrimaryButton type="submit" disabled={processing}>
+                                <MaterialIcon
+                                    name="search"
+                                    style={{ fontSize: 18 }}
+                                />
                                 Filter
-                            </PrimaryButton>
-                            <SecondaryButton
+                            </button>
+                            <button
                                 type="button"
                                 onClick={reset}
-                                disabled={processing}
+                                className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-outline-variant px-4 text-sm font-medium text-on-surface-variant transition hover:border-primary/50 hover:text-on-surface"
                             >
+                                <MaterialIcon
+                                    name="restart_alt"
+                                    style={{ fontSize: 18 }}
+                                />
                                 Reset
-                            </SecondaryButton>
-                        </div>
-                    </div>
+                            </button>
+                        </>
+                    }
+                >
+                    <FilterField label="Tanggal Awal" htmlFor="start_date">
+                        <DatePicker
+                            id="start_date"
+                            value={data.start_date}
+                            onChange={(val) => setData("start_date", val)}
+                        />
+                    </FilterField>
 
-                    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-outline-variant pt-4">
-                        <p className="text-sm text-on-surface-variant">
-                            Periode:{" "}
-                            <span className="font-medium text-on-surface">
-                                {periodLabel}
-                            </span>
-                            <span className="ml-2 text-on-surface-variant/70">
-                                ({report.rows.length} baris)
-                            </span>
-                        </p>
-                        <a
-                            href={exportUrl}
-                            className="inline-flex items-center gap-2 rounded-lg border border-transparent bg-[#28a745] px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[#22963e] focus:outline-none focus:ring-2 focus:ring-[#28a745] focus:ring-offset-2"
-                        >
-                            Export Excel
-                        </a>
-                    </div>
-                </form>
+                    <FilterField label="Tanggal Akhir" htmlFor="end_date">
+                        <DatePicker
+                            id="end_date"
+                            value={data.end_date}
+                            min={data.start_date}
+                            onChange={(val) => setData("end_date", val)}
+                        />
+                    </FilterField>
+
+                    <FilterField label="Program Magang" htmlFor="program">
+                        <FilterSelect
+                            id="program"
+                            value={data.program}
+                            options={programOptions}
+                            placeholder="Semua program"
+                            onChange={(val) => setData("program", val)}
+                        />
+                    </FilterField>
+
+                    <FilterField label="Divisi" htmlFor="division">
+                        <FilterSelect
+                            id="division"
+                            value={data.division}
+                            options={divisionOptions}
+                            placeholder="Semua divisi"
+                            onChange={(val) => setData("division", val)}
+                        />
+                    </FilterField>
+                </FilterCard>
+
+                {/* Period Info & Export */}
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-outline-variant bg-white p-4 shadow-sm">
+                    <p className="text-sm text-on-surface-variant">
+                        Periode:{" "}
+                        <span className="font-medium text-on-surface">
+                            {periodLabel}
+                        </span>
+                        <span className="ml-2 text-on-surface-variant/70">
+                            ({report.rows.length} baris)
+                        </span>
+                    </p>
+                    <a
+                        href={exportUrl}
+                        className="inline-flex items-center gap-2 rounded-lg border border-transparent bg-[#28a745] px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[#22963e] focus:outline-none focus:ring-2 focus:ring-[#28a745] focus:ring-offset-2"
+                    >
+                        Export Excel
+                    </a>
+                </div>
 
                 {/* 2. Summary Cards */}
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-                    <SummaryCard
-                        label="Total Peserta"
-                        value={report.summary.total_peserta}
-                        accent="text-gray-900"
-                    />
-                    <SummaryCard
-                        label="Total Hadir"
-                        value={report.summary.total_hadir}
-                        accent="text-green-600"
-                    />
-                    <SummaryCard
-                        label="Terlambat"
-                        value={report.summary.terlambat}
-                        accent="text-yellow-600"
-                    />
-                    <SummaryCard
-                        label="Izin"
-                        value={report.summary.izin}
-                        accent="text-indigo-600"
-                    />
-                    <SummaryCard
-                        label="Tidak Hadir"
-                        value={report.summary.tidak_hadir}
-                        accent="text-red-600"
-                    />
+                    <div className="card-fade-in">
+                        <SummaryCard
+                            label="Total Peserta"
+                            value={report.summary.total_peserta}
+                            icon="group"
+                            bgGradient="bg-gradient-to-br from-purple-300 to-purple-500"
+                        />
+                    </div>
+                    <div className="card-fade-in">
+                        <SummaryCard
+                            label="Total Hadir"
+                            value={report.summary.total_hadir}
+                            total={report.summary.total_peserta}
+                            icon="check_circle"
+                            bgGradient="bg-gradient-to-br from-teal-300 to-teal-500"
+                        />
+                    </div>
+                    <div className="card-fade-in">
+                        <SummaryCard
+                            label="Terlambat"
+                            value={report.summary.terlambat}
+                            total={report.summary.total_peserta}
+                            icon="schedule"
+                            bgGradient="bg-gradient-to-br from-rose-300 to-rose-500"
+                        />
+                    </div>
+                    <div className="card-fade-in">
+                        <SummaryCard
+                            label="Izin / Sakit"
+                            value={report.summary.izin}
+                            total={report.summary.total_peserta}
+                            icon="event_note"
+                            bgGradient="bg-gradient-to-br from-blue-300 to-blue-500"
+                        />
+                    </div>
+                    <div className="card-fade-in">
+                        <SummaryCard
+                            label="Tidak Hadir"
+                            value={report.summary.tidak_hadir}
+                            total={report.summary.total_peserta}
+                            icon="person_off"
+                            bgGradient="bg-gradient-to-br from-sky-300 to-sky-500"
+                        />
+                    </div>
                 </div>
 
                 {/* 3. Attendance Distribution Chart */}
-                <div className="rounded-xl border border-outline-variant bg-white p-6 shadow-sm">
-                    <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-on-surface-variant">
-                        Distribusi Kehadiran
-                    </h3>
-                    <DonutChart
-                        data={chartSlices}
-                        emptyMessage="Belum ada data kehadiran untuk periode ini."
-                    />
-                </div>
+                <Suspense
+                    fallback={
+                        <div className="flex h-[460px] items-center justify-center rounded-xl border border-outline-variant bg-white shadow-sm">
+                            <span className="text-sm text-on-surface-variant">
+                                Memuat grafik…
+                            </span>
+                        </div>
+                    }
+                >
+                    <AttendanceChart chart={report.chart} />
+                </Suspense>
 
                 {/* 4. Reporting Table */}
                 <div className="overflow-hidden rounded-xl border border-outline-variant bg-white shadow-sm">
+                    <TableToolbar
+                        search={tableSearch}
+                        onSearchChange={handleSearchChange}
+                        searchPlaceholder="Cari nama, NIM, divisi..."
+                        perPage={tablePerPage}
+                        onPerPageChange={handlePerPageChange}
+                    />
                     <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-outline-variant text-sm">
                             <thead className="bg-[#eab308]">
-                                <tr>
+                                <tr className="divide-x divide-yellow-400">
                                     {[
                                         "NIM",
                                         "Nama",
@@ -307,7 +431,7 @@ export default function Report({
                                     ].map((heading) => (
                                         <th
                                             key={heading}
-                                            className="whitespace-nowrap px-3 py-3 text-left text-xs font-bold uppercase tracking-wider text-on-surface"
+                                            className="whitespace-nowrap px-3 py-3 text-left text-xs font-bold uppercase tracking-wider text-white"
                                         >
                                             {heading}
                                         </th>
@@ -325,7 +449,7 @@ export default function Report({
                                         </td>
                                     </tr>
                                 ) : (
-                                    report.rows.map((row) => (
+                                    pagedRows.map((row) => (
                                         <ReportRow
                                             key={`${row.intern_id}-${row.tanggal}`}
                                             row={row}
@@ -335,6 +459,96 @@ export default function Report({
                             </tbody>
                         </table>
                     </div>
+                    {/* Table Footer */}
+                    <div className="flex flex-col items-center justify-between gap-3 border-t border-outline-variant bg-surface-container-lowest px-6 py-4 sm:flex-row">
+                        <p className="text-sm text-on-surface-variant">
+                            Menampilkan{" "}
+                            <span className="font-bold text-on-surface">
+                                {from} - {to}
+                            </span>{" "}
+                            dari{" "}
+                            <span className="font-bold text-on-surface">
+                                {totalFiltered}
+                            </span>{" "}
+                            entitas
+                        </p>
+                        <div className="flex items-center gap-1">
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setTablePage((p) => Math.max(1, p - 1))
+                                }
+                                disabled={safePage <= 1}
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant transition hover:bg-surface-container-low disabled:opacity-40"
+                            >
+                                <MaterialIcon
+                                    name="chevron_left"
+                                    style={{ fontSize: 18 }}
+                                />
+                            </button>
+                            {Array.from({ length: totalPages }, (_, i) => i + 1)
+                                .filter(
+                                    (p) =>
+                                        p === 1 ||
+                                        p === totalPages ||
+                                        Math.abs(p - safePage) <= 1,
+                                )
+                                .reduce<(number | "...")[]>(
+                                    (acc, p, idx, arr) => {
+                                        if (
+                                            idx > 0 &&
+                                            (p as number) -
+                                                (arr[idx - 1] as number) >
+                                                1
+                                        )
+                                            acc.push("...");
+                                        acc.push(p);
+                                        return acc;
+                                    },
+                                    [],
+                                )
+                                .map((p, idx) =>
+                                    p === "..." ? (
+                                        <span
+                                            key={`ellipsis-${idx}`}
+                                            className="px-1 text-sm text-on-surface-variant"
+                                        >
+                                            …
+                                        </span>
+                                    ) : (
+                                        <button
+                                            key={p}
+                                            type="button"
+                                            onClick={() =>
+                                                setTablePage(p as number)
+                                            }
+                                            className={`inline-flex h-8 w-8 items-center justify-center rounded-lg border text-sm transition ${
+                                                p === safePage
+                                                    ? "border-primary bg-primary font-bold text-white"
+                                                    : "border-outline-variant text-on-surface-variant hover:bg-surface-container-low"
+                                            }`}
+                                        >
+                                            {p}
+                                        </button>
+                                    ),
+                                )}
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setTablePage((p) =>
+                                        Math.min(totalPages, p + 1),
+                                    )
+                                }
+                                disabled={safePage >= totalPages}
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-outline-variant text-on-surface-variant transition hover:bg-surface-container-low disabled:opacity-40"
+                            >
+                                <MaterialIcon
+                                    name="chevron_right"
+                                    style={{ fontSize: 18 }}
+                                />
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>
@@ -343,26 +557,26 @@ export default function Report({
 
 function ReportRow({ row }: { row: AttendanceReportRow }) {
     return (
-        <tr className="hover:bg-gray-50">
-            <td className="whitespace-nowrap px-3 py-3 text-gray-700">
+        <tr className="divide-x divide-outline-variant hover:bg-gray-50">
+            <td className="whitespace-nowrap px-3 py-3 text-gray-900">
                 {dash(row.nim)}
             </td>
             <td className="whitespace-nowrap px-3 py-3 font-medium text-gray-900">
                 {dash(row.nama)}
             </td>
-            <td className="whitespace-nowrap px-3 py-3 text-gray-700">
+            <td className="whitespace-nowrap px-3 py-3 text-gray-900">
                 {formatDate(row.tanggal)}
             </td>
-            <td className="whitespace-nowrap px-3 py-3 text-gray-700">
+            <td className="whitespace-nowrap px-3 py-3 text-gray-900">
                 {dash(row.program)}
             </td>
-            <td className="whitespace-nowrap px-3 py-3 text-gray-700">
+            <td className="whitespace-nowrap px-3 py-3 text-gray-900">
                 {dash(row.divisi)}
             </td>
-            <td className="whitespace-nowrap px-3 py-3 text-gray-700">
+            <td className="whitespace-nowrap px-3 py-3 text-gray-900">
                 {row.hari}
             </td>
-            <td className="whitespace-nowrap px-3 py-3 text-gray-700">
+            <td className="whitespace-nowrap px-3 py-3 text-gray-900">
                 {row.hari_kerja ? "Ya" : "Tidak"}
             </td>
             <td className="whitespace-nowrap px-3 py-3">
@@ -380,34 +594,34 @@ function ReportRow({ row }: { row: AttendanceReportRow }) {
                     </span>
                 )}
             </td>
-            <td className="whitespace-nowrap px-3 py-3 text-gray-700">
+            <td className="whitespace-nowrap px-3 py-3 text-gray-900">
                 {dash(row.check_in_schedule)}
             </td>
-            <td className="whitespace-nowrap px-3 py-3 text-gray-700">
+            <td className="whitespace-nowrap px-3 py-3 text-gray-900">
                 {dash(row.check_in)}
             </td>
-            <td className="whitespace-nowrap px-3 py-3 text-gray-500">
+            <td className="whitespace-nowrap px-3 py-3 text-gray-700">
                 {dash(row.check_in_lat)}
             </td>
-            <td className="whitespace-nowrap px-3 py-3 text-gray-500">
+            <td className="whitespace-nowrap px-3 py-3 text-gray-700">
                 {dash(row.check_in_long)}
             </td>
-            <td className="whitespace-nowrap px-3 py-3 text-gray-700">
+            <td className="whitespace-nowrap px-3 py-3 text-gray-900">
                 {dash(row.check_out_schedule)}
             </td>
-            <td className="whitespace-nowrap px-3 py-3 text-gray-700">
+            <td className="whitespace-nowrap px-3 py-3 text-gray-900">
                 {dash(row.check_out)}
             </td>
-            <td className="whitespace-nowrap px-3 py-3 text-gray-500">
+            <td className="whitespace-nowrap px-3 py-3 text-gray-700">
                 {dash(row.check_out_lat)}
             </td>
-            <td className="whitespace-nowrap px-3 py-3 text-gray-500">
+            <td className="whitespace-nowrap px-3 py-3 text-gray-700">
                 {dash(row.check_out_long)}
             </td>
-            <td className="whitespace-nowrap px-3 py-3 text-gray-400">
+            <td className="whitespace-nowrap px-3 py-3 text-gray-600">
                 {dash(row.mood_in)}
             </td>
-            <td className="whitespace-nowrap px-3 py-3 text-gray-400">
+            <td className="whitespace-nowrap px-3 py-3 text-gray-600">
                 {dash(row.mood_out)}
             </td>
             <td className="whitespace-nowrap px-3 py-3">

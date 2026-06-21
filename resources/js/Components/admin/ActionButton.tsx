@@ -2,7 +2,7 @@ import MaterialIcon from "@/Components/MaterialIcon";
 import { Link } from "@inertiajs/react";
 
 const TONE_CLASS = {
-    green: "bg-[#28a745] hover:brightness-95",
+    green: "bg-green-600 hover:brightness-110",
     blue: "bg-primary hover:brightness-110",
 };
 

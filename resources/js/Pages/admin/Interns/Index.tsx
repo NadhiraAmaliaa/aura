@@ -2,10 +2,7 @@ import ActionButton from "@/Components/admin/ActionButton";
 import ConfirmDeleteDialog from "@/Components/admin/ConfirmDeleteDialog";
 import DataTable, { Column } from "@/Components/admin/DataTable";
 import DatePicker from "@/Components/admin/DatePicker";
-import FilterCard, {
-    FilterField,
-    filterControlClass,
-} from "@/Components/admin/FilterCard";
+import { FilterField, filterControlClass } from "@/Components/admin/FilterCard";
 import FilterSelect from "@/Components/admin/FilterSelect";
 import MaterialIcon from "@/Components/MaterialIcon";
 import PageHeader from "@/Components/admin/PageHeader";
@@ -232,13 +229,112 @@ export default function Index({
         >
             <Head title="Peserta Magang" />
 
-            <FilterCard
+            <form
                 onSubmit={submitFilters}
-                actions={
-                    <>
+                className="mb-6 rounded-xl border border-outline-variant bg-white p-4 shadow-sm"
+            >
+                <div className="flex flex-col gap-4">
+                    {/* Row 1: dropdown filters */}
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                        <FilterField label="Program Magang" htmlFor="program">
+                            <FilterSelect
+                                id="program"
+                                value={program}
+                                options={programOptions}
+                                placeholder="Semua program"
+                                onChange={(val) => {
+                                    setProgram(val);
+                                    applyFilters({ program: val });
+                                }}
+                            />
+                        </FilterField>
+
+                        <FilterField label="Divisi" htmlFor="division">
+                            <FilterSelect
+                                id="division"
+                                value={division}
+                                options={divisionOptions}
+                                placeholder="Semua divisi"
+                                onChange={(val) => {
+                                    setDivision(val);
+                                    applyFilters({ division: val });
+                                }}
+                            />
+                        </FilterField>
+
+                        <FilterField label="Status" htmlFor="status">
+                            <FilterSelect
+                                id="status"
+                                value={status}
+                                options={statusOptions}
+                                placeholder="Semua status"
+                                onChange={(val) => {
+                                    setStatus(val);
+                                    applyFilters({ status: val });
+                                }}
+                            />
+                        </FilterField>
+
+                        <FilterField
+                            label="Periode mulai dari"
+                            htmlFor="period_from"
+                        >
+                            <DatePicker
+                                id="period_from"
+                                value={periodFrom}
+                                onChange={(val) => {
+                                    const nextPeriodTo =
+                                        periodTo && val && periodTo < val
+                                            ? ""
+                                            : periodTo;
+                                    setPeriodFrom(val);
+                                    if (nextPeriodTo !== periodTo) {
+                                        setPeriodTo(nextPeriodTo);
+                                    }
+                                    applyFilters({
+                                        period_from: val,
+                                        period_to: nextPeriodTo,
+                                    });
+                                }}
+                            />
+                        </FilterField>
+
+                        <FilterField label="Periode sampai" htmlFor="period_to">
+                            <DatePicker
+                                id="period_to"
+                                value={periodTo}
+                                min={periodFrom}
+                                onChange={(val) => {
+                                    setPeriodTo(val);
+                                    applyFilters({ period_to: val });
+                                }}
+                            />
+                        </FilterField>
+                    </div>
+
+                    {/* Row 2: search + buttons */}
+                    <div className="flex items-end gap-3">
+                        <div className="flex flex-1 flex-col">
+                            <label
+                                htmlFor="search"
+                                className="mb-1 block text-xs font-medium text-on-surface-variant"
+                            >
+                                Cari nama atau NIM
+                            </label>
+                            <input
+                                id="search"
+                                type="text"
+                                value={search}
+                                onChange={(event) =>
+                                    setSearch(event.target.value)
+                                }
+                                placeholder="Ketik lalu tekan Enter..."
+                                className={filterControlClass}
+                            />
+                        </div>
                         <button
                             type="submit"
-                            className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary/90"
+                            className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary/90"
                         >
                             <MaterialIcon
                                 name="search"
@@ -249,7 +345,7 @@ export default function Index({
                         <button
                             type="button"
                             onClick={resetFilters}
-                            className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-outline-variant px-4 text-sm font-medium text-on-surface-variant transition hover:border-primary/50 hover:text-on-surface"
+                            className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border border-outline-variant px-4 text-sm font-medium text-on-surface-variant transition hover:border-primary/50 hover:text-on-surface"
                         >
                             <MaterialIcon
                                 name="restart_alt"
@@ -257,92 +353,9 @@ export default function Index({
                             />
                             Reset
                         </button>
-                    </>
-                }
-            >
-                <FilterField label="Cari nama atau NIM" htmlFor="search">
-                    <input
-                        id="search"
-                        type="text"
-                        value={search}
-                        onChange={(event) => setSearch(event.target.value)}
-                        placeholder="Ketik lalu tekan Enter..."
-                        className={filterControlClass}
-                    />
-                </FilterField>
-
-                <FilterField label="Program Magang" htmlFor="program">
-                    <FilterSelect
-                        id="program"
-                        value={program}
-                        options={programOptions}
-                        placeholder="Semua program"
-                        onChange={(val) => {
-                            setProgram(val);
-                            applyFilters({ program: val });
-                        }}
-                    />
-                </FilterField>
-
-                <FilterField label="Divisi" htmlFor="division">
-                    <FilterSelect
-                        id="division"
-                        value={division}
-                        options={divisionOptions}
-                        placeholder="Semua divisi"
-                        onChange={(val) => {
-                            setDivision(val);
-                            applyFilters({ division: val });
-                        }}
-                    />
-                </FilterField>
-
-                <FilterField label="Status" htmlFor="status">
-                    <FilterSelect
-                        id="status"
-                        value={status}
-                        options={statusOptions}
-                        placeholder="Semua status"
-                        onChange={(val) => {
-                            setStatus(val);
-                            applyFilters({ status: val });
-                        }}
-                    />
-                </FilterField>
-
-                <FilterField label="Periode mulai dari" htmlFor="period_from">
-                    <DatePicker
-                        id="period_from"
-                        value={periodFrom}
-                        onChange={(val) => {
-                            const nextPeriodTo =
-                                periodTo && val && periodTo < val
-                                    ? ""
-                                    : periodTo;
-                            setPeriodFrom(val);
-                            if (nextPeriodTo !== periodTo) {
-                                setPeriodTo(nextPeriodTo);
-                            }
-                            applyFilters({
-                                period_from: val,
-                                period_to: nextPeriodTo,
-                            });
-                        }}
-                    />
-                </FilterField>
-
-                <FilterField label="Periode sampai" htmlFor="period_to">
-                    <DatePicker
-                        id="period_to"
-                        value={periodTo}
-                        min={periodFrom}
-                        onChange={(val) => {
-                            setPeriodTo(val);
-                            applyFilters({ period_to: val });
-                        }}
-                    />
-                </FilterField>
-            </FilterCard>
+                    </div>
+                </div>
+            </form>
 
             <TableCard>
                 <TableToolbar
