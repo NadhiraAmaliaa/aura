@@ -240,7 +240,10 @@ export default function Index({
                             type="submit"
                             className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-primary px-5 text-sm font-semibold text-white transition hover:bg-primary/90"
                         >
-                            <MaterialIcon name="search" style={{ fontSize: 18 }} />
+                            <MaterialIcon
+                                name="search"
+                                style={{ fontSize: 18 }}
+                            />
                             Filter
                         </button>
                         <button
@@ -248,7 +251,10 @@ export default function Index({
                             onClick={resetFilters}
                             className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-outline-variant px-4 text-sm font-medium text-on-surface-variant transition hover:border-primary/50 hover:text-on-surface"
                         >
-                            <MaterialIcon name="restart_alt" style={{ fontSize: 18 }} />
+                            <MaterialIcon
+                                name="restart_alt"
+                                style={{ fontSize: 18 }}
+                            />
                             Reset
                         </button>
                     </>
@@ -310,7 +316,9 @@ export default function Index({
                         value={periodFrom}
                         onChange={(val) => {
                             const nextPeriodTo =
-                                periodTo && val && periodTo < val ? "" : periodTo;
+                                periodTo && val && periodTo < val
+                                    ? ""
+                                    : periodTo;
                             setPeriodFrom(val);
                             if (nextPeriodTo !== periodTo) {
                                 setPeriodTo(nextPeriodTo);

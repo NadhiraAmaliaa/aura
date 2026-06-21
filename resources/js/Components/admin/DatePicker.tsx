@@ -181,7 +181,9 @@ export default function DatePicker({
                                 : "text-on-surface-variant")
                         }
                     >
-                        {selectedDate ? formatDisplay(selectedDate) : placeholder}
+                        {selectedDate
+                            ? formatDisplay(selectedDate)
+                            : placeholder}
                     </span>
                 </span>
                 {selectedDate && (
@@ -221,7 +223,11 @@ export default function DatePicker({
                             value={month}
                             onChange={(event) =>
                                 setViewDate(
-                                    new Date(year, Number(event.target.value), 1),
+                                    new Date(
+                                        year,
+                                        Number(event.target.value),
+                                        1,
+                                    ),
                                 )
                             }
                             className="h-8 flex-1 rounded-lg border-outline-variant bg-surface-container-low px-2 text-xs font-semibold text-on-surface focus:border-primary focus:ring-primary"
@@ -237,7 +243,11 @@ export default function DatePicker({
                             value={year}
                             onChange={(event) =>
                                 setViewDate(
-                                    new Date(Number(event.target.value), month, 1),
+                                    new Date(
+                                        Number(event.target.value),
+                                        month,
+                                        1,
+                                    ),
                                 )
                             }
                             className="h-8 w-[4.5rem] flex-shrink-0 rounded-lg border-outline-variant bg-surface-container-low px-2 text-xs font-semibold text-on-surface focus:border-primary focus:ring-primary"
