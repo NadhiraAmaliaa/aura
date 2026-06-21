@@ -6,8 +6,8 @@ import PrimaryButton from "@/Components/PrimaryButton";
 import TextareaInput from "@/Components/TextareaInput";
 import { formatDate, leaveStatusLabels, leaveTypeLabels } from "@/lib/labels";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { LeaveRequest, LeaveStatus } from "@/types";
-import { Head, Link, useForm } from "@inertiajs/react";
+import { LeaveRequest, LeaveStatus, PageProps } from "@/types";
+import { Head, Link, useForm, usePage } from "@inertiajs/react";
 import { FormEventHandler } from "react";
 
 const statusTone: Record<
@@ -31,6 +31,7 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 export default function Show({ leaveRequest }: { leaveRequest: LeaveRequest }) {
+    const isAdmin = usePage<PageProps>().props.auth.user?.is_admin ?? false;
     const isPending = leaveRequest.status === "pending";
 
     const { data, setData, patch, processing, errors } = useForm({
@@ -137,46 +138,53 @@ export default function Show({ leaveRequest }: { leaveRequest: LeaveRequest }) {
                         )}
 
                         {isPending ? (
-                            <form className="space-y-4">
-                                <div>
-                                    <InputLabel
-                                        htmlFor="admin_note"
-                                        value="Catatan (opsional)"
-                                    />
-                                    <TextareaInput
-                                        id="admin_note"
-                                        rows={3}
-                                        className="mt-1 block w-full"
-                                        value={data.admin_note}
-                                        onChange={(event) =>
-                                            setData(
-                                                "admin_note",
-                                                event.target.value,
-                                            )
-                                        }
-                                    />
-                                    {errors.admin_note && (
-                                        <p className="mt-2 text-sm text-error">
-                                            {errors.admin_note}
-                                        </p>
-                                    )}
-                                </div>
+                            isAdmin ? (
+                                <form className="space-y-4">
+                                    <div>
+                                        <InputLabel
+                                            htmlFor="admin_note"
+                                            value="Catatan (opsional)"
+                                        />
+                                        <TextareaInput
+                                            id="admin_note"
+                                            rows={3}
+                                            className="mt-1 block w-full"
+                                            value={data.admin_note}
+                                            onChange={(event) =>
+                                                setData(
+                                                    "admin_note",
+                                                    event.target.value,
+                                                )
+                                            }
+                                        />
+                                        {errors.admin_note && (
+                                            <p className="mt-2 text-sm text-error">
+                                                {errors.admin_note}
+                                            </p>
+                                        )}
+                                    </div>
 
-                                <div className="flex gap-3">
-                                    <PrimaryButton
-                                        onClick={decide("approve")}
-                                        disabled={processing}
-                                    >
-                                        Setujui
-                                    </PrimaryButton>
-                                    <DangerButton
-                                        onClick={decide("reject")}
-                                        disabled={processing}
-                                    >
-                                        Tolak
-                                    </DangerButton>
-                                </div>
-                            </form>
+                                    <div className="flex gap-3">
+                                        <PrimaryButton
+                                            onClick={decide("approve")}
+                                            disabled={processing}
+                                        >
+                                            Setujui
+                                        </PrimaryButton>
+                                        <DangerButton
+                                            onClick={decide("reject")}
+                                            disabled={processing}
+                                        >
+                                            Tolak
+                                        </DangerButton>
+                                    </div>
+                                </form>
+                            ) : (
+                                <p className="text-sm text-on-surface-variant">
+                                    Pengajuan ini masih menunggu keputusan
+                                    administrator.
+                                </p>
+                            )
                         ) : (
                             <div className="space-y-3 text-sm">
                                 <p className="text-on-surface-variant">

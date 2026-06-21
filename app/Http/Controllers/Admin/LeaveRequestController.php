@@ -24,6 +24,12 @@ class LeaveRequestController extends Controller
             ->with(['user.intern.internProgram'])
             ->orderByDesc('created_at');
 
+        // Supervisors only see leave requests from interns in their division.
+        if ($request->user()->isSupervisor()) {
+            $divisionId = $request->user()->division_id;
+            $query->whereHas('user.intern', fn ($i) => $i->where('division_id', $divisionId));
+        }
+
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
@@ -63,9 +69,15 @@ class LeaveRequestController extends Controller
     /**
      * Display the detail of a single leave request.
      */
-    public function show(LeaveRequest $leaveRequest): Response
+    public function show(Request $request, LeaveRequest $leaveRequest): Response
     {
         $leaveRequest->load(['user.intern.internProgram', 'approver']);
+
+        // Supervisors may only open leave requests from their own division.
+        if ($request->user()->isSupervisor()
+            && $leaveRequest->user?->intern?->division_id !== $request->user()->division_id) {
+            abort(403, 'Unauthorized.');
+        }
 
         return Inertia::render('admin/LeaveRequests/Show', [
             'leaveRequest' => $leaveRequest,

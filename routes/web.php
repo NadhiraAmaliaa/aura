@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\LeaveRequestController as AdminLeaveRequestContro
 use App\Http\Controllers\Admin\NonWorkingDayController;
 use App\Http\Controllers\Admin\StudyProgramController;
 use App\Http\Controllers\Admin\UniversityController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\WorkingHourController;
 use App\Http\Controllers\Intern\AttendanceController;
 use App\Http\Controllers\Intern\LeaveRequestController;
@@ -34,24 +35,38 @@ Route::get('/dashboard', function () {
     return redirect()->route($user->dashboardRoute());
 })->middleware(['auth'])->name('dashboard');
 
-Route::middleware(['auth', 'role:admin'])
+Route::middleware(['auth', 'role:admin,supervisor'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
         Route::get('/dashboard', function () {
+            /** @var \App\Models\User $user */
+            $user = Auth::user();
+
+            // Supervisors only see figures for the division they manage.
+            $divisionId = $user->isSupervisor() ? $user->division_id : null;
+
             $today = today();
 
             $stats = [
-                'total_interns' => \App\Models\Intern::count(),
-                'active_interns' => \App\Models\Intern::activeOn($today)->count(),
+                'total_interns' => \App\Models\Intern::query()
+                    ->when($divisionId, fn ($q) => $q->where('division_id', $divisionId))
+                    ->count(),
+                'active_interns' => \App\Models\Intern::activeOn($today)
+                    ->when($divisionId, fn ($q) => $q->where('division_id', $divisionId))
+                    ->count(),
                 'present_today' => \App\Models\Attendance::whereDate('attendance_date', $today)
                     ->whereIn('status', ['present', 'late'])
+                    ->when($divisionId, fn ($q) => $q->whereHas('user.intern', fn ($i) => $i->where('division_id', $divisionId)))
                     ->count(),
-                'pending_leaves' => \App\Models\LeaveRequest::where('status', 'pending')->count(),
+                'pending_leaves' => \App\Models\LeaveRequest::where('status', 'pending')
+                    ->when($divisionId, fn ($q) => $q->whereHas('user.intern', fn ($i) => $i->where('division_id', $divisionId)))
+                    ->count(),
             ];
 
             $recentLeaves = \App\Models\LeaveRequest::with('user')
                 ->where('status', 'pending')
+                ->when($divisionId, fn ($q) => $q->whereHas('user.intern', fn ($i) => $i->where('division_id', $divisionId)))
                 ->orderByDesc('created_at')
                 ->limit(5)
                 ->get();
@@ -62,7 +77,24 @@ Route::middleware(['auth', 'role:admin'])
             ]);
         })->name('dashboard');
 
-        Route::resource('interns', InternController::class)->except(['show']);
+        // Read-only operational views. Supervisors share the administrator
+        // pages but are scoped to their division inside the controllers.
+        Route::get('/interns', [InternController::class, 'index'])->name('interns.index');
+        Route::get('/leave-requests', [AdminLeaveRequestController::class, 'index'])->name('leave-requests.index');
+        Route::get('/leave-requests/{leaveRequest}', [AdminLeaveRequestController::class, 'show'])->name('leave-requests.show');
+        Route::get('/attendances', [AdminAttendanceController::class, 'index'])->name('attendances.index');
+        Route::get('/attendances/export', [AdminAttendanceController::class, 'export'])->name('attendances.export');
+    });
+
+Route::middleware(['auth', 'role:admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        // Internal staff (admin & supervisor) account management.
+        Route::resource('users', UserController::class)
+            ->only(['index', 'create', 'store', 'edit', 'update']);
+
+        Route::resource('interns', InternController::class)->except(['show', 'index']);
 
         // Master data managed by administrators.
         Route::resource('intern-programs', InternProgramController::class)
@@ -83,8 +115,6 @@ Route::middleware(['auth', 'role:admin'])
         Route::post('/lookup/study-programs', [LookupController::class, 'storeStudyProgram'])->name('lookup.study-programs.store');
         Route::post('/lookup/divisions', [LookupController::class, 'storeDivision'])->name('lookup.divisions.store');
 
-        Route::get('/attendances', [AdminAttendanceController::class, 'index'])->name('attendances.index');
-        Route::get('/attendances/export', [AdminAttendanceController::class, 'export'])->name('attendances.export');
         Route::get('/attendances/{attendance}/edit', [AdminAttendanceController::class, 'edit'])->name('attendances.edit');
         Route::patch('/attendances/{attendance}', [AdminAttendanceController::class, 'update'])->name('attendances.update');
 
@@ -100,8 +130,6 @@ Route::middleware(['auth', 'role:admin'])
             ->except(['show'])
             ->parameters(['attendance-locations' => 'attendanceLocation']);
 
-        Route::get('/leave-requests', [AdminLeaveRequestController::class, 'index'])->name('leave-requests.index');
-        Route::get('/leave-requests/{leaveRequest}', [AdminLeaveRequestController::class, 'show'])->name('leave-requests.show');
         Route::patch('/leave-requests/{leaveRequest}/approve', [AdminLeaveRequestController::class, 'approve'])->name('leave-requests.approve');
         Route::patch('/leave-requests/{leaveRequest}/reject', [AdminLeaveRequestController::class, 'reject'])->name('leave-requests.reject');
     });

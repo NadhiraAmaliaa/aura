@@ -17,8 +17,8 @@ import {
     internStatusLabels,
 } from "@/lib/labels";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Division, Intern, InternProgram, Paginated } from "@/types";
-import { Head, router } from "@inertiajs/react";
+import { Division, Intern, InternProgram, PageProps, Paginated } from "@/types";
+import { Head, router, usePage } from "@inertiajs/react";
 import { FormEventHandler, useMemo, useState } from "react";
 
 interface Filters {
@@ -43,6 +43,7 @@ export default function Index({
     filters: Filters;
     perPage: number;
 }) {
+    const isAdmin = usePage<PageProps>().props.auth.user?.is_admin ?? false;
     const [search, setSearch] = useState(filters.search ?? "");
     const [program, setProgram] = useState(
         filters.program ? String(filters.program) : "",
@@ -194,36 +195,42 @@ export default function Index({
                 </StatusBadge>
             ),
         },
-        {
-            header: "Aksi",
-            align: "center",
-            cell: (intern) => (
-                <RowActions>
-                    <IconAction
-                        icon="edit"
-                        label="Ubah peserta"
-                        tone="edit"
-                        href={route("admin.interns.edit", intern.id)}
-                    />
-                    <IconAction
-                        icon="delete"
-                        label="Hapus peserta"
-                        tone="delete"
-                        onClick={() => openDelete(intern)}
-                    />
-                </RowActions>
-            ),
-        },
+        ...(isAdmin
+            ? [
+                  {
+                      header: "Aksi",
+                      align: "center" as const,
+                      cell: (intern: Intern) => (
+                          <RowActions>
+                              <IconAction
+                                  icon="edit"
+                                  label="Ubah peserta"
+                                  tone="edit"
+                                  href={route("admin.interns.edit", intern.id)}
+                              />
+                              <IconAction
+                                  icon="delete"
+                                  label="Hapus peserta"
+                                  tone="delete"
+                                  onClick={() => openDelete(intern)}
+                              />
+                          </RowActions>
+                      ),
+                  },
+              ]
+            : []),
     ];
 
     return (
         <AuthenticatedLayout
             header={
                 <PageHeader title="Peserta Magang">
-                    <ActionButton
-                        label="Tambah"
-                        href={route("admin.interns.create")}
-                    />
+                    {isAdmin && (
+                        <ActionButton
+                            label="Tambah"
+                            href={route("admin.interns.create")}
+                        />
+                    )}
                 </PageHeader>
             }
         >
@@ -249,18 +256,20 @@ export default function Index({
                             />
                         </FilterField>
 
-                        <FilterField label="Divisi" htmlFor="division">
-                            <FilterSelect
-                                id="division"
-                                value={division}
-                                options={divisionOptions}
-                                placeholder="Semua divisi"
-                                onChange={(val) => {
-                                    setDivision(val);
-                                    applyFilters({ division: val });
-                                }}
-                            />
-                        </FilterField>
+                        {isAdmin && (
+                            <FilterField label="Divisi" htmlFor="division">
+                                <FilterSelect
+                                    id="division"
+                                    value={division}
+                                    options={divisionOptions}
+                                    placeholder="Semua divisi"
+                                    onChange={(val) => {
+                                        setDivision(val);
+                                        applyFilters({ division: val });
+                                    }}
+                                />
+                            </FilterField>
+                        )}
 
                         <FilterField label="Status" htmlFor="status">
                             <FilterSelect

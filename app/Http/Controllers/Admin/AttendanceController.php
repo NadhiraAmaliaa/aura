@@ -32,6 +32,11 @@ class AttendanceController extends Controller
         $programId = $request->integer('program') ?: null;
         $divisionId = $request->integer('division') ?: null;
 
+        // Supervisors only see attendance for their own division.
+        if ($request->user()->isSupervisor()) {
+            $divisionId = $request->user()->division_id;
+        }
+
         return Inertia::render('admin/Attendances/Report', [
             'report' => $this->report->build($startDate, $endDate, $programId, $divisionId),
             'programs' => InternProgram::orderBy('name')->get(['id', 'name']),
@@ -53,6 +58,11 @@ class AttendanceController extends Controller
         [$startDate, $endDate] = $this->resolveDateRange($request);
         $programId = $request->integer('program') ?: null;
         $divisionId = $request->integer('division') ?: null;
+
+        // Supervisors only export attendance for their own division.
+        if ($request->user()->isSupervisor()) {
+            $divisionId = $request->user()->division_id;
+        }
 
         $report = $this->report->build($startDate, $endDate, $programId, $divisionId);
 

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Auth;
 
 use App\Models\Intern;
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -98,21 +99,35 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Authenticate an administrator using NIK + password.
+     * Authenticate an internal staff member (admin or supervisor) using
+     * NIK + password.
      *
-     * The role is included as a credential so only admin accounts can sign in
-     * through this path; interns have a null NIK and authenticate separately.
+     * The NIK doubles as the username. Only active admin and supervisor
+     * accounts can sign in through this path; interns have a null NIK and
+     * authenticate separately. Uses the query builder and hasher only (no raw
+     * SQL) so it stays portable.
      */
     protected function authenticateAdmin(): bool
     {
-        return Auth::attempt(
-            [
-                'nik' => (string) $this->input('nik'),
-                'password' => (string) $this->input('password'),
-                'role' => 'admin',
-            ],
-            $this->boolean('remember'),
-        );
+        $user = User::query()
+            ->where('nik', (string) $this->input('nik'))
+            ->whereIn('role', ['admin', 'supervisor'])
+            ->first();
+
+        if ($user === null || ! $user->is_active) {
+            // Run a dummy hash check to reduce user-enumeration timing leaks.
+            Hash::check((string) $this->input('password'), '$2y$12$'.str_repeat('0', 53));
+
+            return false;
+        }
+
+        if (! Hash::check((string) $this->input('password'), $user->password)) {
+            return false;
+        }
+
+        Auth::login($user, $this->boolean('remember'));
+
+        return true;
     }
 
     /**

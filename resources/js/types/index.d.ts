@@ -1,6 +1,6 @@
 import { Config as ZiggyConfig } from "ziggy-js";
 
-export type UserRole = "admin" | "intern";
+export type UserRole = "admin" | "supervisor" | "intern";
 
 export interface AuthUser {
     id: number;
@@ -8,7 +8,9 @@ export interface AuthUser {
     nik: string | null;
     role: UserRole;
     is_admin: boolean;
+    is_supervisor: boolean;
     is_intern: boolean;
+    division?: { id: number; name: string } | null;
     intern?: AuthIntern | null;
 }
 
@@ -27,6 +29,16 @@ export interface User {
     nik: string | null;
     role: UserRole;
     intern?: Intern | null;
+}
+
+export interface ManagedUser {
+    id: number;
+    name: string;
+    nik: string | null;
+    role: "admin" | "supervisor";
+    is_active: boolean;
+    division_id: number | null;
+    division?: { id: number; name: string } | null;
 }
 
 export interface Flash {

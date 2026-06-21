@@ -6,12 +6,13 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'nik', 'password', 'role'])]
+#[Fillable(['name', 'nik', 'password', 'role', 'is_active', 'division_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -27,12 +28,27 @@ class User extends Authenticatable
     {
         return [
             'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
     }
 
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
+    }
+
+    public function isSupervisor(): bool
+    {
+        return $this->role === 'supervisor';
+    }
+
+    /**
+     * Whether the user is an internal staff account (admin or supervisor)
+     * managed through the User Management module.
+     */
+    public function isInternalStaff(): bool
+    {
+        return $this->role === 'admin' || $this->role === 'supervisor';
     }
 
     public function isIntern(): bool
@@ -42,13 +58,26 @@ class User extends Authenticatable
 
     /**
      * Get the dashboard route name based on the user's role.
+     *
+     * Supervisors reuse the administrator dashboard and pages; their view is
+     * scoped to their division by the controllers.
      */
     public function dashboardRoute(): string
     {
         return match ($this->role) {
-            'admin' => 'admin.dashboard',
+            'admin', 'supervisor' => 'admin.dashboard',
             default => 'intern.dashboard',
         };
+    }
+
+    /**
+     * Get the division a supervisor is assigned to manage.
+     *
+     * @return BelongsTo<Division, $this>
+     */
+    public function division(): BelongsTo
+    {
+        return $this->belongsTo(Division::class);
     }
 
     /**

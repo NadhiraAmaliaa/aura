@@ -41,7 +41,11 @@ class HandleInertiaRequests extends Middleware
                     'nik' => $user->nik,
                     'role' => $user->role,
                     'is_admin' => $user->isAdmin(),
+                    'is_supervisor' => $user->isSupervisor(),
                     'is_intern' => $user->isIntern(),
+                    'division' => $user->isSupervisor() && $user->division
+                        ? ['id' => $user->division->id, 'name' => $user->division->name]
+                        : null,
                     'intern' => $intern ? [
                         'status' => $intern->effectiveStatus(),
                         'start_date' => $intern->start_date?->toDateString(),

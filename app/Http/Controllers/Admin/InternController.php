@@ -37,6 +37,11 @@ class InternController extends Controller
         $periodFrom = $request->filled('period_from') ? $request->date('period_from') : null;
         $periodTo = $request->filled('period_to') ? $request->date('period_to') : null;
 
+        // Supervisors are locked to the interns of their own division.
+        if ($request->user()->isSupervisor()) {
+            $divisionId = $request->user()->division_id;
+        }
+
         $perPage = (int) $request->integer('perPage', 10);
 
         if (! in_array($perPage, [10, 25, 50, 100], true)) {

@@ -14,8 +14,9 @@ import {
     AttendanceReportRow,
     Division,
     InternProgram,
+    PageProps,
 } from "@/types";
-import { Head, Link, router, useForm } from "@inertiajs/react";
+import { Head, Link, router, useForm, usePage } from "@inertiajs/react";
 import { FormEventHandler, lazy, Suspense, useMemo, useState } from "react";
 
 const AttendanceChart = lazy(() => import("@/Components/AttendanceChart"));
@@ -150,6 +151,7 @@ export default function Report({
     divisions,
     filters,
 }: ReportPageProps) {
+    const isAdmin = usePage<PageProps>().props.auth.user?.is_admin ?? false;
     const { data, setData, get } = useForm({
         start_date: filters.start_date,
         end_date: filters.end_date,
@@ -304,15 +306,17 @@ export default function Report({
                         />
                     </FilterField>
 
-                    <FilterField label="Divisi" htmlFor="division">
-                        <FilterSelect
-                            id="division"
-                            value={data.division}
-                            options={divisionOptions}
-                            placeholder="Semua divisi"
-                            onChange={(val) => setData("division", val)}
-                        />
-                    </FilterField>
+                    {isAdmin && (
+                        <FilterField label="Divisi" htmlFor="division">
+                            <FilterSelect
+                                id="division"
+                                value={data.division}
+                                options={divisionOptions}
+                                placeholder="Semua divisi"
+                                onChange={(val) => setData("division", val)}
+                            />
+                        </FilterField>
+                    )}
                 </FilterCard>
 
                 {/* Period Info & Export */}

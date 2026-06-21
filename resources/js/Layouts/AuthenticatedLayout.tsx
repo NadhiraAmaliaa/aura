@@ -40,6 +40,12 @@ const adminNav: NavEntry[] = [
         activePattern: "admin.dashboard",
     },
     {
+        label: "Manajemen User",
+        icon: "manage_accounts",
+        routeName: "admin.users.index",
+        activePattern: "admin.users.*",
+    },
+    {
         label: "Operasional",
         icon: "work",
         items: [
@@ -146,6 +152,47 @@ const internNav: NavEntry[] = [
     },
 ];
 
+// Supervisors reuse the administrator pages but only see a subset of the
+// navigation; their data is scoped to their division by the backend.
+const supervisorNav: NavEntry[] = [
+    {
+        label: "Dashboard",
+        icon: "dashboard",
+        routeName: "admin.dashboard",
+        activePattern: "admin.dashboard",
+    },
+    {
+        label: "Operasional",
+        icon: "work",
+        items: [
+            {
+                label: "Peserta Magang",
+                icon: "groups",
+                routeName: "admin.interns.index",
+                activePattern: "admin.interns.*",
+            },
+            {
+                label: "Pengajuan Izin",
+                icon: "event_available",
+                routeName: "admin.leave-requests.index",
+                activePattern: "admin.leave-requests.*",
+            },
+        ],
+    },
+    {
+        label: "Reporting",
+        icon: "assessment",
+        items: [
+            {
+                label: "Reporting Absensi",
+                icon: "summarize",
+                routeName: "admin.attendances.index",
+                activePattern: "admin.attendances.*",
+            },
+        ],
+    },
+];
+
 function initials(name: string): string {
     return name
         .split(" ")
@@ -209,9 +256,13 @@ export default function AuthenticatedLayout({
         );
     };
 
-    const navItems = user.is_admin ? adminNav : internNav;
+    const navItems = user.is_admin
+        ? adminNav
+        : user.is_supervisor
+          ? supervisorNav
+          : internNav;
     const homeRoute = route(
-        user.is_admin ? "admin.dashboard" : "intern.dashboard",
+        user.is_intern ? "intern.dashboard" : "admin.dashboard",
     );
 
     return (
@@ -260,7 +311,9 @@ export default function AuthenticatedLayout({
                                     <p className="text-[10px] uppercase tracking-wider text-white/80">
                                         {user.is_admin
                                             ? "Administrator"
-                                            : "Peserta Magang"}
+                                            : user.is_supervisor
+                                              ? "Supervisor"
+                                              : "Peserta Magang"}
                                     </p>
                                 </div>
                                 <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-white/30 bg-white/15 text-sm font-bold text-white">
