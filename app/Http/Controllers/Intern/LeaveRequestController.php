@@ -52,7 +52,7 @@ class LeaveRequestController extends Controller
             'reason' => $data['reason'],
             'start_date' => $startDate,
             'end_date' => $endDate,
-            'total_days' => $startDate->diffInDays($endDate) + 1,
+            'total_days' => LeaveRequest::calculateWorkingDays($startDate, $endDate),
             'contact_phone' => $data['contact_phone'] ?? null,
             'address' => $data['address'] ?? null,
             'status' => 'pending',

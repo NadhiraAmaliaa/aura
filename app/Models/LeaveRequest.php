@@ -57,6 +57,54 @@ class LeaveRequest extends Model
     }
 
     /**
+     * Calculate the number of working days (HK) within a date range.
+     *
+     * Only valid working days are counted: weekends (Saturday and Sunday) and
+     * any registered non-working day (national holiday, collective leave or
+     * company holiday) are skipped. The working-day configuration is reused so
+     * the result stays consistent with attendance handling.
+     */
+    public static function calculateWorkingDays(Carbon $start, Carbon $end): int
+    {
+        $start = $start->copy()->startOfDay();
+        $end = $end->copy()->startOfDay();
+
+        if ($end->lessThan($start)) {
+            return 0;
+        }
+
+        // Pre-load registered non-working days within the range so the loop
+        // does not query the database once per day.
+        $holidays = NonWorkingDay::whereBetween('date', [
+            $start->toDateString(),
+            $end->toDateString(),
+        ])
+            ->pluck('date')
+            ->map(fn ($date): string => Carbon::parse($date)->toDateString())
+            ->flip();
+
+        $workingDays = 0;
+
+        for ($date = $start->copy(); $date->lessThanOrEqualTo($end); $date->addDay()) {
+            if (Attendance::isWeekend($date)) {
+                continue;
+            }
+
+            if (! WorkingHour::isWorkingDay($date)) {
+                continue;
+            }
+
+            if ($holidays->has($date->toDateString())) {
+                continue;
+            }
+
+            $workingDays++;
+        }
+
+        return $workingDays;
+    }
+
+    /**
      * Generate a unique, human-readable request number (e.g. LR-20260608-0001).
      */
     public static function generateRequestNumber(): string

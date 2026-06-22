@@ -351,7 +351,7 @@ export default function AuthenticatedLayout({
             {/* Sidebar */}
             <aside
                 className={
-                    "fixed left-0 top-20 z-40 flex h-[calc(100vh-5rem)] w-56 flex-col overflow-y-auto border-r border-outline-variant bg-white py-4 transition-transform duration-200 md:translate-x-0 " +
+                    "fixed left-0 top-20 z-40 flex h-[calc(100vh-5rem)] w-56 flex-col border-r border-outline-variant bg-white py-4 transition-transform duration-200 md:translate-x-0 " +
                     (sidebarOpen ? "translate-x-0" : "-translate-x-full")
                 }
                 ref={setSidebarRef}

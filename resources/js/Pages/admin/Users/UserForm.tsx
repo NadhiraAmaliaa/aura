@@ -143,7 +143,10 @@ export default function UserForm({
                                 />
                             </button>
                         </div>
-                        <InputError className="mt-2" message={errors.password} />
+                        <InputError
+                            className="mt-2"
+                            message={errors.password}
+                        />
                     </div>
                     <div className="sm:col-span-2">
                         <InputLabel
@@ -273,7 +276,10 @@ export default function UserForm({
                             <option value="1">Aktif</option>
                             <option value="0">Nonaktif</option>
                         </SelectInput>
-                        <InputError className="mt-2" message={errors.is_active} />
+                        <InputError
+                            className="mt-2"
+                            message={errors.is_active}
+                        />
                     </div>
                 </div>
             </section>
