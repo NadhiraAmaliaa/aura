@@ -207,6 +207,22 @@ class Intern extends Model
     }
 
     /**
+     * Whether the intern may be archived (soft deleted).
+     *
+     * Only finished (Selesai) or manually deactivated (Non Aktif) interns can
+     * be archived; upcoming (Akan Datang) and active (Aktif) participants must
+     * stay in the active list.
+     */
+    public function canBeArchived(?Carbon $date = null): bool
+    {
+        return in_array(
+            $this->effectiveStatus($date),
+            [self::STATUS_COMPLETED, self::STATUS_INACTIVE],
+            true
+        );
+    }
+
+    /**
      * Whether the internship is currently running (within the period and not
      * manually deactivated).
      */

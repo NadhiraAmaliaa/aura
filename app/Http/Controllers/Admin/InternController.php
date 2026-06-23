@@ -204,6 +204,14 @@ class InternController extends Controller
      */
     public function destroy(Intern $intern): RedirectResponse
     {
+        // Only finished (Selesai) or deactivated (Non Aktif) interns may be
+        // archived; upcoming and active participants must stay in the list.
+        if (! $intern->canBeArchived()) {
+            return redirect()
+                ->back()
+                ->with('error', 'Hanya peserta dengan status Selesai atau Non Aktif yang dapat diarsipkan.');
+        }
+
         $intern->delete();
 
         return redirect()

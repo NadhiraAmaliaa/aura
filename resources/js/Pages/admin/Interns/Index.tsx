@@ -156,6 +156,11 @@ export default function Index({
     const openArchive = (intern: Intern) => setArchiving(intern);
     const openRestore = (intern: Intern) => setRestoring(intern);
 
+    // Only finished (Selesai) or deactivated (Non Aktif) interns may be archived.
+    const canArchive = (intern: Intern) =>
+        intern.effective_status === "completed" ||
+        intern.effective_status === "inactive";
+
     const columns: Column<Intern>[] = [
         {
             header: "Nama",
@@ -230,8 +235,13 @@ export default function Index({
                                       />
                                       <IconAction
                                           icon="archive"
-                                          label="Arsipkan peserta"
+                                          label={
+                                              canArchive(intern)
+                                                  ? "Arsipkan peserta"
+                                                  : "Hanya peserta Selesai atau Non Aktif yang dapat diarsipkan"
+                                          }
                                           tone="archive"
+                                          disabled={!canArchive(intern)}
                                           onClick={() => openArchive(intern)}
                                       />
                                   </>

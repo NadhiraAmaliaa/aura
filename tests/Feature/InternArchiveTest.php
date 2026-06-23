@@ -43,12 +43,16 @@ class InternArchiveTest extends TestCase
 
     public function test_archiving_soft_deletes_the_intern_but_keeps_the_user_and_history(): void
     {
-        $user = $this->makeIntern();
+        // Only finished (Selesai) interns may be archived.
+        $user = $this->makeIntern([
+            'start_date' => Carbon::today()->subDays(30),
+            'end_date' => Carbon::today()->subDay(),
+        ]);
         $intern = $user->intern;
 
         Attendance::factory()->create([
             'user_id' => $user->id,
-            'attendance_date' => Carbon::today(),
+            'attendance_date' => Carbon::today()->subDays(2),
         ]);
 
         $this->actingAs($this->admin())
@@ -60,6 +64,30 @@ class InternArchiveTest extends TestCase
         // The user account and attendance history are preserved.
         $this->assertDatabaseHas('users', ['id' => $user->id]);
         $this->assertDatabaseHas('attendances', ['user_id' => $user->id]);
+    }
+
+    public function test_active_or_upcoming_interns_cannot_be_archived(): void
+    {
+        $admin = $this->admin();
+
+        // Active (Aktif): period is currently running.
+        $active = $this->makeIntern();
+
+        // Upcoming (Akan Datang): period has not started yet.
+        $upcoming = $this->makeIntern([
+            'start_date' => Carbon::today()->addDays(5),
+            'end_date' => Carbon::today()->addDays(30),
+        ]);
+
+        foreach ([$active, $upcoming] as $user) {
+            $this->actingAs($admin)
+                ->delete(route('admin.interns.destroy', $user->intern->id))
+                ->assertRedirect()
+                ->assertSessionHas('error');
+
+            // Still present (not archived).
+            $this->assertNotSoftDeleted('interns', ['id' => $user->intern->id]);
+        }
     }
 
     public function test_data_tab_excludes_archived_and_archive_tab_shows_only_archived(): void
