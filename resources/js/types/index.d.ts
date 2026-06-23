@@ -110,6 +110,7 @@ export interface Intern {
     start_date: string | null;
     end_date: string | null;
     status: InternStatus;
+    effective_status: InternStatus;
     user?: User;
     intern_program?: InternProgram | null;
     university_ref?: University | null;

@@ -54,6 +54,123 @@ class InternPeriodTest extends TestCase
         $this->assertFalse($intern->canAccessPortal(Carbon::parse('2026-07-01')));
     }
 
+    public function test_effective_status_is_active_on_the_start_date(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-06-23 09:00'));
+
+        $intern = (new Intern)->forceFill([
+            'status' => Intern::STATUS_UPCOMING,
+            'start_date' => Carbon::parse('2026-06-23'),
+            'end_date' => Carbon::parse('2026-07-23'),
+        ]);
+
+        // The period starts today, so the effective status must be active even
+        // though the stored column still reads "upcoming".
+        $this->assertSame(Intern::STATUS_ACTIVE, $intern->effectiveStatus());
+        $this->assertSame(Intern::STATUS_ACTIVE, $intern->effective_status);
+        $this->assertTrue($intern->isActive());
+        $this->assertFalse($intern->isUpcoming());
+    }
+
+    public function test_effective_status_covers_every_boundary(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-06-23 09:00'));
+
+        $base = [
+            'start_date' => Carbon::parse('2026-06-23'),
+            'end_date' => Carbon::parse('2026-07-23'),
+        ];
+
+        // Before the start date.
+        $upcoming = (new Intern)->forceFill($base + ['status' => Intern::STATUS_ACTIVE]);
+        $upcoming->start_date = Carbon::parse('2026-06-24');
+        $this->assertSame(Intern::STATUS_UPCOMING, $upcoming->effectiveStatus());
+
+        // On the end date is still active (inclusive).
+        $endingToday = (new Intern)->forceFill([
+            'status' => Intern::STATUS_UPCOMING,
+            'start_date' => Carbon::parse('2026-06-01'),
+            'end_date' => Carbon::parse('2026-06-23'),
+        ]);
+        $this->assertSame(Intern::STATUS_ACTIVE, $endingToday->effectiveStatus());
+
+        // After the end date.
+        $completed = (new Intern)->forceFill([
+            'status' => Intern::STATUS_ACTIVE,
+            'start_date' => Carbon::parse('2026-06-01'),
+            'end_date' => Carbon::parse('2026-06-22'),
+        ]);
+        $this->assertSame(Intern::STATUS_COMPLETED, $completed->effectiveStatus());
+
+        // A manual deactivation always wins, regardless of the calendar.
+        $inactive = (new Intern)->forceFill($base + ['status' => Intern::STATUS_INACTIVE]);
+        $this->assertSame(Intern::STATUS_INACTIVE, $inactive->effectiveStatus());
+    }
+
+    public function test_admin_interns_index_shows_effective_status_when_stored_column_is_stale(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-06-23 09:00'));
+
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        // Created while the start date was in the future, so the stored column
+        // lags behind on the day the period actually begins.
+        $user = $this->makeIntern([
+            'status' => Intern::STATUS_UPCOMING,
+            'start_date' => Carbon::today(),
+            'end_date' => Carbon::today()->addDays(30),
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->get(route('admin.interns.index'))
+            ->assertOk();
+
+        $response->assertInertia(
+            fn ($page) => $page
+                ->component('admin/Interns/Index')
+                ->where('interns.data.0.user_id', $user->id)
+                ->where('interns.data.0.status', Intern::STATUS_UPCOMING)
+                ->where('interns.data.0.effective_status', Intern::STATUS_ACTIVE)
+        );
+    }
+
+    public function test_admin_interns_index_status_filter_uses_effective_status(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-06-23 09:00'));
+
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        // Effectively active today but stored as "upcoming".
+        $active = $this->makeIntern([
+            'status' => Intern::STATUS_UPCOMING,
+            'start_date' => Carbon::today(),
+            'end_date' => Carbon::today()->addDays(30),
+        ]);
+
+        // Genuinely not started yet.
+        $upcoming = $this->makeIntern([
+            'status' => Intern::STATUS_UPCOMING,
+            'start_date' => Carbon::today()->addDays(5),
+            'end_date' => Carbon::today()->addDays(30),
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.interns.index', ['status' => Intern::STATUS_ACTIVE]))
+            ->assertOk()
+            ->assertInertia(
+                fn ($page) => $page
+                    ->where('interns.data', fn ($rows) => collect($rows)->pluck('user_id')->all() === [$active->id])
+            );
+
+        $this->actingAs($admin)
+            ->get(route('admin.interns.index', ['status' => Intern::STATUS_UPCOMING]))
+            ->assertOk()
+            ->assertInertia(
+                fn ($page) => $page
+                    ->where('interns.data', fn ($rows) => collect($rows)->pluck('user_id')->all() === [$upcoming->id])
+            );
+    }
+
     public function test_active_intern_within_period_can_access_portal(): void
     {
         $user = $this->makeIntern();

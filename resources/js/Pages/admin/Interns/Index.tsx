@@ -81,7 +81,7 @@ export default function Index({
                 intern.division_ref?.name ?? intern.division,
                 intern.intern_program?.name,
                 periodText(intern),
-                internStatusLabels[intern.status],
+                internStatusLabels[intern.effective_status],
             ]
                 .join(" ")
                 .toLowerCase()
@@ -190,8 +190,10 @@ export default function Index({
             header: "Status",
             align: "center",
             cell: (intern) => (
-                <StatusBadge tone={internStatusBadgeTone[intern.status]}>
-                    {internStatusLabels[intern.status]}
+                <StatusBadge
+                    tone={internStatusBadgeTone[intern.effective_status]}
+                >
+                    {internStatusLabels[intern.effective_status]}
                 </StatusBadge>
             ),
         },

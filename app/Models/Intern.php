@@ -51,6 +51,20 @@ class Intern extends Model
     ];
 
     /**
+     * The accessors to append to the model's array / JSON form.
+     *
+     * Exposing the date-derived status means the UI always reflects the
+     * calendar (and the server clock) instead of the stored column, which only
+     * gets realigned by the daily schedule and can therefore lag behind on the
+     * day a period starts or ends.
+     *
+     * @var array<int, string>
+     */
+    protected $appends = [
+        'effective_status',
+    ];
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -61,6 +75,18 @@ class Intern extends Model
             'start_date' => 'date',
             'end_date' => 'date',
         ];
+    }
+
+    /**
+     * The date-derived status surfaced to the UI.
+     *
+     * Always computed from the dates against the server clock so it stays
+     * accurate even when the stored column has not yet been realigned by the
+     * daily schedule.
+     */
+    public function getEffectiveStatusAttribute(): string
+    {
+        return $this->effectiveStatus();
     }
 
     /**
@@ -102,6 +128,34 @@ class Intern extends Model
             ->where('status', '!=', self::STATUS_INACTIVE)
             ->whereNotNull('end_date')
             ->whereDate('end_date', '<', $date);
+    }
+
+    /**
+     * Scope a query to interns whose period has not started yet on the given
+     * date and that are not manually deactivated (i.e. upcoming).
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<Intern>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<Intern>
+     */
+    public function scopeUpcomingOn(\Illuminate\Database\Eloquent\Builder $query, ?Carbon $date = null): \Illuminate\Database\Eloquent\Builder
+    {
+        $date = ($date ?? Carbon::today())->copy()->startOfDay();
+
+        return $query
+            ->where('status', '!=', self::STATUS_INACTIVE)
+            ->whereNotNull('start_date')
+            ->whereDate('start_date', '>', $date);
+    }
+
+    /**
+     * Scope a query to interns that are manually deactivated.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<Intern>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<Intern>
+     */
+    public function scopeInactive(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->where('status', self::STATUS_INACTIVE);
     }
 
     /**

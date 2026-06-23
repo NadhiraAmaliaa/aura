@@ -57,7 +57,16 @@ class InternController extends Controller
             })
             ->when($programId !== null, fn ($query) => $query->where('intern_program_id', $programId))
             ->when($divisionId !== null, fn ($query) => $query->where('division_id', $divisionId))
-            ->when($status !== '', fn ($query) => $query->where('status', $status))
+            // Filter by the date-derived status so the result matches the
+            // effective status shown in the table, regardless of whether the
+            // stored column has been realigned by the daily schedule yet.
+            ->when($status !== '', fn ($query) => match ($status) {
+                Intern::STATUS_UPCOMING => $query->upcomingOn(),
+                Intern::STATUS_ACTIVE => $query->activeOn(),
+                Intern::STATUS_COMPLETED => $query->completedOn(),
+                Intern::STATUS_INACTIVE => $query->inactive(),
+                default => $query,
+            })
             // Internship period overlap: keep interns whose period intersects
             // the requested range. Null bounds are treated as open-ended.
             ->when($periodFrom !== null, function ($query) use ($periodFrom): void {
