@@ -207,7 +207,7 @@ class InternController extends Controller
         $intern->delete();
 
         return redirect()
-            ->route('admin.interns.index', ['tab' => self::TAB_ARCHIVED])
+            ->back()
             ->with('status', 'Peserta magang berhasil diarsipkan.');
     }
 
@@ -219,7 +219,7 @@ class InternController extends Controller
         $intern->restore();
 
         return redirect()
-            ->route('admin.interns.index')
+            ->back()
             ->with('status', 'Peserta magang berhasil dipulihkan.');
     }
 

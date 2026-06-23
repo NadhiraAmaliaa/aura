@@ -8,8 +8,10 @@ const TONE_CLASS: Record<Tone, string> = {
     edit: "bg-tertiary/10 text-tertiary hover:bg-tertiary hover:text-white",
     delete: "bg-error/10 text-error hover:bg-error hover:text-white",
     view: "bg-primary/10 text-primary hover:bg-primary hover:text-white",
-    archive: "bg-amber-500/10 text-amber-600 hover:bg-amber-500 hover:text-white",
-    restore: "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500 hover:text-white",
+    archive:
+        "bg-amber-500/10 text-amber-600 hover:bg-amber-500 hover:text-white",
+    restore:
+        "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500 hover:text-white",
 };
 
 export function IconAction({

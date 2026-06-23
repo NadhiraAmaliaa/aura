@@ -130,7 +130,7 @@ export default function Index({
                 period_to: next.period_to ?? periodTo,
                 perPage: next.perPage ?? String(perPage),
             },
-            { preserveState: true, replace: true },
+            { preserveState: true, preserveScroll: true, replace: true },
         );
     };
 
@@ -149,7 +149,7 @@ export default function Index({
         router.get(
             route("admin.interns.index"),
             { tab },
-            { preserveState: true, replace: true },
+            { preserveState: true, preserveScroll: true, replace: true },
         );
     };
 

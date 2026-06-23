@@ -46,18 +46,21 @@ export default function ConfirmActionDialog({
             return;
         }
 
-        router[method](
-            url,
-            {},
-            {
-                preserveScroll: true,
-                onStart: () => setProcessing(true),
-                onFinish: () => {
-                    setProcessing(false);
-                    onOpenChange(false);
-                },
+        const options = {
+            preserveScroll: true,
+            onStart: () => setProcessing(true),
+            onFinish: () => {
+                setProcessing(false);
+                onOpenChange(false);
             },
-        );
+        };
+
+        // router.delete(url, options) — no data argument, unlike patch/put/post.
+        if (method === "delete") {
+            router.delete(url, options);
+        } else {
+            router[method](url, {}, options);
+        }
     };
 
     return (
