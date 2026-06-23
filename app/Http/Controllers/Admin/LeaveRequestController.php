@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateLeaveRequestStatusRequest;
 use App\Models\Attendance;
 use App\Models\LeaveRequest;
+use App\Models\User;
+use App\Notifications\LeaveRequestDecidedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -124,9 +126,40 @@ class LeaveRequestController extends Controller
             $this->syncAttendanceForApprovedLeave($leaveRequest);
         }
 
+        // Notify the division supervisor of the decision.
+        $this->notifySupervisor($leaveRequest->fresh(['user.intern']));
+
         return redirect()
             ->route('admin.leave-requests.show', $leaveRequest)
             ->with('status', $message);
+    }
+
+    /**
+     * Find and e-mail the division supervisor about the decision.
+     */
+    private function notifySupervisor(?LeaveRequest $leaveRequest): void
+    {
+        if (! $leaveRequest) {
+            return;
+        }
+
+        $divisionId = $leaveRequest->user?->intern?->division_id;
+
+        if (! $divisionId) {
+            return;
+        }
+
+        $supervisor = User::where('role', 'supervisor')
+            ->where('division_id', $divisionId)
+            ->whereNotNull('email')
+            ->where('is_active', true)
+            ->first();
+
+        if (! $supervisor) {
+            return;
+        }
+
+        $supervisor->notify(new LeaveRequestDecidedNotification($leaveRequest));
     }
 
     /**

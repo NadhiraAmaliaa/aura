@@ -6,9 +6,18 @@
     <style>
         * { font-family: DejaVu Sans, sans-serif; }
         body { font-size: 12px; color: #111; margin: 0; }
-        .header { text-align: center; border-bottom: 2px solid #111; padding-bottom: 10px; margin-bottom: 18px; }
+        .header { border-bottom: 2px solid #111; padding-bottom: 16px; margin-bottom: 24px; }
+        .header-table { width: 100%; border-collapse: collapse; }
+        .header-logo-left { width: 18%; vertical-align: middle; }
+        .header-logo-left img { max-height: 50px; max-width: 100%; display: block; }
+        .header-center { vertical-align: middle; text-align: center; }
+        .header-logo-right { width: 22%; vertical-align: middle; text-align: right; }
+        .header-logo-right img { max-height: 50px; max-width: 100%; display: inline-block; margin: 0 4px 0 0; }
+        .header-logo-holding { max-height: 40px !important; margin: 0 4px 0 0 !important; }
+        .header-logo-right img:last-child { margin: 0 0 0 0; }
+        .header-logo-right-inner { display: inline-block; text-align: center; }
         .company { font-size: 14px; font-weight: bold; }
-        .title { font-size: 13px; font-weight: bold; text-decoration: underline; margin-top: 14px; text-transform: uppercase; }
+        .title { font-size: 13px; font-weight: bold; text-decoration: underline; margin-top: 6px; text-transform: uppercase; }
         .number { font-weight: bold; margin-top: 4px; }
         table.info { width: 100%; border-collapse: collapse; }
         table.info td { padding: 2px 4px; vertical-align: top; }
@@ -20,14 +29,17 @@
         .row td { padding: 2px 4px; }
         .row td.amount { text-align: left; width: 28%; }
         .reason { margin-top: 16px; }
-        .signatures { width: 100%; margin-top: 48px; }
-        .signatures td { width: 50%; text-align: center; vertical-align: top; font-size: 12px; }
+        .signatures { width: 100%; margin-top: 48px; border-collapse: collapse; }
+        .signatures td { width: 50%; text-align: center; vertical-align: top; font-size: 12px; padding: 0 8px; }
+        .sign-date { text-align: right; padding-right: 8px; font-size: 12px; padding-bottom: 20px; }
+        .sign-title { margin-bottom: 40px; text-align: center; }
         .sign-name { font-weight: bold; margin-top: 60px; text-decoration: underline; }
-        .sign-role { font-size: 11px; }
+        .sign-role { font-size: 11px; margin-top: 2px; }
         .status-box { margin-top: 18px; padding: 8px 10px; border: 1px solid #999; }
         .qr-wrap { text-align: center; margin-bottom: 6px; }
         .qr-wrap img { display: block; margin: 0 auto; }
         .qr-caption { font-size: 9px; color: #555; text-align: center; margin-top: 2px; }
+        .qr-corner { float: right; margin-left: 16px; margin-bottom: 16px; text-align: center; }
     </style>
 </head>
 <body>
@@ -36,9 +48,37 @@
     @endphp
 
     <div class="header">
-        <div class="company">PERKEBUNAN NUSANTARA</div>
-        <div class="title">Permohonan Izin / Sakit Peserta Magang</div>
-        <div class="number">Nomor : {{ $leaveRequest->request_number }}</div>
+        <table class="header-table">
+            <tr>
+                {{-- Left: Danantara logo --}}
+                <td class="header-logo-left">
+                    @if($logos['danantara'])
+                        <img src="{{ $logos['danantara'] }}" alt="Danantara Indonesia">
+                    @endif
+                </td>
+
+                {{-- Center: Company name, document title and request number --}}
+                <td class="header-center">
+                    <div class="title">Permohonan Izin / Sakit Peserta Magang</div>
+                    <div class="number">Nomor : {{ $leaveRequest->request_number }}</div>
+                </td>
+
+                {{-- Right: Holding + PTPN logos stacked --}}
+                <td class="header-logo-right">
+                    @if($logos['holding'])
+                        <img src="{{ $logos['holding'] }}" alt="Holding Perkebunan Nusantara" class="header-logo-holding">
+                    @endif
+                    @if($logos['ptpn'])
+                        <img src="{{ $logos['ptpn'] }}" alt="PTPN">
+                    @endif
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="qr-corner">
+        <img src="data:image/svg+xml;base64,{{ $qrCode }}" width="70" height="70" alt="QR Verifikasi">
+        <div class="qr-caption">Scan untuk verifikasi</div>
     </div>
 
     <table class="info">
@@ -119,18 +159,17 @@
 
     <table class="signatures">
         <tr>
+            <td></td>
+            <td class="sign-date">Jakarta, {{ $leaveRequest->created_at->format('d M Y') }}</td>
+        </tr>
+        <tr>
             <td>
-                Menyetujui,
-                <div class="qr-wrap">
-                    <img src="data:image/svg+xml;base64,{{ $qrCode }}" width="80" height="80" alt="QR Verifikasi">
-                    <div class="qr-caption">Scan untuk verifikasi</div>
-                </div>
+                <div class="sign-title">Menyetujui,</div>
                 <div class="sign-name">{{ $leaveRequest->approver?->name ?? '-' }}</div>
                 <div class="sign-role">Administrator</div>
             </td>
             <td>
-                Jakarta, {{ $leaveRequest->created_at->format('d M Y') }}<br>
-                Pemohon,
+                <div class="sign-title">Pemohon,</div>
                 <div class="sign-name">{{ $leaveRequest->user?->name ?? '-' }}</div>
                 <div class="sign-role">Peserta Magang</div>
             </td>

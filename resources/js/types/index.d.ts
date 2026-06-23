@@ -34,6 +34,7 @@ export interface User {
 export interface ManagedUser {
     id: number;
     name: string;
+    email: string | null;
     nik: string | null;
     role: "admin" | "supervisor";
     is_active: boolean;

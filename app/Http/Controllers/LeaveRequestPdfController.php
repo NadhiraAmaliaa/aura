@@ -37,7 +37,25 @@ class LeaveRequestPdfController extends Controller
             QrCode::format('svg')->size(120)->errorCorrection('H')->generate($verifyUrl)
         );
 
-        $pdf = Pdf::loadView('leave-requests.pdf', compact('leaveRequest', 'qrCode'))
+        // DomPDF cannot resolve web URLs; embed logos as base64 data URIs.
+        $logos = collect([
+            'danantara'  => 'images/logos/danantara-indonesia.svg',
+            'holding'    => 'images/logos/logo-holding-perkebunan-nusantara.png',
+            'ptpn'       => 'images/logos/logo-ptpn.png',
+        ])->map(function (string $relative): ?string {
+            $path = public_path($relative);
+
+            if (! file_exists($path)) {
+                return null;
+            }
+
+            $mime = mime_content_type($path);
+            $data = base64_encode(file_get_contents($path));
+
+            return "data:{$mime};base64,{$data}";
+        });
+
+        $pdf = Pdf::loadView('leave-requests.pdf', compact('leaveRequest', 'qrCode', 'logos'))
             ->setPaper('letter');
 
         return $pdf->stream("pengajuan-{$leaveRequest->request_number}.pdf");

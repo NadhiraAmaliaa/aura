@@ -31,6 +31,12 @@ class StoreUserRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            'email' => [
+                'nullable',
+                Rule::requiredIf(fn (): bool => $this->input('role') === 'supervisor'),
+                'email',
+                'max:255',
+            ],
             'nik' => ['required', 'string', 'max:50', Rule::unique('users', 'nik')],
             'password' => ['required', 'confirmed', Password::min(3)],
             'role' => ['required', 'in:admin,supervisor'],
@@ -66,6 +72,8 @@ class StoreUserRequest extends FormRequest
         return [
             'nik.unique' => 'NIK tersebut sudah terdaftar.',
             'division_id.required' => 'Divisi wajib dipilih untuk akun supervisor.',
+            'email.required' => 'Email wajib diisi untuk akun supervisor.',
+            'email.email' => 'Format email tidak valid.',
         ];
     }
 

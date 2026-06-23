@@ -592,11 +592,7 @@ function ReportRow({ row }: { row: AttendanceReportRow }) {
                 >
                     {row.jenis_absen}
                 </span>
-                {row.is_late && (
-                    <span className="ml-1 inline-flex rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">
-                        Terlambat
-                    </span>
-                )}
+
             </td>
             <td className="whitespace-nowrap px-3 py-3 text-gray-900">
                 {dash(row.check_in_schedule)}

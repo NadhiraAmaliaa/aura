@@ -60,6 +60,7 @@ class UserController extends Controller
 
         User::create([
             'name' => $data['name'],
+            'email' => $data['email'] ?? null,
             'nik' => $data['nik'],
             'password' => $data['password'],
             'role' => $data['role'],
@@ -80,7 +81,7 @@ class UserController extends Controller
         $user->load('division:id,name');
 
         return Inertia::render('admin/Users/Edit', [
-            'user' => $user->only(['id', 'name', 'nik', 'role', 'is_active', 'division_id']),
+            'user' => $user->only(['id', 'name', 'email', 'nik', 'role', 'is_active', 'division_id']),
             'divisions' => Division::active()->orderBy('name')->get(['id', 'name']),
         ]);
     }
@@ -98,6 +99,7 @@ class UserController extends Controller
 
         $attributes = [
             'name' => $data['name'],
+            'email' => $data['email'] ?? null,
             'nik' => $data['nik'],
             'role' => $isSelf ? 'admin' : $data['role'],
             'division_id' => $isSelf ? null : ($data['division_id'] ?? null),

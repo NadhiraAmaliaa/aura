@@ -10,6 +10,7 @@ import { FormEventHandler, useState } from "react";
 
 interface UserFormData {
     name: string;
+    email: string;
     nik: string;
     password: string;
     password_confirmation: string;
@@ -34,6 +35,7 @@ export default function UserForm({
     const { data, setData, post, put, processing, errors } =
         useForm<UserFormData>({
             name: user?.name ?? "",
+            email: user?.email ?? "",
             nik: user?.nik ?? "",
             password: "",
             password_confirmation: "",
@@ -97,6 +99,27 @@ export default function UserForm({
                         <p className="mt-1 text-xs text-on-surface-variant">
                             Username otomatis mengikuti NIK.
                         </p>
+                    </div>
+                    <div className="sm:col-span-2">
+                        <InputLabel
+                            htmlFor="email"
+                            value={
+                                data.role === "supervisor"
+                                    ? "Email (wajib untuk Supervisor)"
+                                    : "Email"
+                            }
+                        />
+                        <TextInput
+                            id="email"
+                            type="email"
+                            className="mt-1 block w-full"
+                            value={data.email}
+                            placeholder="contoh@email.com"
+                            onChange={(event) =>
+                                setData("email", event.target.value)
+                            }
+                        />
+                        <InputError className="mt-2" message={errors.email} />
                     </div>
                     <div className="sm:col-span-2">
                         <InputLabel

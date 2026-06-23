@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Intern;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreLeaveRequestRequest;
 use App\Models\LeaveRequest;
+use App\Models\User;
+use App\Notifications\LeaveRequestSubmittedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -46,7 +48,7 @@ class LeaveRequestController extends Controller
         $startDate = Carbon::parse($data['start_date']);
         $endDate = Carbon::parse($data['end_date']);
 
-        LeaveRequest::create([
+        $leaveRequest = LeaveRequest::create([
             'user_id' => Auth::id(),
             'type' => $data['type'],
             'reason' => $data['reason'],
@@ -57,6 +59,9 @@ class LeaveRequestController extends Controller
             'address' => $data['address'] ?? null,
             'status' => 'pending',
         ]);
+
+        // Notify the division supervisor (if one exists and has an email).
+        $this->notifySupervisor($leaveRequest);
 
         return redirect()
             ->route('intern.leave-requests.index')
@@ -75,5 +80,31 @@ class LeaveRequestController extends Controller
         return Inertia::render('intern/LeaveRequests/Show', [
             'leaveRequest' => $leaveRequest,
         ]);
+    }
+
+    /**
+     * Find and e-mail the division supervisor for this leave request.
+     */
+    private function notifySupervisor(LeaveRequest $leaveRequest): void
+    {
+        $leaveRequest->load('user.intern');
+
+        $divisionId = $leaveRequest->user?->intern?->division_id;
+
+        if (! $divisionId) {
+            return;
+        }
+
+        $supervisor = User::where('role', 'supervisor')
+            ->where('division_id', $divisionId)
+            ->whereNotNull('email')
+            ->where('is_active', true)
+            ->first();
+
+        if (! $supervisor) {
+            return;
+        }
+
+        $supervisor->notify(new LeaveRequestSubmittedNotification($leaveRequest));
     }
 }
