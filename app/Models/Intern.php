@@ -5,12 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 class Intern extends Model
 {
     /** @use HasFactory<\Database\Factories\InternFactory> */
     use HasFactory;
+    use SoftDeletes;
 
     /**
      * Internship participation statuses.

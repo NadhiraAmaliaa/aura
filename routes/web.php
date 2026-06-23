@@ -95,6 +95,9 @@ Route::middleware(['auth', 'role:admin'])
             ->only(['index', 'create', 'store', 'edit', 'update']);
 
         Route::resource('interns', InternController::class)->except(['show', 'index']);
+        Route::patch('interns/{intern}/restore', [InternController::class, 'restore'])
+            ->withTrashed()
+            ->name('interns.restore');
 
         // Master data managed by administrators.
         Route::resource('intern-programs', InternProgramController::class)

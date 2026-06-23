@@ -1,5 +1,5 @@
 import ActionButton from "@/Components/admin/ActionButton";
-import ConfirmDeleteDialog from "@/Components/admin/ConfirmDeleteDialog";
+import ConfirmActionDialog from "@/Components/admin/ConfirmActionDialog";
 import DataTable, { Column } from "@/Components/admin/DataTable";
 import DatePicker from "@/Components/admin/DatePicker";
 import { FilterField, filterControlClass } from "@/Components/admin/FilterCard";
@@ -30,20 +30,27 @@ interface Filters {
     period_to: string | null;
 }
 
+type Tab = "data" | "arsip";
+
 export default function Index({
     interns,
     programs,
     divisions,
     filters,
     perPage,
+    tab,
+    tabCounts,
 }: {
     interns: Paginated<Intern>;
     programs: Pick<InternProgram, "id" | "name">[];
     divisions: Pick<Division, "id" | "name">[];
     filters: Filters;
     perPage: number;
+    tab: Tab;
+    tabCounts: Record<Tab, number>;
 }) {
     const isAdmin = usePage<PageProps>().props.auth.user?.is_admin ?? false;
+    const isArchive = tab === "arsip";
     const [search, setSearch] = useState(filters.search ?? "");
     const [program, setProgram] = useState(
         filters.program ? String(filters.program) : "",
@@ -55,8 +62,8 @@ export default function Index({
     const [periodFrom, setPeriodFrom] = useState(filters.period_from ?? "");
     const [periodTo, setPeriodTo] = useState(filters.period_to ?? "");
 
-    const [deleteOpen, setDeleteOpen] = useState(false);
-    const [deleting, setDeleting] = useState<Intern | null>(null);
+    const [archiving, setArchiving] = useState<Intern | null>(null);
+    const [restoring, setRestoring] = useState<Intern | null>(null);
 
     const [tableSearch, setTableSearch] = useState("");
 
@@ -114,6 +121,7 @@ export default function Index({
         router.get(
             route("admin.interns.index"),
             {
+                tab: next.tab ?? tab,
                 search: next.search ?? search,
                 program: next.program ?? program,
                 division: next.division ?? division,
@@ -140,15 +148,13 @@ export default function Index({
         setPeriodTo("");
         router.get(
             route("admin.interns.index"),
-            {},
+            { tab },
             { preserveState: true, replace: true },
         );
     };
 
-    const openDelete = (intern: Intern) => {
-        setDeleting(intern);
-        setDeleteOpen(true);
-    };
+    const openArchive = (intern: Intern) => setArchiving(intern);
+    const openRestore = (intern: Intern) => setRestoring(intern);
 
     const columns: Column<Intern>[] = [
         {
@@ -204,18 +210,32 @@ export default function Index({
                       align: "center" as const,
                       cell: (intern: Intern) => (
                           <RowActions>
-                              <IconAction
-                                  icon="edit"
-                                  label="Ubah peserta"
-                                  tone="edit"
-                                  href={route("admin.interns.edit", intern.id)}
-                              />
-                              <IconAction
-                                  icon="delete"
-                                  label="Hapus peserta"
-                                  tone="delete"
-                                  onClick={() => openDelete(intern)}
-                              />
+                              {isArchive ? (
+                                  <IconAction
+                                      icon="restore_from_trash"
+                                      label="Pulihkan peserta"
+                                      tone="restore"
+                                      onClick={() => openRestore(intern)}
+                                  />
+                              ) : (
+                                  <>
+                                      <IconAction
+                                          icon="edit"
+                                          label="Ubah peserta"
+                                          tone="edit"
+                                          href={route(
+                                              "admin.interns.edit",
+                                              intern.id,
+                                          )}
+                                      />
+                                      <IconAction
+                                          icon="archive"
+                                          label="Arsipkan peserta"
+                                          tone="archive"
+                                          onClick={() => openArchive(intern)}
+                                      />
+                                  </>
+                              )}
                           </RowActions>
                       ),
                   },
@@ -368,6 +388,43 @@ export default function Index({
                 </div>
             </form>
 
+            <div className="mb-4 flex gap-1 border-b border-outline-variant">
+                {(
+                    [
+                        { key: "data", label: "Data Peserta" },
+                        { key: "arsip", label: "Arsip" },
+                    ] as { key: Tab; label: string }[]
+                ).map(({ key, label }) => {
+                    const active = tab === key;
+
+                    return (
+                        <button
+                            key={key}
+                            type="button"
+                            onClick={() => applyFilters({ tab: key })}
+                            className={
+                                "-mb-px flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-semibold transition " +
+                                (active
+                                    ? "border-primary text-primary"
+                                    : "border-transparent text-on-surface-variant hover:text-on-surface")
+                            }
+                        >
+                            {label}
+                            <span
+                                className={
+                                    "rounded-full px-2 py-0.5 text-xs font-semibold " +
+                                    (active
+                                        ? "bg-primary/10 text-primary"
+                                        : "bg-surface-container text-on-surface-variant")
+                                }
+                            >
+                                {tabCounts[key]}
+                            </span>
+                        </button>
+                    );
+                })}
+            </div>
+
             <TableCard>
                 <TableToolbar
                     search={tableSearch}
@@ -381,7 +438,11 @@ export default function Index({
                     rows={rows}
                     getRowKey={(intern) => intern.id}
                     emptyIcon="groups"
-                    emptyText="Tidak ada peserta magang yang cocok."
+                    emptyText={
+                        isArchive
+                            ? "Belum ada peserta magang yang diarsipkan."
+                            : "Tidak ada peserta magang yang cocok."
+                    }
                 />
 
                 <TableFooter
@@ -392,24 +453,48 @@ export default function Index({
                 />
             </TableCard>
 
-            <ConfirmDeleteDialog
-                open={deleteOpen}
-                onOpenChange={setDeleteOpen}
-                title="Hapus peserta magang ini?"
+            <ConfirmActionDialog
+                open={archiving !== null}
+                onOpenChange={(open) => !open && setArchiving(null)}
+                title="Arsipkan peserta magang ini?"
                 description={
                     <>
-                        Akun pengguna dan seluruh data absensi{" "}
                         <span className="font-semibold text-foreground">
-                            {deleting?.user?.name}
+                            {archiving?.user?.name}
                         </span>{" "}
-                        akan dihapus permanen.
+                        akan dipindahkan ke arsip. Riwayat absensi, pengajuan
+                        izin, serta laporan tetap tersimpan dan peserta dapat
+                        dipulihkan kapan saja.
                     </>
                 }
-                deleteUrl={
-                    deleting
-                        ? route("admin.interns.destroy", deleting.id)
+                url={
+                    archiving
+                        ? route("admin.interns.destroy", archiving.id)
                         : null
                 }
+                method="delete"
+                confirmLabel="Arsipkan"
+            />
+
+            <ConfirmActionDialog
+                open={restoring !== null}
+                onOpenChange={(open) => !open && setRestoring(null)}
+                title="Pulihkan peserta magang ini?"
+                description={
+                    <>
+                        <span className="font-semibold text-foreground">
+                            {restoring?.user?.name}
+                        </span>{" "}
+                        akan dikembalikan ke daftar peserta aktif.
+                    </>
+                }
+                url={
+                    restoring
+                        ? route("admin.interns.restore", restoring.id)
+                        : null
+                }
+                method="patch"
+                confirmLabel="Pulihkan"
             />
         </AuthenticatedLayout>
     );

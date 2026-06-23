@@ -20,6 +20,13 @@ use Inertia\Response;
 class InternController extends Controller
 {
     /**
+     * Listing tabs: active participants versus the archive of soft-deleted ones.
+     */
+    private const TAB_DATA = 'data';
+
+    private const TAB_ARCHIVED = 'arsip';
+
+    /**
      * Display a filtered, paginated listing of the interns.
      *
      * The participant information (university, study program, division and the
@@ -37,6 +44,10 @@ class InternController extends Controller
         $periodFrom = $request->filled('period_from') ? $request->date('period_from') : null;
         $periodTo = $request->filled('period_to') ? $request->date('period_to') : null;
 
+        // The archive tab lists soft-deleted interns; the default tab lists the
+        // active ones. Both share the same filters.
+        $tab = $request->query('tab') === self::TAB_ARCHIVED ? self::TAB_ARCHIVED : self::TAB_DATA;
+
         // Supervisors are locked to the interns of their own division.
         if ($request->user()->isSupervisor()) {
             $divisionId = $request->user()->division_id;
@@ -48,7 +59,9 @@ class InternController extends Controller
             $perPage = 10;
         }
 
-        $interns = Intern::with(['user', 'internProgram', 'universityRef', 'studyProgram', 'divisionRef'])
+        $interns = Intern::query()
+            ->when($tab === self::TAB_ARCHIVED, fn ($query) => $query->onlyTrashed())
+            ->with(['user', 'internProgram', 'universityRef', 'studyProgram', 'divisionRef'])
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($q) use ($search): void {
                     $q->whereHas('user', fn ($u) => $u->where('name', 'like', '%'.$search.'%'))
@@ -83,11 +96,23 @@ class InternController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
+        // Division scope is also applied to the tab counts so supervisors only
+        // see their own totals.
+        $countScope = fn ($query) => $query->when(
+            $request->user()->isSupervisor(),
+            fn ($q) => $q->where('division_id', $request->user()->division_id)
+        );
+
         return Inertia::render('admin/Interns/Index', [
             'interns' => $interns,
             'programs' => InternProgram::orderBy('name')->get(['id', 'name']),
             'divisions' => Division::orderBy('name')->get(['id', 'name']),
             'perPage' => $perPage,
+            'tab' => $tab,
+            'tabCounts' => [
+                self::TAB_DATA => $countScope(Intern::query())->count(),
+                self::TAB_ARCHIVED => $countScope(Intern::onlyTrashed())->count(),
+            ],
             'filters' => [
                 'search' => $search,
                 'program' => $programId,
@@ -171,18 +196,31 @@ class InternController extends Controller
     }
 
     /**
-     * Remove the specified intern and its linked user account.
+     * Archive the specified intern (soft delete).
+     *
+     * The record is never destroyed: the linked user account, attendance
+     * history and leave requests are all preserved so the participant can be
+     * restored later and stays available in reports and exports.
      */
     public function destroy(Intern $intern): RedirectResponse
     {
-        DB::transaction(function () use ($intern): void {
-            // Deleting the user cascades to the intern record via the foreign key.
-            $intern->user->delete();
-        });
+        $intern->delete();
+
+        return redirect()
+            ->route('admin.interns.index', ['tab' => self::TAB_ARCHIVED])
+            ->with('status', 'Peserta magang berhasil diarsipkan.');
+    }
+
+    /**
+     * Restore a previously archived intern.
+     */
+    public function restore(Intern $intern): RedirectResponse
+    {
+        $intern->restore();
 
         return redirect()
             ->route('admin.interns.index')
-            ->with('status', 'Peserta magang berhasil dihapus.');
+            ->with('status', 'Peserta magang berhasil dipulihkan.');
     }
 
     /**

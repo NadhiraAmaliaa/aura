@@ -129,6 +129,7 @@ class AttendanceReportService
         ?int $divisionId
     ): Collection {
         return Intern::query()
+            ->withTrashed()
             ->whereHas('user')
             ->with(['user', 'internProgram', 'divisionRef'])
             ->where('status', '!=', 'inactive')

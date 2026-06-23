@@ -111,6 +111,7 @@ export interface Intern {
     end_date: string | null;
     status: InternStatus;
     effective_status: InternStatus;
+    deleted_at: string | null;
     user?: User;
     intern_program?: InternProgram | null;
     university_ref?: University | null;
