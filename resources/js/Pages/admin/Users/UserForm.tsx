@@ -105,7 +105,7 @@ export default function UserForm({
                             htmlFor="email"
                             value={
                                 data.role === "supervisor"
-                                    ? "Email (wajib untuk Supervisor)"
+                                    ? "Email (wajib untuk Mentor)"
                                     : "Email"
                             }
                         />
@@ -255,7 +255,7 @@ export default function UserForm({
                             }}
                         >
                             <option value="admin">Admin</option>
-                            <option value="supervisor">Supervisor</option>
+                            <option value="supervisor">Mentor</option>
                         </SelectInput>
                         <InputError className="mt-2" message={errors.role} />
                     </div>

@@ -12,7 +12,7 @@ import { Head, router } from "@inertiajs/react";
 import { useMemo, useState } from "react";
 
 function roleLabel(role: ManagedUser["role"]): string {
-    return role === "admin" ? "Admin" : "Supervisor";
+    return role === "admin" ? "Admin" : "Mentor";
 }
 
 export default function Index({

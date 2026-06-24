@@ -306,7 +306,7 @@ export default function AuthenticatedLayout({
                                         {user.is_admin
                                             ? "Administrator"
                                             : user.is_supervisor
-                                              ? "Supervisor"
+                                              ? "Mentor"
                                               : "Peserta Magang"}
                                     </p>
                                 </div>
