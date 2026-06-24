@@ -3,13 +3,7 @@ import FlashToaster from "@/Components/FlashToaster";
 import MaterialIcon from "@/Components/MaterialIcon";
 import { AuthUser, PageProps } from "@/types";
 import { Link, usePage } from "@inertiajs/react";
-import {
-    PropsWithChildren,
-    ReactNode,
-    useCallback,
-    useRef,
-    useState,
-} from "react";
+import { PropsWithChildren, ReactNode, useCallback, useState } from "react";
 
 const SIDEBAR_SCROLL_KEY = "admin-sidebar-scroll";
 

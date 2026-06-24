@@ -21,13 +21,27 @@ class StoreLeaveRequestRequest extends FormRequest
      */
     public function rules(): array
     {
+        // Izin must be requested at least H-1 (tomorrow or later); Sakit may be
+        // submitted for today.
+        $startDateRule = $this->input('type') === 'sakit'
+            ? 'after_or_equal:today'
+            : 'after_or_equal:tomorrow';
+
         return [
             'type' => ['required', 'in:izin,sakit'],
             'reason' => ['required', 'string', 'max:1000'],
-            'start_date' => ['required', 'date', 'after_or_equal:today'],
+            'start_date' => ['required', 'date', $startDateRule],
             'end_date' => ['required', 'date', 'after_or_equal:start_date'],
             'contact_phone' => ['nullable', 'string', 'max:30'],
             'address' => ['nullable', 'string', 'max:500'],
+            // Evidence is required for Sakit, optional for Izin. PDF or image
+            // only, capped at 5 MB.
+            'evidence' => [
+                $this->input('type') === 'sakit' ? 'required' : 'nullable',
+                'file',
+                'mimes:pdf,jpg,jpeg,png,webp',
+                'max:5120',
+            ],
         ];
     }
 
@@ -43,9 +57,15 @@ class StoreLeaveRequestRequest extends FormRequest
             'type.in' => 'Jenis pengajuan tidak valid.',
             'reason.required' => 'Alasan wajib diisi.',
             'start_date.required' => 'Tanggal awal wajib diisi.',
-            'start_date.after_or_equal' => 'Tanggal awal tidak boleh di masa lalu.',
+            'start_date.after_or_equal' => $this->input('type') === 'sakit'
+                ? 'Tanggal awal tidak boleh di masa lalu.'
+                : 'Pengajuan izin minimal H-1.',
             'end_date.required' => 'Tanggal akhir wajib diisi.',
             'end_date.after_or_equal' => 'Tanggal akhir harus sama atau setelah tanggal awal.',
+            'evidence.required' => 'Lampiran bukti wajib diunggah untuk pengajuan sakit.',
+            'evidence.file' => 'Lampiran bukti harus berupa berkas.',
+            'evidence.mimes' => 'Lampiran bukti harus berupa PDF atau gambar (jpg, jpeg, png, webp).',
+            'evidence.max' => 'Ukuran lampiran bukti maksimal 5 MB.',
         ];
     }
 

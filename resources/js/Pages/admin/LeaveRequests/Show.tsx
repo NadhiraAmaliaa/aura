@@ -109,6 +109,23 @@ export default function Show({ leaveRequest }: { leaveRequest: LeaveRequest }) {
                                 label="Alamat"
                                 value={leaveRequest.address ?? "-"}
                             />
+                            <Row
+                                label="Bukti"
+                                value={
+                                    leaveRequest.evidence_url ? (
+                                        <a
+                                            href={leaveRequest.evidence_url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="font-medium text-primary hover:underline"
+                                        >
+                                            Lihat / Unduh Lampiran
+                                        </a>
+                                    ) : (
+                                        "-"
+                                    )
+                                }
+                            />
                         </dl>
                     </div>
                 </div>

@@ -1,14 +1,14 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import Badge from '@/Components/Badge';
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import Badge from "@/Components/Badge";
 import {
     formatDate,
     leaveStatusBadge,
     leaveStatusLabels,
     leaveTypeLabels,
-} from '@/lib/labels';
-import { LeaveRequest } from '@/types';
-import { Head, Link } from '@inertiajs/react';
-import { ReactNode } from 'react';
+} from "@/lib/labels";
+import { LeaveRequest } from "@/types";
+import { Head, Link } from "@inertiajs/react";
+import { ReactNode } from "react";
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
     return (
@@ -19,11 +19,7 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
     );
 }
 
-export default function Show({
-    leaveRequest,
-}: {
-    leaveRequest: LeaveRequest;
-}) {
+export default function Show({ leaveRequest }: { leaveRequest: LeaveRequest }) {
     return (
         <AuthenticatedLayout
             header={
@@ -49,7 +45,7 @@ export default function Show({
                         {leaveTypeLabels[leaveRequest.type]}
                     </Row>
                     <Row label="Periode">
-                        {formatDate(leaveRequest.start_date)} &ndash;{' '}
+                        {formatDate(leaveRequest.start_date)} &ndash;{" "}
                         {formatDate(leaveRequest.end_date)} (
                         {leaveRequest.total_days} hari)
                     </Row>
@@ -64,9 +60,21 @@ export default function Show({
                             {leaveRequest.address}
                         </Row>
                     )}
-                    {leaveRequest.status !== 'pending' && (
+                    {leaveRequest.evidence_url && (
+                        <Row label="Bukti">
+                            <a
+                                href={leaveRequest.evidence_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="font-medium text-green-700 hover:underline"
+                            >
+                                Lihat / Unduh Lampiran
+                            </a>
+                        </Row>
+                    )}
+                    {leaveRequest.status !== "pending" && (
                         <Row label="Catatan Admin">
-                            {leaveRequest.admin_note || '-'}
+                            {leaveRequest.admin_note || "-"}
                         </Row>
                     )}
                     {leaveRequest.approver && (
@@ -77,12 +85,9 @@ export default function Show({
                 </dl>
 
                 <div className="mt-6 flex items-center gap-3 border-t border-gray-100 pt-4">
-                    {leaveRequest.status === 'approved' && (
+                    {leaveRequest.status === "approved" && (
                         <a
-                            href={route(
-                                'leave-requests.pdf',
-                                leaveRequest.id,
-                            )}
+                            href={route("leave-requests.pdf", leaveRequest.id)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="rounded-md bg-green-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-800"
@@ -91,7 +96,7 @@ export default function Show({
                         </a>
                     )}
                     <Link
-                        href={route('intern.leave-requests.index')}
+                        href={route("intern.leave-requests.index")}
                         className="text-sm font-medium text-gray-600 hover:underline"
                     >
                         Kembali

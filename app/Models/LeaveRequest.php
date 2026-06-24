@@ -19,6 +19,7 @@ use Illuminate\Support\Carbon;
     'total_days',
     'contact_phone',
     'address',
+    'evidence_path',
     'status',
     'admin_note',
     'approved_by',
@@ -28,6 +29,15 @@ class LeaveRequest extends Model
 {
     /** @use HasFactory<\Database\Factories\LeaveRequestFactory> */
     use HasFactory;
+
+    /**
+     * The accessors to append to the model's array / JSON form.
+     *
+     * @var array<int, string>
+     */
+    protected $appends = [
+        'evidence_url',
+    ];
 
     /**
      * Get the attributes that should be cast.
@@ -118,6 +128,20 @@ class LeaveRequest extends Model
         } while (static::where('request_number', $number)->exists());
 
         return $number;
+    }
+
+    /**
+     * Public URL to the uploaded evidence, or null when none is attached.
+     */
+    public function getEvidenceUrlAttribute(): ?string
+    {
+        if (empty($this->evidence_path)) {
+            return null;
+        }
+
+        // asset('storage/...') resolves to APP_URL/storage/{path}, matching
+        // the "public" disk URL — without hitting the untyped Filesystem contract.
+        return asset('storage/'.$this->evidence_path);
     }
 
     /**

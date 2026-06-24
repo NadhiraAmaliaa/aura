@@ -48,6 +48,12 @@ class LeaveRequestController extends Controller
         $startDate = Carbon::parse($data['start_date']);
         $endDate = Carbon::parse($data['end_date']);
 
+        // Store the uploaded evidence (PDF/image) on the public disk so it can
+        // be reviewed later by the admin/supervisor.
+        $evidencePath = $request->hasFile('evidence')
+            ? $request->file('evidence')->store('leave-evidence', 'public')
+            : null;
+
         $leaveRequest = LeaveRequest::create([
             'user_id' => Auth::id(),
             'type' => $data['type'],
@@ -57,6 +63,7 @@ class LeaveRequestController extends Controller
             'total_days' => LeaveRequest::calculateWorkingDays($startDate, $endDate),
             'contact_phone' => $data['contact_phone'] ?? null,
             'address' => $data['address'] ?? null,
+            'evidence_path' => $evidencePath,
             'status' => 'pending',
         ]);
 

@@ -158,6 +158,8 @@ export interface LeaveRequest {
     total_days: number;
     contact_phone: string | null;
     address: string | null;
+    evidence_path: string | null;
+    evidence_url: string | null;
     status: LeaveStatus;
     admin_note: string | null;
     approved_by: number | null;
