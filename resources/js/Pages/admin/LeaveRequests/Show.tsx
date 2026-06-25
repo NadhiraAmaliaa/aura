@@ -31,7 +31,8 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 export default function Show({ leaveRequest }: { leaveRequest: LeaveRequest }) {
-    const isAdmin = usePage<PageProps>().props.auth.user?.is_admin ?? false;
+    const isSupervisor =
+        usePage<PageProps>().props.auth.user?.is_supervisor ?? false;
     const isPending = leaveRequest.status === "pending";
 
     const { data, setData, patch, processing, errors } = useForm({
@@ -155,7 +156,7 @@ export default function Show({ leaveRequest }: { leaveRequest: LeaveRequest }) {
                         )}
 
                         {isPending ? (
-                            isAdmin ? (
+                            isSupervisor ? (
                                 <form className="space-y-4">
                                     <div>
                                         <InputLabel
@@ -199,7 +200,7 @@ export default function Show({ leaveRequest }: { leaveRequest: LeaveRequest }) {
                             ) : (
                                 <p className="text-sm text-on-surface-variant">
                                     Pengajuan ini masih menunggu keputusan
-                                    administrator.
+                                    mentor bagian.
                                 </p>
                             )
                         ) : (

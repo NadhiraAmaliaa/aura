@@ -132,7 +132,14 @@ Route::middleware(['auth', 'role:admin'])
         Route::resource('attendance-locations', AttendanceLocationController::class)
             ->except(['show'])
             ->parameters(['attendance-locations' => 'attendanceLocation']);
+    });
 
+// Leave request decisions are owned by the division supervisor/mentor only.
+// Administrators keep read-only access (index/show) for monitoring above.
+Route::middleware(['auth', 'role:supervisor'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
         Route::patch('/leave-requests/{leaveRequest}/approve', [AdminLeaveRequestController::class, 'approve'])->name('leave-requests.approve');
         Route::patch('/leave-requests/{leaveRequest}/reject', [AdminLeaveRequestController::class, 'reject'])->name('leave-requests.reject');
     });
