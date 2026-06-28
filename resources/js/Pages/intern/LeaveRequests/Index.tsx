@@ -1,14 +1,14 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import Badge from '@/Components/Badge';
-import Pagination from '@/Components/Pagination';
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import Badge from "@/Components/Badge";
+import Pagination from "@/Components/Pagination";
 import {
     formatDate,
     leaveStatusBadge,
     leaveStatusLabels,
     leaveTypeLabels,
-} from '@/lib/labels';
-import { LeaveRequest, Paginated } from '@/types';
-import { Head, Link } from '@inertiajs/react';
+} from "@/lib/labels";
+import { LeaveRequest, Paginated } from "@/types";
+import { Head, Link } from "@inertiajs/react";
 
 export default function Index({
     leaveRequests,
@@ -27,7 +27,7 @@ export default function Index({
 
             <div className="mb-4 flex justify-end">
                 <Link
-                    href={route('intern.leave-requests.create')}
+                    href={route("intern.leave-requests.create")}
                     className="rounded-md bg-green-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-800"
                 >
                     Ajukan Izin
@@ -43,6 +43,7 @@ export default function Index({
                                 <th className="px-6 py-3">Jenis</th>
                                 <th className="px-6 py-3">Periode</th>
                                 <th className="px-6 py-3">Durasi</th>
+                                <th className="px-6 py-3">Tgl Pengajuan</th>
                                 <th className="px-6 py-3">Status</th>
                                 <th className="px-6 py-3"></th>
                             </tr>
@@ -51,7 +52,7 @@ export default function Index({
                             {leaveRequests.data.length === 0 ? (
                                 <tr>
                                     <td
-                                        colSpan={6}
+                                        colSpan={7}
                                         className="px-6 py-8 text-center text-gray-500"
                                     >
                                         Belum ada pengajuan izin.
@@ -67,11 +68,14 @@ export default function Index({
                                             {leaveTypeLabels[item.type]}
                                         </td>
                                         <td className="px-6 py-3 text-gray-600">
-                                            {formatDate(item.start_date)} &ndash;{' '}
-                                            {formatDate(item.end_date)}
+                                            {formatDate(item.start_date)}{" "}
+                                            &ndash; {formatDate(item.end_date)}
                                         </td>
                                         <td className="px-6 py-3 text-gray-600">
                                             {item.total_days} hari
+                                        </td>
+                                        <td className="px-6 py-3 text-gray-600">
+                                            {formatDate(item.created_at)}
                                         </td>
                                         <td className="px-6 py-3">
                                             <Badge
@@ -87,7 +91,7 @@ export default function Index({
                                         <td className="px-6 py-3 text-right">
                                             <Link
                                                 href={route(
-                                                    'intern.leave-requests.show',
+                                                    "intern.leave-requests.show",
                                                     item.id,
                                                 )}
                                                 className="text-sm font-medium text-green-700 hover:underline"

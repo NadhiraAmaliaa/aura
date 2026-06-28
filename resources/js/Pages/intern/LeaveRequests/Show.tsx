@@ -41,6 +41,16 @@ export default function Show({ leaveRequest }: { leaveRequest: LeaveRequest }) {
                 </div>
 
                 <dl className="divide-y divide-gray-100">
+                    <div className="rounded-lg bg-green-50 px-4 py-3 -mx-6 mb-4 border-l-4 border-green-700">
+                        <div className="grid grid-cols-1 gap-1 sm:grid-cols-3">
+                            <dt className="text-xs font-semibold uppercase tracking-wider text-green-700">
+                                Tanggal Pengajuan
+                            </dt>
+                            <dd className="text-base font-semibold text-gray-900 sm:col-span-2">
+                                {formatDate(leaveRequest.created_at)}
+                            </dd>
+                        </div>
+                    </div>
                     <Row label="Jenis">
                         {leaveTypeLabels[leaveRequest.type]}
                     </Row>

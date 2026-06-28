@@ -79,6 +79,16 @@ export default function Show({ leaveRequest }: { leaveRequest: LeaveRequest }) {
                         </div>
 
                         <dl className="divide-y divide-outline-variant">
+                            <div className="rounded-lg bg-primary/5 px-4 py-3 -mx-6 mb-4 border-l-4 border-primary">
+                                <div className="grid grid-cols-3 gap-4">
+                                    <dt className="text-xs font-semibold uppercase tracking-wider text-primary">
+                                        Tanggal Pengajuan
+                                    </dt>
+                                    <dd className="col-span-2 text-base font-semibold text-on-surface">
+                                        {formatDate(leaveRequest.created_at)}
+                                    </dd>
+                                </div>
+                            </div>
                             <Row label="Nama" value={leaveRequest.user?.name} />
                             <Row
                                 label="NIM"

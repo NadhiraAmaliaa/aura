@@ -29,13 +29,18 @@ class LeaveRequestPdfController extends Controller
 
         $leaveRequest->load(['user.intern.internProgram', 'approver']);
 
-        $verifyUrl = route('leave-requests.verify', $leaveRequest);
-
-        // Generate QR code as base64-encoded SVG for embedding in the PDF.
+        // Render plain-text signature QR codes (full names only). These are a
+        // visual stand-in for handwritten signatures — no verification URL.
         // SVG backend requires no PHP extensions (Imagick/GD not needed).
-        $qrCode = base64_encode(
-            QrCode::format('svg')->size(120)->errorCorrection('H')->generate($verifyUrl)
+        $makeQr = static fn (string $text): string => base64_encode(
+            QrCode::format('svg')->size(120)->errorCorrection('M')->generate($text)
         );
+
+        $supervisorName = $leaveRequest->approver?->name ?? '-';
+        $internName = $leaveRequest->user?->name ?? '-';
+
+        $supervisorQr = $makeQr($supervisorName);
+        $internQr = $makeQr($internName);
 
         // DomPDF cannot resolve web URLs; embed logos as base64 data URIs.
         $logos = collect([
@@ -55,7 +60,7 @@ class LeaveRequestPdfController extends Controller
             return "data:{$mime};base64,{$data}";
         });
 
-        $pdf = Pdf::loadView('leave-requests.pdf', compact('leaveRequest', 'qrCode', 'logos'))
+        $pdf = Pdf::loadView('leave-requests.pdf', compact('leaveRequest', 'supervisorQr', 'internQr', 'logos'))
             ->setPaper('letter');
 
         return $pdf->stream("pengajuan-{$leaveRequest->request_number}.pdf");

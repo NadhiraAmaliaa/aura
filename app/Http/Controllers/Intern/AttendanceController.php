@@ -37,7 +37,7 @@ class AttendanceController extends Controller
             'todayAttendance' => $todayAttendance,
             'todayLeave' => $todayLeave,
             'expectedCheckOut' => $expectedCheckOut,
-            'history' => $history,
+            'history' => $history, 
         ]);
     }
 

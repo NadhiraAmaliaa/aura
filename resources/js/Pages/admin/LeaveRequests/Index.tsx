@@ -60,6 +60,7 @@ export default function Index({
                 leave.user?.intern?.nim,
                 leaveTypeLabels[leave.type],
                 `${formatDate(leave.start_date)} - ${formatDate(leave.end_date)}`,
+                formatDate(leave.created_at),
                 leaveStatusLabels[leave.status],
             ]
                 .join(" ")
@@ -146,6 +147,11 @@ export default function Index({
             className: "whitespace-nowrap",
             cell: (leave) =>
                 `${formatDate(leave.start_date)} - ${formatDate(leave.end_date)}`,
+        },
+        {
+            header: "Tgl Pengajuan",
+            className: "whitespace-nowrap",
+            cell: (leave) => formatDate(leave.created_at),
         },
         {
             header: "Status",

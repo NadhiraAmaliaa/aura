@@ -14,7 +14,6 @@ use App\Http\Controllers\Admin\WorkingHourController;
 use App\Http\Controllers\Intern\AttendanceController;
 use App\Http\Controllers\Intern\LeaveRequestController;
 use App\Http\Controllers\LeaveRequestPdfController;
-use App\Http\Controllers\LeaveRequestVerifyController;
 use App\Http\Controllers\LookupController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Auth;
@@ -173,10 +172,6 @@ Route::middleware(['auth', 'role:intern', 'intern.active'])
         Route::post('/leave-requests', [LeaveRequestController::class, 'store'])->name('leave-requests.store');
         Route::get('/leave-requests/{leaveRequest}', [LeaveRequestController::class, 'show'])->name('leave-requests.show');
     });
-
-// Public leave request verification (no auth — printed in QR code)
-Route::get('/leave-requests/{leaveRequest}/verify', LeaveRequestVerifyController::class)
-    ->name('leave-requests.verify');
 
 Route::middleware('auth')->group(function () {
     Route::get('/leave-requests/{leaveRequest}/pdf', LeaveRequestPdfController::class)->name('leave-requests.pdf');

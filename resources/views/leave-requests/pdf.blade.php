@@ -32,14 +32,12 @@
         .signatures { width: 100%; margin-top: 48px; border-collapse: collapse; }
         .signatures td { width: 50%; text-align: center; vertical-align: top; font-size: 12px; padding: 0 8px; }
         .sign-date { text-align: right; padding-right: 8px; font-size: 12px; padding-bottom: 20px; }
-        .sign-title { margin-bottom: 40px; text-align: center; }
-        .sign-name { font-weight: bold; margin-top: 60px; text-decoration: underline; }
+        .sign-title { margin-bottom: 8px; text-align: center; }
+        .sign-name { font-weight: bold; margin-top: 8px; text-decoration: underline; }
         .sign-role { font-size: 11px; margin-top: 2px; }
         .status-box { margin-top: 18px; padding: 8px 10px; border: 1px solid #999; }
-        .qr-wrap { text-align: center; margin-bottom: 6px; }
-        .qr-wrap img { display: block; margin: 0 auto; }
-        .qr-caption { font-size: 9px; color: #555; text-align: center; margin-top: 2px; }
-        .qr-corner { float: right; margin-left: 16px; margin-bottom: 16px; text-align: center; }
+        .sign-qr { text-align: center; margin: 4px 0; }
+        .sign-qr img { display: inline-block; }
     </style>
 </head>
 <body>
@@ -74,11 +72,6 @@
                 </td>
             </tr>
         </table>
-    </div>
-
-    <div class="qr-corner">
-        <img src="data:image/svg+xml;base64,{{ $qrCode }}" width="70" height="70" alt="QR Verifikasi">
-        <div class="qr-caption">Scan untuk verifikasi</div>
     </div>
 
     <table class="info">
@@ -165,11 +158,17 @@
         <tr>
             <td>
                 <div class="sign-title">Menyetujui,</div>
+                <div class="sign-qr">
+                    <img src="data:image/svg+xml;base64,{{ $supervisorQr }}" width="80" height="80" alt="Tanda tangan supervisor">
+                </div>
                 <div class="sign-name">{{ $leaveRequest->approver?->name ?? '-' }}</div>
                 <div class="sign-role">Administrator</div>
             </td>
             <td>
                 <div class="sign-title">Pemohon,</div>
+                <div class="sign-qr">
+                    <img src="data:image/svg+xml;base64,{{ $internQr }}" width="80" height="80" alt="Tanda tangan peserta magang">
+                </div>
                 <div class="sign-name">{{ $leaveRequest->user?->name ?? '-' }}</div>
                 <div class="sign-role">Peserta Magang</div>
             </td>
