@@ -154,4 +154,20 @@ class InternArchiveTest extends TestCase
                 ->where('report.rows', fn ($rows) => collect($rows)->pluck('nama')->contains($name))
             );
     }
+
+    public function test_admin_can_view_intern_detail_page(): void
+    {
+        $user = $this->makeIntern();
+        $user->update(['email' => 'peserta@example.com']);
+        $user->intern->update(['phone' => '081234567890']);
+
+        $this->actingAs($this->admin())
+            ->get(route('admin.interns.show', $user->intern->id))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('admin/Interns/Show')
+                ->where('intern.user.email', 'peserta@example.com')
+                ->where('intern.phone', '081234567890')
+            );
+    }
 }

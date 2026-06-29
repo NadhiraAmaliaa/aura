@@ -225,6 +225,15 @@ export default function Index({
                               ) : (
                                   <>
                                       <IconAction
+                                          icon="visibility"
+                                          label="Lihat detail"
+                                          tone="view"
+                                          href={route(
+                                              "admin.interns.show",
+                                              intern.id,
+                                          )}
+                                      />
+                                      <IconAction
                                           icon="edit"
                                           label="Ubah peserta"
                                           tone="edit"

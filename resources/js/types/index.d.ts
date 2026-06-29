@@ -6,6 +6,7 @@ export interface AuthUser {
     id: number;
     name: string;
     nik: string | null;
+    email: string | null;
     role: UserRole;
     is_admin: boolean;
     is_supervisor: boolean;
@@ -16,6 +17,7 @@ export interface AuthUser {
 
 export interface AuthIntern {
     status: InternStatus;
+    phone: string | null;
     start_date: string | null;
     end_date: string | null;
     can_record_attendance: boolean;
@@ -27,6 +29,7 @@ export interface User {
     id: number;
     name: string;
     nik: string | null;
+    email: string | null;
     role: UserRole;
     intern?: Intern | null;
 }

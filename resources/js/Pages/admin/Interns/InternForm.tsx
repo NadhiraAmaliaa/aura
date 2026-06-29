@@ -20,7 +20,6 @@ interface InternFormData {
     study_program_id: number | string;
     division_id: number | string;
     nim: string;
-    phone: string;
     start_date: string;
     end_date: string;
     is_active: boolean;
@@ -52,7 +51,6 @@ export default function InternForm({
             study_program_id: intern?.study_program_id ?? "",
             division_id: intern?.division_id ?? "",
             nim: intern?.nim ?? "",
-            phone: intern?.phone ?? "",
             start_date: intern?.start_date ?? "",
             end_date: intern?.end_date ?? "",
             is_active: intern ? intern.status !== "inactive" : true,
@@ -359,16 +357,6 @@ export default function InternForm({
                             className="mt-2"
                             message={errors.division_id}
                         />
-                    </div>
-                    <div>
-                        <InputLabel htmlFor="phone" value="Nomor Telepon" />
-                        <TextInput
-                            id="phone"
-                            className="mt-1 block w-full"
-                            value={data.phone}
-                            onChange={(e) => setData("phone", e.target.value)}
-                        />
-                        <InputError className="mt-2" message={errors.phone} />
                     </div>
                     <div>
                         <InputLabel

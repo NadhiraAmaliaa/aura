@@ -14,11 +14,14 @@ export default function UpdateProfileInformation({
 }) {
     const user = usePage<PageProps>().props.auth.user!;
     const isAdmin = user.role === "admin";
+    const isIntern = user.role === "intern";
 
     const { data, setData, patch, errors, processing, recentlySuccessful } =
         useForm({
             name: user.name,
             nik: user.nik ?? "",
+            email: user.email ?? "",
+            phone: user.intern?.phone ?? "",
         });
 
     const submit: FormEventHandler = (e) => {
@@ -66,6 +69,43 @@ export default function UpdateProfileInformation({
                         />
                         <InputError className="mt-2" message={errors.nik} />
                     </div>
+                )}
+
+                {isIntern && (
+                    <>
+                        <div>
+                            <InputLabel htmlFor="email" value="Email" />
+                            <TextInput
+                                id="email"
+                                type="email"
+                                className="mt-1 block w-full"
+                                value={data.email}
+                                onChange={(e) =>
+                                    setData("email", e.target.value)
+                                }
+                                autoComplete="email"
+                            />
+                            <InputError className="mt-2" message={errors.email} />
+                        </div>
+
+                        <div>
+                            <InputLabel
+                                htmlFor="phone"
+                                value="Nomor Telepon"
+                            />
+                            <TextInput
+                                id="phone"
+                                type="tel"
+                                className="mt-1 block w-full"
+                                value={data.phone}
+                                onChange={(e) =>
+                                    setData("phone", e.target.value)
+                                }
+                                autoComplete="tel"
+                            />
+                            <InputError className="mt-2" message={errors.phone} />
+                        </div>
+                    </>
                 )}
 
                 <div className="flex items-center gap-4">

@@ -27,9 +27,15 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
 
-        $request->user()->save();
+        $user->fill($request->validated());
+        $user->save();
+
+        // The phone number belongs to the intern profile, not the user account.
+        if ($user->isIntern() && $user->intern) {
+            $user->intern->update(['phone' => $request->validated('phone')]);
+        }
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }

@@ -157,6 +157,18 @@ class InternController extends Controller
     }
 
     /**
+     * Display a read-only detail page for the specified intern.
+     */
+    public function show(Intern $intern): Response
+    {
+        $intern->load(['user', 'internProgram', 'universityRef', 'studyProgram', 'divisionRef']);
+
+        return Inertia::render('admin/Interns/Show', [
+            'intern' => $intern,
+        ]);
+    }
+
+    /**
      * Show the form for editing the specified intern.
      */
     public function edit(Intern $intern): Response
@@ -255,7 +267,6 @@ class InternController extends Controller
             'study_program_id' => $data['study_program_id'],
             'division_id' => $data['division_id'],
             'nim' => $data['nim'],
-            'phone' => $data['phone'],
             'university' => $university?->name,
             'major' => $studyProgram?->name,
             'division' => $division?->name,

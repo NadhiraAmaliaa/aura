@@ -79,6 +79,7 @@ Route::middleware(['auth', 'role:admin,supervisor'])
         // Read-only operational views. Supervisors share the administrator
         // pages but are scoped to their division inside the controllers.
         Route::get('/interns', [InternController::class, 'index'])->name('interns.index');
+        Route::get('/interns/{intern}', [InternController::class, 'show'])->name('interns.show');
         Route::get('/leave-requests', [AdminLeaveRequestController::class, 'index'])->name('leave-requests.index');
         Route::get('/leave-requests/{leaveRequest}', [AdminLeaveRequestController::class, 'show'])->name('leave-requests.show');
         Route::get('/attendances', [AdminAttendanceController::class, 'index'])->name('attendances.index');

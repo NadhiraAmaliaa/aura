@@ -49,7 +49,6 @@ class StoreInternRequest extends FormRequest
                     fn ($query) => $query->where('university_id', $this->integer('university_id'))
                 ),
             ],
-            'phone' => ['required', 'string', 'max:30'],
             'start_date' => ['required', 'date'],
             'end_date' => ['required', 'date', 'after_or_equal:start_date'],
             'is_active' => ['boolean'],
