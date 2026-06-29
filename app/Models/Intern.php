@@ -20,8 +20,7 @@ class Intern extends Model
      * Only INACTIVE is set manually by an administrator as an override that
      * disables the intern regardless of the calendar. The remaining statuses
      * are derived automatically from the internship dates (see effectiveStatus)
-     * and are also written back to the stored column by the daily schedule so
-     * that simple status-based reporting and filtering stay accurate.
+     * at read time, so the stored column never needs to be maintained by hand.
      */
     public const STATUS_UPCOMING = 'upcoming';
 
@@ -158,17 +157,6 @@ class Intern extends Model
     public function scopeInactive(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
     {
         return $query->where('status', self::STATUS_INACTIVE);
-    }
-
-    /**
-     * Compute the status value that should be stored for the given date.
-     *
-     * Manually deactivated interns keep their INACTIVE status; everyone else is
-     * realigned to the date-derived status. Used by the daily schedule.
-     */
-    public function resolveStoredStatus(?Carbon $date = null): string
-    {
-        return $this->effectiveStatus($date);
     }
 
     /**
