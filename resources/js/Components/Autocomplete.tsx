@@ -58,7 +58,7 @@ export default function Autocomplete({
     const [highlight, setHighlight] = useState(0);
 
     const containerRef = useRef<HTMLDivElement>(null);
-    const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
     // Keep the visible text in sync when the selection is set externally
     // (e.g. when an edit form loads, or the university filter resets it).
