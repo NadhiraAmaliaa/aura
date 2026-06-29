@@ -185,16 +185,17 @@ export default function Report({
         );
     };
 
+    const [tableSearch, setTableSearch] = useState("");
+    const [tablePerPage, setTablePerPage] = useState(10);
+    const [tablePage, setTablePage] = useState(1);
+
     const exportUrl = route("admin.attendances.export", {
         start_date: data.start_date,
         end_date: data.end_date,
         program: data.program || undefined,
         division: data.division || undefined,
+        search: tableSearch.trim() || undefined,
     });
-
-    const [tableSearch, setTableSearch] = useState("");
-    const [tablePerPage, setTablePerPage] = useState(10);
-    const [tablePage, setTablePage] = useState(1);
 
     const filteredRows = useMemo(() => {
         const term = tableSearch.trim().toLowerCase();

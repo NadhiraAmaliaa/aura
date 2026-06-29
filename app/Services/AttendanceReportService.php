@@ -117,6 +117,42 @@ class AttendanceReportService
     }
 
     /**
+     * Filter report rows by a free-text search term across the same fields the
+     * table searches on, so an export mirrors what the user sees. The summary
+     * and chart are recomputed so totals match the filtered rows.
+     *
+     * @param  array<string, mixed>  $report
+     * @return array<string, mixed>
+     */
+    public function applySearch(array $report, ?string $term): array
+    {
+        $term = trim((string) $term);
+
+        if ($term === '') {
+            return $report;
+        }
+
+        $needle = mb_strtolower($term);
+
+        $rows = array_values(array_filter(
+            $report['rows'],
+            fn (array $row): bool => str_contains(
+                mb_strtolower(implode(' ', [
+                    $row['nim'], $row['nama'], $row['program'], $row['divisi'],
+                    $row['hari'], $row['jenis_absen'], $row['check_in'], $row['check_out'],
+                ])),
+                $needle
+            )
+        ));
+
+        $report['rows'] = $rows;
+        $report['summary'] = $this->summarize($rows);
+        $report['chart'] = $this->chart($rows);
+
+        return $report;
+    }
+
+    /**
      * Fetch interns that overlap the date range, optionally filtered.
      * Per-date filtering is done in PHP via isActiveOnDate().
      *

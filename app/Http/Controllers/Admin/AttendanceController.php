@@ -65,6 +65,7 @@ class AttendanceController extends Controller
         }
 
         $report = $this->report->build($startDate, $endDate, $programId, $divisionId);
+        $report = $this->report->applySearch($report, $request->validated('search'));
 
         $fileName = 'laporan-absensi-'.$startDate->toDateString().'-sd-'.$endDate->toDateString().'.xlsx';
 

@@ -26,6 +26,7 @@ class AttendanceReportRequest extends FormRequest
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'program' => ['nullable', 'integer', 'exists:intern_programs,id'],
             'division' => ['nullable', 'integer', 'exists:divisions,id'],
+            'search' => ['nullable', 'string', 'max:255'],
         ];
     }
 
