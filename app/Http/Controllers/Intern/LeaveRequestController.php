@@ -10,6 +10,7 @@ use App\Notifications\LeaveRequestSubmittedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -112,6 +113,16 @@ class LeaveRequestController extends Controller
             return;
         }
 
-        $supervisor->notify(new LeaveRequestSubmittedNotification($leaveRequest));
+        // The email is best-effort: a leave request must still succeed even if
+        // the mail server is unreachable or rejects the message.
+        try {
+            $supervisor->notify(new LeaveRequestSubmittedNotification($leaveRequest));
+        } catch (\Throwable $e) {
+            Log::error('Gagal mengirim notifikasi pengajuan izin ke supervisor.', [
+                'leave_request_id' => $leaveRequest->id,
+                'supervisor_id' => $supervisor->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }
