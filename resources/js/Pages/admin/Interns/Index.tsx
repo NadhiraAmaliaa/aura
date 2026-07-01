@@ -9,17 +9,18 @@ import PageHeader from "@/Components/admin/PageHeader";
 import RowActions, { IconAction } from "@/Components/admin/RowActions";
 import StatusBadge from "@/Components/admin/StatusBadge";
 import TableCard from "@/Components/admin/TableCard";
-import TableFooter from "@/Components/admin/TableFooter";
+import ClientTableFooter from "@/Components/admin/ClientTableFooter";
 import TableToolbar from "@/Components/admin/TableToolbar";
 import {
     formatDate,
     internStatusBadgeTone,
     internStatusLabels,
 } from "@/lib/labels";
+import { useClientTable } from "@/lib/useClientTable";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Division, Intern, InternProgram, PageProps, Paginated } from "@/types";
+import { Division, Intern, InternProgram, PageProps } from "@/types";
 import { Head, router, usePage } from "@inertiajs/react";
-import { FormEventHandler, useMemo, useState } from "react";
+import { FormEventHandler, useState } from "react";
 
 interface Filters {
     search: string;
@@ -37,15 +38,13 @@ export default function Index({
     programs,
     divisions,
     filters,
-    perPage,
     tab,
     tabCounts,
 }: {
-    interns: Paginated<Intern>;
+    interns: Intern[];
     programs: Pick<InternProgram, "id" | "name">[];
     divisions: Pick<Division, "id" | "name">[];
     filters: Filters;
-    perPage: number;
     tab: Tab;
     tabCounts: Record<Tab, number>;
 }) {
@@ -65,8 +64,6 @@ export default function Index({
     const [archiving, setArchiving] = useState<Intern | null>(null);
     const [restoring, setRestoring] = useState<Intern | null>(null);
 
-    const [tableSearch, setTableSearch] = useState("");
-
     const periodText = (intern: Intern) => {
         if (!intern.start_date && !intern.end_date) {
             return "-";
@@ -75,30 +72,18 @@ export default function Index({
         return `${formatDate(intern.start_date)} - ${formatDate(intern.end_date)}`;
     };
 
-    const rows = useMemo(() => {
-        const term = tableSearch.trim().toLowerCase();
-        if (!term) return interns.data;
-
-        return interns.data.filter((intern) =>
-            [
-                intern.user?.name,
-                intern.nim,
-                intern.university_ref?.name ?? intern.university,
-                intern.study_program?.name ?? intern.major,
-                intern.division_ref?.name ?? intern.division,
-                intern.intern_program?.name,
-                periodText(intern),
-                internStatusLabels[intern.effective_status],
-            ]
-                .join(" ")
-                .toLowerCase()
-                .includes(term),
-        );
-    }, [interns.data, tableSearch]);
-
-    const changePerPage = (value: number) => {
-        applyFilters({ perPage: String(value) });
-    };
+    const table = useClientTable(interns, (intern) =>
+        [
+            intern.user?.name,
+            intern.nim,
+            intern.university_ref?.name ?? intern.university,
+            intern.study_program?.name ?? intern.major,
+            intern.division_ref?.name ?? intern.division,
+            intern.intern_program?.name,
+            periodText(intern),
+            internStatusLabels[intern.effective_status],
+        ].join(" "),
+    );
 
     const programOptions = programs.map((p) => ({
         value: String(p.id),
@@ -128,7 +113,6 @@ export default function Index({
                 status: next.status ?? status,
                 period_from: next.period_from ?? periodFrom,
                 period_to: next.period_to ?? periodTo,
-                perPage: next.perPage ?? String(perPage),
             },
             { preserveState: true, preserveScroll: true, replace: true },
         );
@@ -290,10 +274,7 @@ export default function Index({
                                 value={program}
                                 options={programOptions}
                                 placeholder="Semua program"
-                                onChange={(val) => {
-                                    setProgram(val);
-                                    applyFilters({ program: val });
-                                }}
+                                onChange={(val) => setProgram(val)}
                             />
                         </FilterField>
 
@@ -304,10 +285,7 @@ export default function Index({
                                     value={division}
                                     options={divisionOptions}
                                     placeholder="Semua divisi"
-                                    onChange={(val) => {
-                                        setDivision(val);
-                                        applyFilters({ division: val });
-                                    }}
+                                    onChange={(val) => setDivision(val)}
                                 />
                             </FilterField>
                         )}
@@ -318,10 +296,7 @@ export default function Index({
                                 value={status}
                                 options={statusOptions}
                                 placeholder="Semua status"
-                                onChange={(val) => {
-                                    setStatus(val);
-                                    applyFilters({ status: val });
-                                }}
+                                onChange={(val) => setStatus(val)}
                             />
                         </FilterField>
 
@@ -341,10 +316,6 @@ export default function Index({
                                     if (nextPeriodTo !== periodTo) {
                                         setPeriodTo(nextPeriodTo);
                                     }
-                                    applyFilters({
-                                        period_from: val,
-                                        period_to: nextPeriodTo,
-                                    });
                                 }}
                             />
                         </FilterField>
@@ -354,10 +325,7 @@ export default function Index({
                                 id="period_to"
                                 value={periodTo}
                                 min={periodFrom}
-                                onChange={(val) => {
-                                    setPeriodTo(val);
-                                    applyFilters({ period_to: val });
-                                }}
+                                onChange={(val) => setPeriodTo(val)}
                             />
                         </FilterField>
                     </div>
@@ -446,15 +414,15 @@ export default function Index({
 
             <TableCard>
                 <TableToolbar
-                    search={tableSearch}
-                    onSearchChange={setTableSearch}
-                    perPage={perPage}
-                    onPerPageChange={changePerPage}
+                    search={table.search}
+                    onSearchChange={table.onSearchChange}
+                    perPage={table.perPage}
+                    onPerPageChange={table.onPerPageChange}
                 />
 
                 <DataTable
                     columns={columns}
-                    rows={rows}
+                    rows={table.rows}
                     getRowKey={(intern) => intern.id}
                     emptyIcon="groups"
                     emptyText={
@@ -464,11 +432,13 @@ export default function Index({
                     }
                 />
 
-                <TableFooter
-                    from={interns.from}
-                    to={interns.to}
-                    total={interns.total}
-                    links={interns.links}
+                <ClientTableFooter
+                    from={table.from}
+                    to={table.to}
+                    total={table.total}
+                    page={table.page}
+                    totalPages={table.totalPages}
+                    onPageChange={table.setPage}
                 />
             </TableCard>
 

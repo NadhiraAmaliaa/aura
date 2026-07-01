@@ -4,55 +4,27 @@ import PageHeader from "@/Components/admin/PageHeader";
 import RowActions, { IconAction } from "@/Components/admin/RowActions";
 import StatusBadge from "@/Components/admin/StatusBadge";
 import TableCard from "@/Components/admin/TableCard";
-import TableFooter from "@/Components/admin/TableFooter";
+import ClientTableFooter from "@/Components/admin/ClientTableFooter";
 import TableToolbar from "@/Components/admin/TableToolbar";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { ManagedUser, Paginated } from "@/types";
-import { Head, router } from "@inertiajs/react";
-import { useMemo, useState } from "react";
+import { useClientTable } from "@/lib/useClientTable";
+import { ManagedUser } from "@/types";
+import { Head } from "@inertiajs/react";
 
 function roleLabel(role: ManagedUser["role"]): string {
     return role === "admin" ? "Admin" : "Mentor";
 }
 
-export default function Index({
-    users,
-    perPage,
-}: {
-    users: Paginated<ManagedUser>;
-    perPage: number;
-}) {
-    const [search, setSearch] = useState("");
-
-    const rows = useMemo(() => {
-        const term = search.trim().toLowerCase();
-
-        if (!term) {
-            return users.data;
-        }
-
-        return users.data.filter((user) =>
-            [
-                user.name,
-                user.nik ?? "",
-                user.nik ?? "",
-                roleLabel(user.role),
-                user.division?.name ?? "",
-                user.is_active ? "Aktif" : "Nonaktif",
-            ]
-                .join(" ")
-                .toLowerCase()
-                .includes(term),
-        );
-    }, [users.data, search]);
-
-    const changePerPage = (value: number) => {
-        router.get(
-            route("admin.users.index"),
-            { perPage: value },
-            { preserveScroll: true, preserveState: true, replace: true },
-        );
-    };
+export default function Index({ users }: { users: ManagedUser[] }) {
+    const table = useClientTable(users, (user) =>
+        [
+            user.name,
+            user.nik ?? "",
+            roleLabel(user.role),
+            user.division?.name ?? "",
+            user.is_active ? "Aktif" : "Nonaktif",
+        ].join(" "),
+    );
 
     const columns: Column<ManagedUser>[] = [
         {
@@ -122,29 +94,31 @@ export default function Index({
 
             <TableCard>
                 <TableToolbar
-                    search={search}
-                    onSearchChange={setSearch}
-                    perPage={perPage}
-                    onPerPageChange={changePerPage}
+                    search={table.search}
+                    onSearchChange={table.onSearchChange}
+                    perPage={table.perPage}
+                    onPerPageChange={table.onPerPageChange}
                 />
 
                 <DataTable
                     columns={columns}
-                    rows={rows}
+                    rows={table.rows}
                     getRowKey={(user) => user.id}
                     emptyIcon="manage_accounts"
                     emptyText={
-                        search
+                        table.search
                             ? "Tidak ada akun yang cocok."
                             : "Belum ada akun."
                     }
                 />
 
-                <TableFooter
-                    from={users.from}
-                    to={users.to}
-                    total={users.total}
-                    links={users.links}
+                <ClientTableFooter
+                    from={table.from}
+                    to={table.to}
+                    total={table.total}
+                    page={table.page}
+                    totalPages={table.totalPages}
+                    onPageChange={table.setPage}
                 />
             </TableCard>
         </AuthenticatedLayout>

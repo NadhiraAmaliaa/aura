@@ -5,47 +5,34 @@ import PageHeader from "@/Components/admin/PageHeader";
 import RowActions, { IconAction } from "@/Components/admin/RowActions";
 import StatusBadge from "@/Components/admin/StatusBadge";
 import TableCard from "@/Components/admin/TableCard";
-import TableFooter from "@/Components/admin/TableFooter";
+import ClientTableFooter from "@/Components/admin/ClientTableFooter";
 import TableToolbar from "@/Components/admin/TableToolbar";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { AttendanceLocation, Paginated } from "@/types";
-import { Head, router } from "@inertiajs/react";
-import { useMemo, useState } from "react";
+import { useClientTable } from "@/lib/useClientTable";
+import { AttendanceLocation } from "@/types";
+import { Head } from "@inertiajs/react";
+import { useState } from "react";
 import LocationFormDialog from "./Partials/LocationFormDialog";
 
 export default function Index({
     locations,
-    perPage,
 }: {
-    locations: Paginated<AttendanceLocation>;
-    perPage: number;
+    locations: AttendanceLocation[];
 }) {
-    const [search, setSearch] = useState("");
     const [formOpen, setFormOpen] = useState(false);
     const [editing, setEditing] = useState<AttendanceLocation | null>(null);
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [deleting, setDeleting] = useState<AttendanceLocation | null>(null);
 
-    const rows = useMemo(() => {
-        const term = search.trim().toLowerCase();
-
-        if (!term) {
-            return locations.data;
-        }
-
-        return locations.data.filter((location) =>
-            [
-                location.name,
-                location.latitude,
-                location.longitude,
-                location.radius,
-                location.is_active ? "Aktif" : "Nonaktif",
-            ]
-                .join(" ")
-                .toLowerCase()
-                .includes(term),
-        );
-    }, [locations.data, search]);
+    const table = useClientTable(locations, (location) =>
+        [
+            location.name,
+            location.latitude,
+            location.longitude,
+            location.radius,
+            location.is_active ? "Aktif" : "Nonaktif",
+        ].join(" "),
+    );
 
     const openCreate = () => {
         setEditing(null);
@@ -60,14 +47,6 @@ export default function Index({
     const openDelete = (location: AttendanceLocation) => {
         setDeleting(location);
         setDeleteOpen(true);
-    };
-
-    const changePerPage = (value: number) => {
-        router.get(
-            route("admin.attendance-locations.index"),
-            { perPage: value },
-            { preserveScroll: true, preserveState: true, replace: true },
-        );
     };
 
     const columns: Column<AttendanceLocation>[] = [
@@ -139,29 +118,31 @@ export default function Index({
 
             <TableCard>
                 <TableToolbar
-                    search={search}
-                    onSearchChange={setSearch}
-                    perPage={perPage}
-                    onPerPageChange={changePerPage}
+                    search={table.search}
+                    onSearchChange={table.onSearchChange}
+                    perPage={table.perPage}
+                    onPerPageChange={table.onPerPageChange}
                 />
 
                 <DataTable
                     columns={columns}
-                    rows={rows}
+                    rows={table.rows}
                     getRowKey={(location) => location.id}
                     emptyIcon="location_off"
                     emptyText={
-                        search
+                        table.search
                             ? "Tidak ada lokasi yang cocok."
                             : "Belum ada lokasi absensi."
                     }
                 />
 
-                <TableFooter
-                    from={locations.from}
-                    to={locations.to}
-                    total={locations.total}
-                    links={locations.links}
+                <ClientTableFooter
+                    from={table.from}
+                    to={table.to}
+                    total={table.total}
+                    page={table.page}
+                    totalPages={table.totalPages}
+                    onPageChange={table.setPage}
                 />
             </TableCard>
 

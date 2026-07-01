@@ -4,47 +4,30 @@ import DataTable, { Column } from "@/Components/admin/DataTable";
 import PageHeader from "@/Components/admin/PageHeader";
 import RowActions, { IconAction } from "@/Components/admin/RowActions";
 import TableCard from "@/Components/admin/TableCard";
-import TableFooter from "@/Components/admin/TableFooter";
+import ClientTableFooter from "@/Components/admin/ClientTableFooter";
 import TableToolbar from "@/Components/admin/TableToolbar";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { InternProgram, Paginated } from "@/types";
-import { Head, router } from "@inertiajs/react";
-import { useMemo, useState } from "react";
+import { useClientTable } from "@/lib/useClientTable";
+import { InternProgram } from "@/types";
+import { Head } from "@inertiajs/react";
+import { useState } from "react";
 import InternProgramFormDialog from "./Partials/InternProgramFormDialog";
 
 type ProgramRow = InternProgram & { interns_count: number };
 
-export default function Index({
-    programs,
-    perPage,
-}: {
-    programs: Paginated<ProgramRow>;
-    perPage: number;
-}) {
-    const [search, setSearch] = useState("");
+export default function Index({ programs }: { programs: ProgramRow[] }) {
     const [formOpen, setFormOpen] = useState(false);
     const [editing, setEditing] = useState<ProgramRow | null>(null);
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [deleting, setDeleting] = useState<ProgramRow | null>(null);
 
-    const rows = useMemo(() => {
-        const term = search.trim().toLowerCase();
-
-        if (!term) {
-            return programs.data;
-        }
-
-        return programs.data.filter((program) =>
-            [
-                program.name,
-                program.description ?? "",
-                String(program.interns_count),
-            ]
-                .join(" ")
-                .toLowerCase()
-                .includes(term),
-        );
-    }, [programs.data, search]);
+    const table = useClientTable(programs, (program) =>
+        [
+            program.name,
+            program.description ?? "",
+            String(program.interns_count),
+        ].join(" "),
+    );
 
     const openCreate = () => {
         setEditing(null);
@@ -59,14 +42,6 @@ export default function Index({
     const openDelete = (program: ProgramRow) => {
         setDeleting(program);
         setDeleteOpen(true);
-    };
-
-    const changePerPage = (value: number) => {
-        router.get(
-            route("admin.intern-programs.index"),
-            { perPage: value },
-            { preserveScroll: true, preserveState: true, replace: true },
-        );
     };
 
     const columns: Column<ProgramRow>[] = [
@@ -128,29 +103,31 @@ export default function Index({
 
             <TableCard>
                 <TableToolbar
-                    search={search}
-                    onSearchChange={setSearch}
-                    perPage={perPage}
-                    onPerPageChange={changePerPage}
+                    search={table.search}
+                    onSearchChange={table.onSearchChange}
+                    perPage={table.perPage}
+                    onPerPageChange={table.onPerPageChange}
                 />
 
                 <DataTable
                     columns={columns}
-                    rows={rows}
+                    rows={table.rows}
                     getRowKey={(program) => program.id}
                     emptyIcon="school"
                     emptyText={
-                        search
+                        table.search
                             ? "Tidak ada program yang cocok."
                             : "Belum ada program magang."
                     }
                 />
 
-                <TableFooter
-                    from={programs.from}
-                    to={programs.to}
-                    total={programs.total}
-                    links={programs.links}
+                <ClientTableFooter
+                    from={table.from}
+                    to={table.to}
+                    total={table.total}
+                    page={table.page}
+                    totalPages={table.totalPages}
+                    onPageChange={table.setPage}
                 />
             </TableCard>
 

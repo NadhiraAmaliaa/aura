@@ -5,47 +5,30 @@ import PageHeader from "@/Components/admin/PageHeader";
 import RowActions, { IconAction } from "@/Components/admin/RowActions";
 import StatusBadge from "@/Components/admin/StatusBadge";
 import TableCard from "@/Components/admin/TableCard";
-import TableFooter from "@/Components/admin/TableFooter";
+import ClientTableFooter from "@/Components/admin/ClientTableFooter";
 import TableToolbar from "@/Components/admin/TableToolbar";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Division, Paginated } from "@/types";
-import { Head, router } from "@inertiajs/react";
-import { useMemo, useState } from "react";
+import { useClientTable } from "@/lib/useClientTable";
+import { Division } from "@/types";
+import { Head } from "@inertiajs/react";
+import { useState } from "react";
 import DivisionFormDialog from "./Partials/DivisionFormDialog";
 
 type DivisionRow = Division & { interns_count: number };
 
-export default function Index({
-    divisions,
-    perPage,
-}: {
-    divisions: Paginated<DivisionRow>;
-    perPage: number;
-}) {
-    const [search, setSearch] = useState("");
+export default function Index({ divisions }: { divisions: DivisionRow[] }) {
     const [formOpen, setFormOpen] = useState(false);
     const [editing, setEditing] = useState<DivisionRow | null>(null);
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [deleting, setDeleting] = useState<DivisionRow | null>(null);
 
-    const rows = useMemo(() => {
-        const term = search.trim().toLowerCase();
-
-        if (!term) {
-            return divisions.data;
-        }
-
-        return divisions.data.filter((division) =>
-            [
-                division.name,
-                division.is_active ? "Aktif" : "Nonaktif",
-                String(division.interns_count),
-            ]
-                .join(" ")
-                .toLowerCase()
-                .includes(term),
-        );
-    }, [divisions.data, search]);
+    const table = useClientTable(divisions, (division) =>
+        [
+            division.name,
+            division.is_active ? "Aktif" : "Nonaktif",
+            String(division.interns_count),
+        ].join(" "),
+    );
 
     const openCreate = () => {
         setEditing(null);
@@ -60,14 +43,6 @@ export default function Index({
     const openDelete = (division: DivisionRow) => {
         setDeleting(division);
         setDeleteOpen(true);
-    };
-
-    const changePerPage = (value: number) => {
-        router.get(
-            route("admin.divisions.index"),
-            { perPage: value },
-            { preserveScroll: true, preserveState: true, replace: true },
-        );
     };
 
     const columns: Column<DivisionRow>[] = [
@@ -129,29 +104,31 @@ export default function Index({
 
             <TableCard>
                 <TableToolbar
-                    search={search}
-                    onSearchChange={setSearch}
-                    perPage={perPage}
-                    onPerPageChange={changePerPage}
+                    search={table.search}
+                    onSearchChange={table.onSearchChange}
+                    perPage={table.perPage}
+                    onPerPageChange={table.onPerPageChange}
                 />
 
                 <DataTable
                     columns={columns}
-                    rows={rows}
+                    rows={table.rows}
                     getRowKey={(division) => division.id}
                     emptyIcon="apartment"
                     emptyText={
-                        search
+                        table.search
                             ? "Tidak ada divisi yang cocok."
                             : "Belum ada divisi."
                     }
                 />
 
-                <TableFooter
-                    from={divisions.from}
-                    to={divisions.to}
-                    total={divisions.total}
-                    links={divisions.links}
+                <ClientTableFooter
+                    from={table.from}
+                    to={table.to}
+                    total={table.total}
+                    page={table.page}
+                    totalPages={table.totalPages}
+                    onPageChange={table.setPage}
                 />
             </TableCard>
 

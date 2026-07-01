@@ -51,17 +51,10 @@ class LeaveRequestController extends Controller
             });
         }
 
-        $perPage = (int) $request->integer('perPage', 15);
-
-        if (! in_array($perPage, [10, 25, 50, 100], true)) {
-            $perPage = 15;
-        }
-
-        $leaveRequests = $query->paginate($perPage)->withQueryString();
+        $leaveRequests = $query->get();
 
         return Inertia::render('admin/LeaveRequests/Index', [
             'leaveRequests' => $leaveRequests,
-            'perPage' => $perPage,
             'filters' => $request->only(['status', 'type', 'search']),
         ]);
     }

@@ -8,7 +8,6 @@ use App\Http\Requests\UpdateUserRequest;
 use App\Models\Division;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,24 +19,16 @@ class UserController extends Controller
      * Intern accounts are intentionally excluded; they are managed in the
      * Peserta Magang module.
      */
-    public function index(Request $request): Response
+    public function index(): Response
     {
-        $perPage = (int) $request->integer('perPage', 10);
-
-        if (! in_array($perPage, [10, 25, 50, 100], true)) {
-            $perPage = 10;
-        }
-
         $users = User::query()
             ->with('division:id,name')
             ->whereIn('role', ['admin', 'supervisor'])
             ->orderBy('name')
-            ->paginate($perPage)
-            ->withQueryString();
+            ->get();
 
         return Inertia::render('admin/Users/Index', [
             'users' => $users,
-            'perPage' => $perPage,
         ]);
     }
 

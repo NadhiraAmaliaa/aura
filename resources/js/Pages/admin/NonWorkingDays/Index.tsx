@@ -5,47 +5,34 @@ import PageHeader from "@/Components/admin/PageHeader";
 import RowActions, { IconAction } from "@/Components/admin/RowActions";
 import StatusBadge from "@/Components/admin/StatusBadge";
 import TableCard from "@/Components/admin/TableCard";
-import TableFooter from "@/Components/admin/TableFooter";
+import ClientTableFooter from "@/Components/admin/ClientTableFooter";
 import TableToolbar from "@/Components/admin/TableToolbar";
 import { formatDate, nonWorkingDayTypeLabels } from "@/lib/labels";
+import { useClientTable } from "@/lib/useClientTable";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { NonWorkingDay, Paginated } from "@/types";
-import { Head, router } from "@inertiajs/react";
-import { useMemo, useState } from "react";
+import { NonWorkingDay } from "@/types";
+import { Head } from "@inertiajs/react";
+import { useState } from "react";
 import NonWorkingDayFormDialog from "./Partials/NonWorkingDayFormDialog";
 
 export default function Index({
     nonWorkingDays,
-    perPage,
 }: {
-    nonWorkingDays: Paginated<NonWorkingDay>;
-    perPage: number;
+    nonWorkingDays: NonWorkingDay[];
 }) {
-    const [search, setSearch] = useState("");
     const [formOpen, setFormOpen] = useState(false);
     const [editing, setEditing] = useState<NonWorkingDay | null>(null);
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [deleting, setDeleting] = useState<NonWorkingDay | null>(null);
 
-    const rows = useMemo(() => {
-        const term = search.trim().toLowerCase();
-
-        if (!term) {
-            return nonWorkingDays.data;
-        }
-
-        return nonWorkingDays.data.filter((day) =>
-            [
-                day.name,
-                day.date,
-                formatDate(day.date),
-                nonWorkingDayTypeLabels[day.type],
-            ]
-                .join(" ")
-                .toLowerCase()
-                .includes(term),
-        );
-    }, [nonWorkingDays.data, search]);
+    const table = useClientTable(nonWorkingDays, (day) =>
+        [
+            day.name,
+            day.date,
+            formatDate(day.date),
+            nonWorkingDayTypeLabels[day.type],
+        ].join(" "),
+    );
 
     const openCreate = () => {
         setEditing(null);
@@ -60,14 +47,6 @@ export default function Index({
     const openDelete = (day: NonWorkingDay) => {
         setDeleting(day);
         setDeleteOpen(true);
-    };
-
-    const changePerPage = (value: number) => {
-        router.get(
-            route("admin.non-working-days.index"),
-            { perPage: value },
-            { preserveScroll: true, preserveState: true, replace: true },
-        );
     };
 
     const columns: Column<NonWorkingDay>[] = [
@@ -125,29 +104,31 @@ export default function Index({
 
             <TableCard>
                 <TableToolbar
-                    search={search}
-                    onSearchChange={setSearch}
-                    perPage={perPage}
-                    onPerPageChange={changePerPage}
+                    search={table.search}
+                    onSearchChange={table.onSearchChange}
+                    perPage={table.perPage}
+                    onPerPageChange={table.onPerPageChange}
                 />
 
                 <DataTable
                     columns={columns}
-                    rows={rows}
+                    rows={table.rows}
                     getRowKey={(day) => day.id}
                     emptyIcon="event_busy"
                     emptyText={
-                        search
+                        table.search
                             ? "Tidak ada hari libur yang cocok."
                             : "Belum ada hari libur."
                     }
                 />
 
-                <TableFooter
-                    from={nonWorkingDays.from}
-                    to={nonWorkingDays.to}
-                    total={nonWorkingDays.total}
-                    links={nonWorkingDays.links}
+                <ClientTableFooter
+                    from={table.from}
+                    to={table.to}
+                    total={table.total}
+                    page={table.page}
+                    totalPages={table.totalPages}
+                    onPageChange={table.setPage}
                 />
             </TableCard>
 

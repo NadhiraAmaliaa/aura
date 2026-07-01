@@ -9,13 +9,14 @@ import PageHeader from "@/Components/admin/PageHeader";
 import RowActions, { IconAction } from "@/Components/admin/RowActions";
 import StatusBadge from "@/Components/admin/StatusBadge";
 import TableCard from "@/Components/admin/TableCard";
-import TableFooter from "@/Components/admin/TableFooter";
+import ClientTableFooter from "@/Components/admin/ClientTableFooter";
 import TableToolbar from "@/Components/admin/TableToolbar";
 import { formatDate, leaveStatusLabels, leaveTypeLabels } from "@/lib/labels";
+import { useClientTable } from "@/lib/useClientTable";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { LeaveRequest, LeaveStatus, Paginated } from "@/types";
+import { LeaveRequest, LeaveStatus } from "@/types";
 import { Head, router } from "@inertiajs/react";
-import { FormEventHandler, useMemo, useState } from "react";
+import { FormEventHandler, useState } from "react";
 
 interface Filters {
     status?: string;
@@ -35,11 +36,9 @@ const statusTone: Record<
 export default function Index({
     leaveRequests,
     filters,
-    perPage,
 }: {
-    leaveRequests: Paginated<LeaveRequest>;
+    leaveRequests: LeaveRequest[];
     filters: Filters;
-    perPage: number;
 }) {
     const [form, setForm] = useState<Filters>({
         status: filters.status ?? "",
@@ -47,35 +46,17 @@ export default function Index({
         search: filters.search ?? "",
     });
 
-    const [tableSearch, setTableSearch] = useState("");
-
-    const rows = useMemo(() => {
-        const term = tableSearch.trim().toLowerCase();
-        if (!term) return leaveRequests.data;
-
-        return leaveRequests.data.filter((leave) =>
-            [
-                leave.request_number,
-                leave.user?.name,
-                leave.user?.intern?.nim,
-                leaveTypeLabels[leave.type],
-                `${formatDate(leave.start_date)} - ${formatDate(leave.end_date)}`,
-                formatDate(leave.created_at),
-                leaveStatusLabels[leave.status],
-            ]
-                .join(" ")
-                .toLowerCase()
-                .includes(term),
-        );
-    }, [leaveRequests.data, tableSearch]);
-
-    const changePerPage = (value: number) => {
-        router.get(
-            route("admin.leave-requests.index"),
-            { ...form, perPage: value },
-            { preserveState: true, replace: true },
-        );
-    };
+    const table = useClientTable(leaveRequests, (leave) =>
+        [
+            leave.request_number,
+            leave.user?.name,
+            leave.user?.intern?.nim,
+            leaveTypeLabels[leave.type],
+            `${formatDate(leave.start_date)} - ${formatDate(leave.end_date)}`,
+            formatDate(leave.created_at),
+            leaveStatusLabels[leave.status],
+        ].join(" "),
+    );
 
     const statusOptions = Object.entries(leaveStatusLabels).map(
         ([value, label]) => ({
@@ -95,7 +76,7 @@ export default function Index({
         event.preventDefault();
         router.get(
             route("admin.leave-requests.index"),
-            { ...form, perPage },
+            { ...form },
             { preserveState: true, replace: true },
         );
     };
@@ -250,25 +231,27 @@ export default function Index({
 
             <TableCard>
                 <TableToolbar
-                    search={tableSearch}
-                    onSearchChange={setTableSearch}
-                    perPage={perPage}
-                    onPerPageChange={changePerPage}
+                    search={table.search}
+                    onSearchChange={table.onSearchChange}
+                    perPage={table.perPage}
+                    onPerPageChange={table.onPerPageChange}
                 />
 
                 <DataTable
                     columns={columns}
-                    rows={rows}
+                    rows={table.rows}
                     getRowKey={(leave) => leave.id}
                     emptyIcon="mail"
                     emptyText="Tidak ada pengajuan."
                 />
 
-                <TableFooter
-                    from={leaveRequests.from}
-                    to={leaveRequests.to}
-                    total={leaveRequests.total}
-                    links={leaveRequests.links}
+                <ClientTableFooter
+                    from={table.from}
+                    to={table.to}
+                    total={table.total}
+                    page={table.page}
+                    totalPages={table.totalPages}
+                    onPageChange={table.setPage}
                 />
             </TableCard>
         </AuthenticatedLayout>

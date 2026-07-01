@@ -128,9 +128,9 @@ class InternPeriodTest extends TestCase
         $response->assertInertia(
             fn ($page) => $page
                 ->component('admin/Interns/Index')
-                ->where('interns.data.0.user_id', $user->id)
-                ->where('interns.data.0.status', Intern::STATUS_UPCOMING)
-                ->where('interns.data.0.effective_status', Intern::STATUS_ACTIVE)
+                ->where('interns.0.user_id', $user->id)
+                ->where('interns.0.status', Intern::STATUS_UPCOMING)
+                ->where('interns.0.effective_status', Intern::STATUS_ACTIVE)
         );
     }
 
@@ -159,7 +159,7 @@ class InternPeriodTest extends TestCase
             ->assertOk()
             ->assertInertia(
                 fn ($page) => $page
-                    ->where('interns.data', fn ($rows) => collect($rows)->pluck('user_id')->all() === [$active->id])
+                    ->where('interns', fn ($rows) => collect($rows)->pluck('user_id')->all() === [$active->id])
             );
 
         $this->actingAs($admin)
@@ -167,7 +167,7 @@ class InternPeriodTest extends TestCase
             ->assertOk()
             ->assertInertia(
                 fn ($page) => $page
-                    ->where('interns.data', fn ($rows) => collect($rows)->pluck('user_id')->all() === [$upcoming->id])
+                    ->where('interns', fn ($rows) => collect($rows)->pluck('user_id')->all() === [$upcoming->id])
             );
     }
 

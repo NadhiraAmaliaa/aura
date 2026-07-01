@@ -106,7 +106,7 @@ class InternArchiveTest extends TestCase
                 ->where('tab', 'data')
                 ->where('tabCounts.data', 1)
                 ->where('tabCounts.arsip', 1)
-                ->where('interns.data', fn ($rows) => collect($rows)->pluck('user_id')->all() === [$active->id])
+                ->where('interns', fn ($rows) => collect($rows)->pluck('user_id')->all() === [$active->id])
             );
 
         // Archive tab: only the archived intern.
@@ -115,7 +115,7 @@ class InternArchiveTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->where('tab', 'arsip')
-                ->where('interns.data', fn ($rows) => collect($rows)->pluck('user_id')->all() === [$archived->id])
+                ->where('interns', fn ($rows) => collect($rows)->pluck('user_id')->all() === [$archived->id])
             );
     }
 

@@ -53,12 +53,6 @@ class InternController extends Controller
             $divisionId = $request->user()->division_id;
         }
 
-        $perPage = (int) $request->integer('perPage', 10);
-
-        if (! in_array($perPage, [10, 25, 50, 100], true)) {
-            $perPage = 10;
-        }
-
         $interns = Intern::query()
             ->when($tab === self::TAB_ARCHIVED, fn ($query) => $query->onlyTrashed())
             ->with(['user', 'internProgram', 'universityRef', 'studyProgram', 'divisionRef'])
@@ -93,8 +87,7 @@ class InternController extends Controller
                 });
             })
             ->latest()
-            ->paginate($perPage)
-            ->withQueryString();
+            ->get();
 
         // Division scope is also applied to the tab counts so supervisors only
         // see their own totals.
@@ -107,7 +100,6 @@ class InternController extends Controller
             'interns' => $interns,
             'programs' => InternProgram::orderBy('name')->get(['id', 'name']),
             'divisions' => Division::orderBy('name')->get(['id', 'name']),
-            'perPage' => $perPage,
             'tab' => $tab,
             'tabCounts' => [
                 self::TAB_DATA => $countScope(Intern::query())->count(),
