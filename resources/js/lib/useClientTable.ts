@@ -11,11 +11,15 @@ import { useMemo, useState } from "react";
 export function useClientTable<T>(
     rows: T[],
     searchableText: (row: T) => string,
-    initialPerPage = 10,
+    defaultPerPage = 10,
 ) {
     const [search, setSearch] = useState("");
-    const [perPage, setPerPage] = useState(initialPerPage);
+    // `null` means "use the page default"; the toolbar renders this as the
+    // empty option, so the user can always fall back to the default page size.
+    const [perPage, setPerPage] = useState<number | null>(null);
     const [page, setPage] = useState(1);
+
+    const effectivePerPage = perPage ?? defaultPerPage;
 
     // 1. Search across all rows.
     const filtered = useMemo(() => {
@@ -32,10 +36,10 @@ export function useClientTable<T>(
 
     // 2. Paginate the filtered rows.
     const total = filtered.length;
-    const totalPages = Math.max(1, Math.ceil(total / perPage));
+    const totalPages = Math.max(1, Math.ceil(total / effectivePerPage));
     const safePage = Math.min(page, totalPages);
-    const from = total === 0 ? 0 : (safePage - 1) * perPage + 1;
-    const to = Math.min(safePage * perPage, total);
+    const from = total === 0 ? 0 : (safePage - 1) * effectivePerPage + 1;
+    const to = Math.min(safePage * effectivePerPage, total);
 
     const pagedRows = useMemo(
         () => filtered.slice(from - 1, to),
@@ -48,7 +52,7 @@ export function useClientTable<T>(
         setPage(1);
     };
 
-    const onPerPageChange = (value: number) => {
+    const onPerPageChange = (value: number | null) => {
         setPerPage(value);
         setPage(1);
     };

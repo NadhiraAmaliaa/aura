@@ -186,8 +186,10 @@ export default function Report({
     };
 
     const [tableSearch, setTableSearch] = useState("");
-    const [tablePerPage, setTablePerPage] = useState(10);
+    const [tablePerPage, setTablePerPage] = useState<number | null>(null);
     const [tablePage, setTablePage] = useState(1);
+
+    const effectivePerPage = tablePerPage ?? 10;
 
     const exportUrl = route("admin.attendances.export", {
         start_date: data.start_date,
@@ -218,10 +220,10 @@ export default function Report({
     }, [report.rows, tableSearch]);
 
     const totalFiltered = filteredRows.length;
-    const totalPages = Math.max(1, Math.ceil(totalFiltered / tablePerPage));
+    const totalPages = Math.max(1, Math.ceil(totalFiltered / effectivePerPage));
     const safePage = Math.min(tablePage, totalPages);
-    const from = totalFiltered === 0 ? 0 : (safePage - 1) * tablePerPage + 1;
-    const to = Math.min(safePage * tablePerPage, totalFiltered);
+    const from = totalFiltered === 0 ? 0 : (safePage - 1) * effectivePerPage + 1;
+    const to = Math.min(safePage * effectivePerPage, totalFiltered);
     const pagedRows = filteredRows.slice(from - 1, to);
 
     const handleSearchChange = (value: string) => {
@@ -229,7 +231,7 @@ export default function Report({
         setTablePage(1);
     };
 
-    const handlePerPageChange = (value: number) => {
+    const handlePerPageChange = (value: number | null) => {
         setTablePerPage(value);
         setTablePage(1);
     };

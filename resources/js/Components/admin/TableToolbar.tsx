@@ -14,8 +14,8 @@ export default function TableToolbar({
     search?: string;
     onSearchChange?: (value: string) => void;
     searchPlaceholder?: string;
-    perPage?: number;
-    onPerPageChange?: (value: number) => void;
+    perPage?: number | null;
+    onPerPageChange?: (value: number | null) => void;
     children?: ReactNode;
 }) {
     const hasPerPage = perPage !== undefined && onPerPageChange !== undefined;
@@ -27,12 +27,17 @@ export default function TableToolbar({
                 <div className="flex items-center gap-2 text-sm text-on-surface-variant">
                     <span>Tampilkan</span>
                     <select
-                        value={perPage}
+                        value={perPage ?? ""}
                         onChange={(event: ChangeEvent<HTMLSelectElement>) =>
-                            onPerPageChange(Number(event.target.value))
+                            onPerPageChange(
+                                event.target.value === ""
+                                    ? null
+                                    : Number(event.target.value),
+                            )
                         }
                         className="appearance-none h-9 rounded-lg border border-outline-variant bg-surface-container-low pl-3 pr-7 text-sm font-medium focus:border-primary focus:ring-primary bg-[url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%229ca3af%22 stroke-width=%222%22%3e%3cpolyline points=%226 9 12 15 18 9%22%3e%3c/polyline%3e%3c/svg%3e')] bg-no-repeat bg-right bg-[length:18px]"
                     >
+                        <option value=""></option>
                         {PER_PAGE_OPTIONS.map((option) => (
                             <option key={option} value={option}>
                                 {option}
