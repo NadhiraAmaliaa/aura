@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateLeaveRequestStatusRequest;
 use App\Models\Attendance;
+use App\Models\Division;
 use App\Models\LeaveRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,29 +18,42 @@ class LeaveRequestController extends Controller
 {
     /**
      * Display a filtered, paginated listing of all leave requests.
+     *
+     * Filtering and pagination are fully server-side so the page stays
+     * responsive as the volume of leave requests grows. Every filter is
+     * applied before pagination and preserved across page/per-page changes.
      */
     public function index(Request $request): Response
     {
+        $user = $request->user();
+        $isSupervisor = $user->isSupervisor();
+
         $query = LeaveRequest::query()
-            ->with(['user.intern.internProgram'])
+            ->with(['user.intern.internProgram', 'user.intern.divisionRef'])
             ->orderByDesc('created_at');
 
-        // Supervisors only see leave requests from interns in their division.
-        if ($request->user()->isSupervisor()) {
-            $divisionId = $request->user()->division_id;
+        // Supervisors are locked to leave requests from their own division.
+        if ($isSupervisor) {
+            $query->whereHas('user.intern', fn ($i) => $i->where('division_id', $user->division_id));
+        }
+
+        // Division filter (admins only; supervisors are already scoped above).
+        $divisionId = null;
+        if (! $isSupervisor && $request->filled('division')) {
+            $divisionId = (int) $request->query('division');
             $query->whereHas('user.intern', fn ($i) => $i->where('division_id', $divisionId));
         }
 
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            $query->where('status', $request->query('status'));
         }
 
         if ($request->filled('type')) {
-            $query->where('type', $request->type);
+            $query->where('type', $request->query('type'));
         }
 
         if ($request->filled('search')) {
-            $search = $request->search;
+            $search = $request->query('search');
             $query->where(function ($q) use ($search): void {
                 $q->where('request_number', 'like', "%{$search}%")
                     ->orWhereHas('user', function ($u) use ($search): void {
@@ -51,11 +65,46 @@ class LeaveRequestController extends Controller
             });
         }
 
-        $leaveRequests = $query->get();
+        // Leave period filters, matched against the request's own date range.
+        $periodStart = $request->filled('period_start') ? $request->date('period_start') : null;
+        $periodEnd = $request->filled('period_end') ? $request->date('period_end') : null;
+
+        if ($periodStart !== null) {
+            $query->whereDate('start_date', '>=', $periodStart);
+        }
+
+        if ($periodEnd !== null) {
+            $query->whereDate('end_date', '<=', $periodEnd);
+        }
+
+        // Submission date filter (the day the request was created).
+        $submittedOn = $request->filled('submitted_on') ? $request->date('submitted_on') : null;
+        if ($submittedOn !== null) {
+            $query->whereDate('created_at', $submittedOn);
+        }
+
+        $perPage = (int) $request->integer('perPage', 15);
+        if (! in_array($perPage, [10, 25, 50, 100], true)) {
+            $perPage = 15;
+        }
+
+        $leaveRequests = $query->paginate($perPage)->withQueryString();
 
         return Inertia::render('admin/LeaveRequests/Index', [
             'leaveRequests' => $leaveRequests,
-            'filters' => $request->only(['status', 'type', 'search']),
+            'divisions' => $isSupervisor
+                ? []
+                : Division::orderBy('name')->get(['id', 'name']),
+            'filters' => [
+                'status' => (string) $request->query('status', ''),
+                'type' => (string) $request->query('type', ''),
+                'search' => (string) $request->query('search', ''),
+                'division' => $divisionId,
+                'period_start' => $periodStart?->toDateString(),
+                'period_end' => $periodEnd?->toDateString(),
+                'submitted_on' => $submittedOn?->toDateString(),
+                'perPage' => $request->filled('perPage') ? $perPage : null,
+            ],
         ]);
     }
 

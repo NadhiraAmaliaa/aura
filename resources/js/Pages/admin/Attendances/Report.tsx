@@ -222,7 +222,8 @@ export default function Report({
     const totalFiltered = filteredRows.length;
     const totalPages = Math.max(1, Math.ceil(totalFiltered / effectivePerPage));
     const safePage = Math.min(tablePage, totalPages);
-    const from = totalFiltered === 0 ? 0 : (safePage - 1) * effectivePerPage + 1;
+    const from =
+        totalFiltered === 0 ? 0 : (safePage - 1) * effectivePerPage + 1;
     const to = Math.min(safePage * effectivePerPage, totalFiltered);
     const pagedRows = filteredRows.slice(from - 1, to);
 
@@ -595,7 +596,6 @@ function ReportRow({ row }: { row: AttendanceReportRow }) {
                 >
                     {row.jenis_absen}
                 </span>
-
             </td>
             <td className="whitespace-nowrap px-3 py-3 text-gray-900">
                 {dash(row.check_in_schedule)}
