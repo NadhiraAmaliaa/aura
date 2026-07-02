@@ -4,145 +4,30 @@ import FilterSelect, {
     FilterSelectOption,
 } from "@/Components/admin/FilterSelect";
 import MaterialIcon from "@/Components/MaterialIcon";
+import SummaryCard from "@/Components/admin/SummaryCard";
 import TableToolbar from "@/Components/admin/TableToolbar";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { formatDate } from "@/lib/labels";
 import {
     AttendanceReport,
-    AttendanceReportCategory,
     AttendanceReportFilters,
-    AttendanceReportRow,
     Division,
     InternProgram,
     PageProps,
 } from "@/types";
-import { Head, Link, router, useForm, usePage } from "@inertiajs/react";
+import { Head, router, useForm, usePage } from "@inertiajs/react";
 import { FormEventHandler, lazy, Suspense, useMemo, useState } from "react";
 
+import { animationStyles } from "./reportAnimations";
+import ReportRow from "./ReportRow";
+
 const AttendanceChart = lazy(() => import("@/Components/AttendanceChart"));
-
-const animationStyles = `
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    @keyframes float {
-        0%, 100% {
-            transform: translateY(0px);
-        }
-        50% {
-            transform: translateY(-8px);
-        }
-    }
-
-    @keyframes progressBarFill {
-        from {
-            width: 0% !important;
-        }
-    }
-
-    .card-fade-in {
-        animation: fadeInUp 0.6s ease-out forwards;
-        opacity: 0;
-    }
-
-    .card-fade-in:nth-child(1) { animation-delay: 0.1s; }
-    .card-fade-in:nth-child(2) { animation-delay: 0.2s; }
-    .card-fade-in:nth-child(3) { animation-delay: 0.3s; }
-    .card-fade-in:nth-child(4) { animation-delay: 0.4s; }
-    .card-fade-in:nth-child(5) { animation-delay: 0.5s; }
-
-    .icon-float {
-        animation: float 3s ease-in-out infinite;
-    }
-
-    .progress-bar-fill {
-        animation: progressBarFill 1s ease-out 0.3s forwards;
-        width: 0% !important;
-    }
-`;
 
 interface ReportPageProps {
     report: AttendanceReport;
     programs: InternProgram[];
     divisions: Division[];
     filters: AttendanceReportFilters;
-}
-
-const categoryBadge: Record<AttendanceReportCategory, string> = {
-    wfo: "bg-green-100 text-green-800",
-    wfh: "bg-sky-100 text-sky-800",
-    dinas: "bg-purple-100 text-purple-800",
-    izin: "bg-indigo-100 text-indigo-800",
-    sakit: "bg-blue-100 text-blue-800",
-    alpha: "bg-red-100 text-red-800",
-    tidak_absen: "bg-gray-100 text-gray-700",
-};
-
-function dash(value: string | number | null | undefined): string {
-    if (value === null || value === undefined || value === "") return "-";
-    return String(value);
-}
-
-function SummaryCard({
-    label,
-    value,
-    total = 0,
-    icon,
-    bgGradient,
-}: {
-    label: string;
-    value: number;
-    total?: number;
-    icon: string;
-    bgGradient: string;
-}) {
-    const pct = total > 0 ? Math.round((value / total) * 100) : 0;
-    const showBar = total > 0;
-    return (
-        <div
-            className={`relative overflow-hidden rounded-2xl px-5 py-4 text-white shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105 ${
-                bgGradient
-            } before:absolute before:right-0 before:top-1/2 before:-translate-y-1/2 before:text-white before:opacity-20 before:-mr-4`}
-        >
-            {/* Background Icon (large, semi-transparent, animated float) */}
-            <div className="absolute right-0 top-4 text-white opacity-20 icon-float">
-                <MaterialIcon name={icon} filled style={{ fontSize: 120 }} />
-            </div>
-
-            {/* Content */}
-            <div className="relative z-10">
-                <p className="truncate text-xs font-semibold uppercase tracking-wider text-white/80">
-                    {label}
-                </p>
-                <p className="mt-2 text-4xl font-extrabold tabular-nums text-white">
-                    {value}
-                </p>
-                <div className="mt-4 space-y-1.5 h-10">
-                    {showBar ? (
-                        <>
-                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/30">
-                                <div
-                                    className="h-full rounded-full bg-white/70 progress-bar-fill transition-all duration-1000"
-                                    style={{ width: `${Math.min(pct, 100)}%` }}
-                                />
-                            </div>
-                            <p className="text-xs text-white/70">
-                                {pct}% dari total
-                            </p>
-                        </>
-                    ) : null}
-                </div>
-            </div>
-        </div>
-    );
 }
 
 export default function Report({
@@ -560,88 +445,5 @@ export default function Report({
                 </div>
             </div>
         </AuthenticatedLayout>
-    );
-}
-
-function ReportRow({ row }: { row: AttendanceReportRow }) {
-    return (
-        <tr className="divide-x divide-outline-variant hover:bg-gray-50">
-            <td className="whitespace-nowrap px-3 py-3 text-gray-900">
-                {dash(row.nim)}
-            </td>
-            <td className="whitespace-nowrap px-3 py-3 font-medium text-gray-900">
-                {dash(row.nama)}
-            </td>
-            <td className="whitespace-nowrap px-3 py-3 text-gray-900">
-                {formatDate(row.tanggal)}
-            </td>
-            <td className="whitespace-nowrap px-3 py-3 text-gray-900">
-                {dash(row.program)}
-            </td>
-            <td className="whitespace-nowrap px-3 py-3 text-gray-900">
-                {dash(row.divisi)}
-            </td>
-            <td className="whitespace-nowrap px-3 py-3 text-gray-900">
-                {row.hari}
-            </td>
-            <td className="whitespace-nowrap px-3 py-3 text-gray-900">
-                {row.hari_kerja ? "Ya" : "Tidak"}
-            </td>
-            <td className="whitespace-nowrap px-3 py-3">
-                <span
-                    className={
-                        "inline-flex rounded-full px-2 py-0.5 text-xs font-medium " +
-                        categoryBadge[row.category]
-                    }
-                >
-                    {row.jenis_absen}
-                </span>
-            </td>
-            <td className="whitespace-nowrap px-3 py-3 text-gray-900">
-                {dash(row.check_in_schedule)}
-            </td>
-            <td className="whitespace-nowrap px-3 py-3 text-gray-900">
-                {dash(row.check_in)}
-            </td>
-            <td className="whitespace-nowrap px-3 py-3 text-gray-700">
-                {dash(row.check_in_lat)}
-            </td>
-            <td className="whitespace-nowrap px-3 py-3 text-gray-700">
-                {dash(row.check_in_long)}
-            </td>
-            <td className="whitespace-nowrap px-3 py-3 text-gray-900">
-                {dash(row.check_out_schedule)}
-            </td>
-            <td className="whitespace-nowrap px-3 py-3 text-gray-900">
-                {dash(row.check_out)}
-            </td>
-            <td className="whitespace-nowrap px-3 py-3 text-gray-700">
-                {dash(row.check_out_lat)}
-            </td>
-            <td className="whitespace-nowrap px-3 py-3 text-gray-700">
-                {dash(row.check_out_long)}
-            </td>
-            <td className="whitespace-nowrap px-3 py-3 text-gray-600">
-                {dash(row.mood_in)}
-            </td>
-            <td className="whitespace-nowrap px-3 py-3 text-gray-600">
-                {dash(row.mood_out)}
-            </td>
-            <td className="whitespace-nowrap px-3 py-3">
-                {row.attendance_id ? (
-                    <Link
-                        href={route(
-                            "admin.attendances.edit",
-                            row.attendance_id,
-                        )}
-                        className="text-sm font-medium text-tertiary hover:underline"
-                    >
-                        Ubah
-                    </Link>
-                ) : (
-                    <span className="text-gray-300">-</span>
-                )}
-            </td>
-        </tr>
     );
 }
