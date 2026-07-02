@@ -7,6 +7,7 @@ use App\Http\Requests\AttendanceLocationRequest;
 use App\Http\Requests\CheckInRequest;
 use App\Models\Attendance;
 use App\Models\LeaveRequest;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -90,15 +91,22 @@ class AttendanceController extends Controller
         // location and radius (geofencing). See Attendance::requiresGeofence().
         // The geofence enforcement is intentionally not implemented yet.
 
-        Attendance::create([
-            'user_id' => $userId,
-            'attendance_date' => today(),
-            'check_in_time' => $now->format('H:i'),
-            'check_in_latitude' => $request->validated('latitude'),
-            'check_in_longitude' => $request->validated('longitude'),
-            'status' => Attendance::determineStatus($now, $workMode),
-            'work_mode' => $workMode,
-        ]);
+        try {
+            Attendance::create([
+                'user_id' => $userId,
+                'attendance_date' => today(),
+                'check_in_time' => $now->format('H:i'),
+                'check_in_latitude' => $request->validated('latitude'),
+                'check_in_longitude' => $request->validated('longitude'),
+                'status' => Attendance::determineStatus($now, $workMode),
+                'work_mode' => $workMode,
+            ]);
+        } catch (UniqueConstraintViolationException $e) {
+            // A concurrent request (double tap / retry on a flaky mobile
+            // connection) already created today's record. Treat it as an
+            // idempotent no-op instead of surfacing a 500.
+            return back()->with('error', 'Anda sudah melakukan Check In hari ini.');
+        }
 
         return back()->with('status', 'Check In berhasil.');
     }

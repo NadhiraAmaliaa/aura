@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AttendanceController as AdminAttendanceController;
 use App\Http\Controllers\Admin\AttendanceLocationController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\DivisionController;
 use App\Http\Controllers\Admin\InternController;
 use App\Http\Controllers\Admin\InternProgramController;
@@ -11,70 +12,29 @@ use App\Http\Controllers\Admin\StudyProgramController;
 use App\Http\Controllers\Admin\UniversityController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\WorkingHourController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Intern\AttendanceController;
+use App\Http\Controllers\Intern\DashboardController as InternDashboardController;
 use App\Http\Controllers\Intern\LeaveRequestController;
 use App\Http\Controllers\LeaveRequestPdfController;
 use App\Http\Controllers\LookupController;
 use App\Http\Controllers\ProfileController;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
-Route::get('/', function () {
-    return Inertia::render('Welcome');
-});
+Route::get('/', [DashboardController::class, 'welcome']);
 
 // Public university lookup for the autocomplete on the login screen.
 Route::get('/lookup/universities', [LookupController::class, 'universities'])->name('lookup.universities');
 
-Route::get('/dashboard', function () {
-    /** @var \App\Models\User $user */
-    $user = Auth::user();
-
-    return redirect()->route($user->dashboardRoute());
-})->middleware(['auth'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth'])
+    ->name('dashboard');
 
 Route::middleware(['auth', 'role:admin,supervisor'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
-        Route::get('/dashboard', function () {
-            /** @var \App\Models\User $user */
-            $user = Auth::user();
-
-            // Supervisors only see figures for the division they manage.
-            $divisionId = $user->isSupervisor() ? $user->division_id : null;
-
-            $today = today();
-
-            $stats = [
-                'total_interns' => \App\Models\Intern::query()
-                    ->when($divisionId, fn ($q) => $q->where('division_id', $divisionId))
-                    ->count(),
-                'active_interns' => \App\Models\Intern::activeOn($today)
-                    ->when($divisionId, fn ($q) => $q->where('division_id', $divisionId))
-                    ->count(),
-                'present_today' => \App\Models\Attendance::whereDate('attendance_date', $today)
-                    ->whereIn('status', ['present', 'late'])
-                    ->when($divisionId, fn ($q) => $q->whereHas('user.intern', fn ($i) => $i->where('division_id', $divisionId)))
-                    ->count(),
-                'pending_leaves' => \App\Models\LeaveRequest::where('status', 'pending')
-                    ->when($divisionId, fn ($q) => $q->whereHas('user.intern', fn ($i) => $i->where('division_id', $divisionId)))
-                    ->count(),
-            ];
-
-            $recentLeaves = \App\Models\LeaveRequest::with('user')
-                ->where('status', 'pending')
-                ->when($divisionId, fn ($q) => $q->whereHas('user.intern', fn ($i) => $i->where('division_id', $divisionId)))
-                ->orderByDesc('created_at')
-                ->limit(5)
-                ->get();
-
-            return Inertia::render('admin/Dashboard', [
-                'stats' => $stats,
-                'recentLeaves' => $recentLeaves,
-            ]);
-        })->name('dashboard');
+        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
         // Read-only operational views. Supervisors share the administrator
         // pages but are scoped to their division inside the controllers.
@@ -148,21 +108,7 @@ Route::middleware(['auth', 'role:intern', 'intern.active'])
     ->prefix('intern')
     ->name('intern.')
     ->group(function () {
-        Route::get('/dashboard', function () {
-            $userId = Auth::id();
-
-            $todayAttendance = \App\Models\Attendance::where('user_id', $userId)
-                ->whereDate('attendance_date', today())
-                ->first();
-
-            $todayLeave = \App\Models\LeaveRequest::approvedCovering($userId, today())->first();
-
-            return Inertia::render('intern/Dashboard', [
-                'todayAttendance' => $todayAttendance,
-                'todayLeave' => $todayLeave,
-                'expectedCheckOut' => \App\Models\Attendance::expectedCheckOutTime(today()),
-            ]);
-        })->name('dashboard');
+        Route::get('/dashboard', [InternDashboardController::class, 'index'])->name('dashboard');
 
         Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
         Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn'])->name('attendance.check-in');
@@ -179,7 +125,6 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
 require __DIR__.'/auth.php';

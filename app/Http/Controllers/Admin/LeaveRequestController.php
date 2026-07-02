@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -163,16 +164,21 @@ class LeaveRequestController extends Controller
             return back()->with('error', 'Pengajuan ini sudah diproses.');
         }
 
-        $leaveRequest->update([
-            'status' => $status,
-            'admin_note' => $request->validated('admin_note'),
-            'approved_by' => Auth::id(),
-            'approved_at' => now(),
-        ]);
+        // The status change and the attendance synchronisation must succeed or
+        // fail together: if the attendance sync throws, the approval is rolled
+        // back so the request never ends up approved without matching records.
+        DB::transaction(function () use ($leaveRequest, $status, $request): void {
+            $leaveRequest->update([
+                'status' => $status,
+                'admin_note' => $request->validated('admin_note'),
+                'approved_by' => Auth::id(),
+                'approved_at' => now(),
+            ]);
 
-        if ($status === 'approved') {
-            $this->syncAttendanceForApprovedLeave($leaveRequest);
-        }
+            if ($status === 'approved') {
+                $this->syncAttendanceForApprovedLeave($leaveRequest);
+            }
+        });
 
         return redirect()
             ->route('admin.leave-requests.show', $leaveRequest)
