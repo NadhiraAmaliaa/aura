@@ -20,7 +20,7 @@ export default function GuestLayout({ children }: PropsWithChildren) {
                     <h1 className="mt-6 text-5xl font-bold leading-tight">
                         Welcome to
                         <br />
-                        aghris
+                        Aura
                     </h1>
                     <p className="mt-4 text-lg text-white/80">
                         Comprehensive attendance management system for
@@ -94,7 +94,7 @@ export default function GuestLayout({ children }: PropsWithChildren) {
                             </div>
                             <div className="text-center">
                                 <div className="text-xl font-bold text-gray-800">
-                                    aghris
+                                    Aura
                                 </div>
                                 <div className="text-xs text-gray-500">
                                     Enterprise HR System

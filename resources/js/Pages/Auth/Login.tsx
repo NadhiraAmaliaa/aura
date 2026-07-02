@@ -111,7 +111,7 @@ export default function Login({ status }: { status?: string }) {
                                 className="text-4xl font-bold"
                                 style={{ color: PRIMARY_COLOR }}
                             >
-                                {isAdminTab ? "Aghris" : "Sistem Presensi"}
+                                {isAdminTab ? "Aura" : "Sistem Presensi"}
                             </h1>
                         </div>
 

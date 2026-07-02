@@ -277,7 +277,7 @@ export default function AuthenticatedLayout({
                         href={homeRoute}
                         className="text-2xl font-extrabold tracking-tight text-white"
                     >
-                        aghris
+                        Aura
                     </Link>
                 </div>
 
