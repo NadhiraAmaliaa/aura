@@ -160,6 +160,28 @@ class Intern extends Model
     }
 
     /**
+     * Scope a query to interns that may access the intern portal on the given
+     * date: not manually deactivated and whose period has not ended. This is
+     * the query-level mirror of {@see canAccessPortal()} and therefore includes
+     * both upcoming and active interns while excluding completed/ended and
+     * deactivated ones. Uses the query builder only (no raw SQL) so it stays
+     * portable across SQL Server, MySQL and SQLite.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<Intern>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<Intern>
+     */
+    public function scopeCanAccessPortalOn(\Illuminate\Database\Eloquent\Builder $query, ?Carbon $date = null): \Illuminate\Database\Eloquent\Builder
+    {
+        $date = ($date ?? Carbon::today())->copy()->startOfDay();
+
+        return $query
+            ->where('status', '!=', self::STATUS_INACTIVE)
+            ->where(function ($q) use ($date): void {
+                $q->whereNull('end_date')->orWhereDate('end_date', '>=', $date);
+            });
+    }
+
+    /**
      * Whether an administrator has manually deactivated this intern.
      *
      * This is the single manual override; everything else is date-driven.

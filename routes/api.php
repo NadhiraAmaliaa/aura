@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Auth\AuthController;
+use App\Http\Controllers\Api\V1\UniversityController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -15,6 +16,12 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('v1')->group(function (): void {
+    // Public lookup: feeds the mobile login screen's university picker. Only
+    // universities with at least one registered intern are returned. Lightly
+    // throttled as it is unauthenticated.
+    Route::get('universities', [UniversityController::class, 'index'])
+        ->middleware('throttle:60,1');
+
     Route::prefix('auth')->group(function (): void {
         // Public: intern login. Throttled as a second line of defence on top
         // of the per-credential rate limiting inside the form request.
