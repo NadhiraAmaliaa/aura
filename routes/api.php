@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Auth\AuthController;
+use App\Http\Controllers\Api\V1\Attendance\AttendanceController;
 use App\Http\Controllers\Api\V1\UniversityController;
 use Illuminate\Support\Facades\Route;
 
@@ -33,5 +34,11 @@ Route::prefix('v1')->group(function (): void {
             Route::get('me', [AuthController::class, 'me']);
             Route::post('logout', [AuthController::class, 'logout']);
         });
+    });
+
+    // Protected intern-facing feature endpoints.
+    Route::middleware('auth:sanctum')->group(function (): void {
+        // Attendance dashboard: today's snapshot + monthly recap (read-only).
+        Route::get('attendance/dashboard', [AttendanceController::class, 'dashboard']);
     });
 });
