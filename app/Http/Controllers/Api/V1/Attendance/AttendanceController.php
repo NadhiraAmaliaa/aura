@@ -3,23 +3,27 @@
 namespace App\Http\Controllers\Api\V1\Attendance;
 
 use App\Http\Controllers\Controller;
+use App\Exceptions\AttendanceException;
+use App\Http\Requests\Api\V1\Attendance\CheckInRequest;
 use App\Http\Resources\Api\V1\Attendance\AttendanceResource;
 use App\Models\Attendance;
+use App\Services\AttendanceService;
 use App\Services\InternAttendanceSummaryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
 /**
- * Read-only attendance endpoints for the AURA mobile app (interns only).
+ * Attendance endpoints for the AURA mobile app (interns only).
  *
- * The write actions (check-in / check-out) land in a later slice; this
- * controller currently only exposes the dashboard snapshot.
+ * Reads (dashboard, history) plus the check-in write action. Check-out lands
+ * in a later slice.
  */
 class AttendanceController extends Controller
 {
     public function __construct(
         private readonly InternAttendanceSummaryService $summary,
+        private readonly AttendanceService $attendance,
     ) {}
 
     /**
@@ -83,6 +87,33 @@ class AttendanceController extends Controller
                 ],
             ],
         ]);
+    }
+
+    /**
+     * Record today's check-in.
+     *
+     * Delegates all business rules to [AttendanceService]; a rule violation is
+     * translated into the matching HTTP status with a user-safe message. On
+     * success returns the created record so the client can update its UI
+     * without an extra round-trip.
+     */
+    public function checkIn(CheckInRequest $request): JsonResponse
+    {
+        try {
+            $attendance = $this->attendance->checkIn(
+                $request->user(),
+                $request->validated('work_mode'),
+                $request->validated('latitude'),
+                $request->validated('longitude'),
+            );
+        } catch (AttendanceException $e) {
+            return response()->json(['message' => $e->getMessage()], $e->status);
+        }
+
+        return response()->json([
+            'message' => 'Check In berhasil.',
+            'data' => new AttendanceResource($attendance),
+        ], 201);
     }
 
     /**

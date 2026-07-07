@@ -43,5 +43,8 @@ Route::prefix('v1')->group(function (): void {
 
         // Attendance history: paginated list of past records, newest first.
         Route::get('attendance/history', [AttendanceController::class, 'history']);
+
+        // Attendance check-in: record today's arrival (work mode + coords).
+        Route::post('attendance/check-in', [AttendanceController::class, 'checkIn']);
     });
 });
