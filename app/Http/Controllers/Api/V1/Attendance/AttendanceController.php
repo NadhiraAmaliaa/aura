@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Attendance;
 use App\Http\Controllers\Controller;
 use App\Exceptions\AttendanceException;
 use App\Http\Requests\Api\V1\Attendance\CheckInRequest;
+use App\Http\Requests\Api\V1\Attendance\CheckOutRequest;
 use App\Http\Resources\Api\V1\Attendance\AttendanceResource;
 use App\Models\Attendance;
 use App\Services\AttendanceService;
@@ -16,8 +17,7 @@ use Illuminate\Support\Carbon;
 /**
  * Attendance endpoints for the AURA mobile app (interns only).
  *
- * Reads (dashboard, history) plus the check-in write action. Check-out lands
- * in a later slice.
+ * Reads (dashboard, history) plus the check-in / check-out write actions.
  */
 class AttendanceController extends Controller
 {
@@ -114,6 +114,31 @@ class AttendanceController extends Controller
             'message' => 'Check In berhasil.',
             'data' => new AttendanceResource($attendance),
         ], 201);
+    }
+
+    /**
+     * Record today's check-out.
+     *
+     * Delegates all business rules to [AttendanceService]; a rule violation is
+     * translated into the matching HTTP status with a user-safe message. On
+     * success returns the updated record so the client can refresh its UI.
+     */
+    public function checkOut(CheckOutRequest $request): JsonResponse
+    {
+        try {
+            $attendance = $this->attendance->checkOut(
+                $request->user(),
+                $request->validated('latitude'),
+                $request->validated('longitude'),
+            );
+        } catch (AttendanceException $e) {
+            return response()->json(['message' => $e->getMessage()], $e->status);
+        }
+
+        return response()->json([
+            'message' => 'Check Out berhasil.',
+            'data' => new AttendanceResource($attendance),
+        ]);
     }
 
     /**

@@ -46,5 +46,8 @@ Route::prefix('v1')->group(function (): void {
 
         // Attendance check-in: record today's arrival (work mode + coords).
         Route::post('attendance/check-in', [AttendanceController::class, 'checkIn']);
+
+        // Attendance check-out: record today's departure (coords only).
+        Route::post('attendance/check-out', [AttendanceController::class, 'checkOut']);
     });
 });
