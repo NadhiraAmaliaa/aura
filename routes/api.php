@@ -31,7 +31,7 @@ Route::prefix('v1')->group(function (): void {
 
         // Protected: require a valid Sanctum token.
         Route::middleware('auth:sanctum')->group(function (): void {
-            Route::get('me', [AuthController::class, 'me']);
+            Route::get('me',  [AuthController::class, 'me']);
             Route::post('logout', [AuthController::class, 'logout']);
         });
     });
@@ -40,5 +40,8 @@ Route::prefix('v1')->group(function (): void {
     Route::middleware('auth:sanctum')->group(function (): void {
         // Attendance dashboard: today's snapshot + monthly recap (read-only).
         Route::get('attendance/dashboard', [AttendanceController::class, 'dashboard']);
+
+        // Attendance history: paginated list of past records, newest first.
+        Route::get('attendance/history', [AttendanceController::class, 'history']);
     });
 });
