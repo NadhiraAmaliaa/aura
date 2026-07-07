@@ -19,6 +19,10 @@ use Illuminate\Support\Carbon;
  */
 class AttendanceService
 {
+    public function __construct(
+        private readonly GeofenceService $geofence,
+    ) {}
+
     /**
      * Record today's check-in for the intern.
      *
@@ -60,9 +64,13 @@ class AttendanceService
             );
         }
 
-        // NOTE: WFO check-ins will later be validated against the office
-        // location and radius (geofencing). See Attendance::requiresGeofence().
-        // The geofence enforcement is intentionally not implemented yet.
+        // WFO check-ins are validated against the configured office locations
+        // (geofencing). The policy is fail-closed: if no active location is
+        // configured, WFO check-in is blocked (admins can still correct
+        // attendance manually from the web).
+        if (Attendance::requiresGeofence($workMode)) {
+            $this->assertWithinOfficeGeofence($latitude, $longitude);
+        }
 
         try {
             return Attendance::create([
@@ -128,6 +136,40 @@ class AttendanceService
         ]);
 
         return $attendance->refresh();
+    }
+
+    /**
+     * Guard that a WFO check-in is inside an active office location's radius.
+     *
+     * Fail-closed: a missing coordinate, or no active location configured,
+     * blocks the check-in.
+     *
+     * @throws AttendanceException
+     */
+    private function assertWithinOfficeGeofence(?string $latitude, ?string $longitude): void
+    {
+        if ($latitude === null || $longitude === null) {
+            throw AttendanceException::unprocessable(
+                'Lokasi Anda wajib diaktifkan untuk melakukan Check In WFO.'
+            );
+        }
+
+        $match = $this->geofence->nearestActive((float) $latitude, (float) $longitude);
+
+        if ($match === null) {
+            throw AttendanceException::unprocessable(
+                'Lokasi kantor belum dikonfigurasi. Silakan hubungi administrator.'
+            );
+        }
+
+        if ($match['distance'] > $match['location']->radius) {
+            throw AttendanceException::unprocessable(sprintf(
+                'Anda berada di luar radius lokasi kantor. Jarak Anda sekitar %d m dari %s (radius %d m).',
+                (int) round($match['distance']),
+                $match['location']->name,
+                $match['location']->radius,
+            ));
+        }
     }
 
     /**

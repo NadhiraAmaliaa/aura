@@ -7,6 +7,7 @@ use App\Models\AttendanceLocation;
 use App\Models\Intern;
 use App\Models\LeaveRequest;
 use App\Models\WorkingHour;
+use App\Support\Geo;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -508,14 +509,7 @@ class AttendanceReportService
      */
     private function haversine(float $lat1, float $lng1, float $lat2, float $lng2): float
     {
-        $R = 6371000.0; // Earth radius in metres.
-        $phi1 = deg2rad($lat1);
-        $phi2 = deg2rad($lat2);
-        $dphi = deg2rad($lat2 - $lat1);
-        $dlambda = deg2rad($lng2 - $lng1);
-        $a = sin($dphi / 2) ** 2 + cos($phi1) * cos($phi2) * sin($dlambda / 2) ** 2;
-
-        return 2.0 * $R * asin(sqrt($a));
+        return Geo::haversineMeters($lat1, $lng1, $lat2, $lng2);
     }
 
     /**

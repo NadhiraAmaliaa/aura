@@ -49,5 +49,8 @@ Route::prefix('v1')->group(function (): void {
 
         // Attendance check-out: record today's departure (coords only).
         Route::post('attendance/check-out', [AttendanceController::class, 'checkOut']);
+
+        // Active office locations for WFO geofence pre-validation / map display.
+        Route::get('attendance/locations', [AttendanceController::class, 'locations']);
     });
 });

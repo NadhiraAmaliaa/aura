@@ -3,6 +3,7 @@
 namespace Tests\Feature\Api\V1\Attendance;
 
 use App\Models\Attendance;
+use App\Models\AttendanceLocation;
 use App\Models\Intern;
 use App\Models\LeaveRequest;
 use App\Models\User;
@@ -24,6 +25,16 @@ class AttendanceCheckInTest extends TestCase
         Carbon::setTestNow(Carbon::parse('2026-07-06 07:50:00'));
 
         WorkingHour::ensureSeeded();
+
+        // An active office location covering the coordinates used by the WFO
+        // tests, so the geofence passes.
+        AttendanceLocation::create([
+            'name' => 'Kantor Pusat',
+            'latitude' => 3.5952000,
+            'longitude' => 98.6722000,
+            'radius' => 200,
+            'is_active' => true,
+        ]);
     }
 
     protected function tearDown(): void
@@ -98,6 +109,8 @@ class AttendanceCheckInTest extends TestCase
 
         $this->postJson('/api/v1/attendance/check-in', [
             'work_mode' => Attendance::WORK_MODE_WFO,
+            'latitude' => 3.5952000,
+            'longitude' => 98.6722000,
         ])
             ->assertCreated()
             ->assertJsonPath('data.status', 'late');

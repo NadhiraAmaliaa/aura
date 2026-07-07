@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Exceptions\AttendanceException;
 use App\Http\Requests\Api\V1\Attendance\CheckInRequest;
 use App\Http\Requests\Api\V1\Attendance\CheckOutRequest;
+use App\Http\Resources\Api\V1\Attendance\AttendanceLocationResource;
 use App\Http\Resources\Api\V1\Attendance\AttendanceResource;
 use App\Models\Attendance;
+use App\Models\AttendanceLocation;
 use App\Services\AttendanceService;
 use App\Services\InternAttendanceSummaryService;
 use Illuminate\Http\JsonResponse;
@@ -138,6 +140,21 @@ class AttendanceController extends Controller
         return response()->json([
             'message' => 'Check Out berhasil.',
             'data' => new AttendanceResource($attendance),
+        ]);
+    }
+
+    /**
+     * List the active office attendance locations (geofence centres).
+     *
+     * Consumed by the client to pre-validate a WFO check-in and, later, to draw
+     * the geofence on a map. Server-side enforcement remains authoritative.
+     */
+    public function locations(): JsonResponse
+    {
+        $locations = AttendanceLocation::active()->orderBy('name')->get();
+
+        return response()->json([
+            'data' => AttendanceLocationResource::collection($locations),
         ]);
     }
 
