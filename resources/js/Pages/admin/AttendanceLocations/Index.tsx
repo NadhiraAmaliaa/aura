@@ -128,9 +128,10 @@ export default function Index({
                             Belum ada lokasi absensi aktif.
                         </p>
                         <p className="mt-0.5">
-                            Check In WFO akan diblokir hingga minimal satu lokasi
-                            diaktifkan. Tambahkan atau aktifkan lokasi kantor
-                            agar peserta magang dapat melakukan Check In WFO.
+                            Check In WFO akan diblokir hingga minimal satu
+                            lokasi diaktifkan. Tambahkan atau aktifkan lokasi
+                            kantor agar peserta magang dapat melakukan Check In
+                            WFO.
                         </p>
                     </div>
                 </div>
