@@ -3,6 +3,7 @@
 namespace Tests\Feature\Api\V1\Attendance;
 
 use App\Models\Attendance;
+use App\Models\AttendanceLocation;
 use App\Models\Intern;
 use App\Models\User;
 use App\Models\WorkingHour;
@@ -14,6 +15,11 @@ use Tests\TestCase;
 class AttendanceCheckOutTest extends TestCase
 {
     use RefreshDatabase;
+
+    // Office location used by the WFO geofence scenarios.
+    private const OFFICE_LAT = 3.5952000;
+
+    private const OFFICE_LNG = 98.6722000;
 
     protected function setUp(): void
     {
@@ -46,7 +52,7 @@ class AttendanceCheckOutTest extends TestCase
         return $user->fresh();
     }
 
-    private function checkedInToday(User $user): Attendance
+    private function checkedInToday(User $user, string $workMode = Attendance::WORK_MODE_WFO): Attendance
     {
         return Attendance::factory()->create([
             'user_id' => $user->id,
@@ -56,7 +62,18 @@ class AttendanceCheckOutTest extends TestCase
             'check_out_latitude' => null,
             'check_out_longitude' => null,
             'status' => 'present',
-            'work_mode' => Attendance::WORK_MODE_WFO,
+            'work_mode' => $workMode,
+        ]);
+    }
+
+    private function seedOffice(int $radius = 200): void
+    {
+        AttendanceLocation::create([
+            'name' => 'Kantor Pusat',
+            'latitude' => self::OFFICE_LAT,
+            'longitude' => self::OFFICE_LNG,
+            'radius' => $radius,
+            'is_active' => true,
         ]);
     }
 
@@ -82,11 +99,12 @@ class AttendanceCheckOutTest extends TestCase
     {
         $user = $this->activeInternUser();
         $this->checkedInToday($user);
+        $this->seedOffice();
         Sanctum::actingAs($user);
 
         $response = $this->postJson('/api/v1/attendance/check-out', [
-            'latitude' => 3.5952000,
-            'longitude' => 98.6722000,
+            'latitude' => self::OFFICE_LAT,
+            'longitude' => self::OFFICE_LNG,
         ]);
 
         $response->assertOk()
@@ -99,6 +117,60 @@ class AttendanceCheckOutTest extends TestCase
             'user_id' => $user->id,
             'status' => 'present',
         ]);
+    }
+
+    public function test_wfo_check_out_requires_coordinates(): void
+    {
+        $user = $this->activeInternUser();
+        $this->checkedInToday($user);
+        $this->seedOffice();
+        Sanctum::actingAs($user);
+
+        $this->postJson('/api/v1/attendance/check-out')
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'Lokasi Anda wajib diaktifkan untuk absensi WFO.');
+
+        $this->assertDatabaseHas('attendances', [
+            'user_id' => $user->id,
+            'check_out_time' => null,
+        ]);
+    }
+
+    public function test_wfo_check_out_is_rejected_outside_radius(): void
+    {
+        $user = $this->activeInternUser();
+        $this->checkedInToday($user);
+        $this->seedOffice(50);
+        Sanctum::actingAs($user);
+
+        // ~1.1 km north of the office, well outside the 50 m radius.
+        $this->postJson('/api/v1/attendance/check-out', [
+            'latitude' => self::OFFICE_LAT + 0.0100000,
+            'longitude' => self::OFFICE_LNG,
+        ])
+            ->assertStatus(422)
+            ->assertJson(fn ($json) => $json->where(
+                'message',
+                fn (string $message) => str_contains($message, 'di luar radius lokasi kantor')
+            )->etc());
+
+        $this->assertDatabaseHas('attendances', [
+            'user_id' => $user->id,
+            'check_out_time' => null,
+        ]);
+    }
+
+    public function test_wfh_check_out_skips_geofence(): void
+    {
+        $user = $this->activeInternUser();
+        $this->checkedInToday($user, Attendance::WORK_MODE_WFH);
+        Sanctum::actingAs($user);
+
+        // No office configured and no coordinates: WFH must still succeed.
+        $this->postJson('/api/v1/attendance/check-out')
+            ->assertOk()
+            ->assertJsonPath('message', 'Check Out berhasil.')
+            ->assertJsonPath('data.check_out_time', '17:05');
     }
 
     public function test_check_out_is_rejected_without_a_check_in(): void

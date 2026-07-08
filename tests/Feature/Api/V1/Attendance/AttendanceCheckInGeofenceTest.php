@@ -73,7 +73,7 @@ class AttendanceCheckInGeofenceTest extends TestCase
             ->assertStatus(422)
             ->assertJsonPath(
                 'message',
-                'Lokasi Anda wajib diaktifkan untuk melakukan Check In WFO.'
+                'Lokasi Anda wajib diaktifkan untuk absensi WFO.'
             );
 
         $this->assertDatabaseCount('attendances', 0);

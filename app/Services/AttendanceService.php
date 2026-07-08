@@ -129,6 +129,13 @@ class AttendanceService
             );
         }
 
+        // The work mode was fixed at check-in; only WFO check-outs are
+        // validated on-site against the configured office locations. WFH and
+        // Dinas skip the geofence, matching the check-in policy.
+        if (Attendance::requiresGeofence($attendance->work_mode)) {
+            $this->assertWithinOfficeGeofence($latitude, $longitude);
+        }
+
         $attendance->update([
             'check_out_time' => $now->format('H:i'),
             'check_out_latitude' => $latitude,
@@ -139,10 +146,11 @@ class AttendanceService
     }
 
     /**
-     * Guard that a WFO check-in is inside an active office location's radius.
+     * Guard that a WFO attendance action is inside an active office location's
+     * radius.
      *
      * Fail-closed: a missing coordinate, or no active location configured,
-     * blocks the check-in.
+     * blocks the action. Shared by WFO check-in and WFO check-out.
      *
      * @throws AttendanceException
      */
@@ -150,7 +158,7 @@ class AttendanceService
     {
         if ($latitude === null || $longitude === null) {
             throw AttendanceException::unprocessable(
-                'Lokasi Anda wajib diaktifkan untuk melakukan Check In WFO.'
+                'Lokasi Anda wajib diaktifkan untuk absensi WFO.'
             );
         }
 
