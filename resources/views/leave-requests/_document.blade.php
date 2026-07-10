@@ -57,7 +57,7 @@
         </dd>
     </div>
     <div class="grid grid-cols-1 gap-1 py-3 sm:grid-cols-3 sm:gap-4">
-        <dt class="text-sm font-medium text-gray-500">{{ __('Catatan Admin') }}</dt>
+        <dt class="text-sm font-medium text-gray-500">{{ __('Catatan Mentor') }}</dt>
         <dd class="text-sm text-gray-900 sm:col-span-2 whitespace-pre-line">{{ $leaveRequest->admin_note ?: '—' }}</dd>
     </div>
 </dl>

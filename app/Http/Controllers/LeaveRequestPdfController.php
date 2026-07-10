@@ -13,15 +13,22 @@ class LeaveRequestPdfController extends Controller
     /**
      * Stream a printable PDF of an approved leave request.
      *
-     * Accessible only by an admin or the request owner.
+     * Accessible by an admin, the request owner, or the supervisor of the
+     * intern's division.
      */
     public function __invoke(LeaveRequest $leaveRequest): Response
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
+        $leaveRequest->loadMissing('user.intern');
+
+        $isOwner = $leaveRequest->user_id === $user->id;
+        $isDivisionSupervisor = $user->isSupervisor()
+            && $leaveRequest->user?->intern?->division_id === $user->division_id;
+
         abort_unless(
-            $user->isAdmin() || $leaveRequest->user_id === $user->id,
+            $user->isAdmin() || $isOwner || $isDivisionSupervisor,
             Response::HTTP_FORBIDDEN
         );
 

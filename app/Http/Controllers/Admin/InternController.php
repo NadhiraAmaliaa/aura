@@ -151,8 +151,14 @@ class InternController extends Controller
     /**
      * Display a read-only detail page for the specified intern.
      */
-    public function show(Intern $intern): Response
+    public function show(Request $request, Intern $intern): Response
     {
+        // Supervisors may only open interns from their own division.
+        if ($request->user()->isSupervisor()
+            && $intern->division_id !== $request->user()->division_id) {
+            abort(403, 'Unauthorized.');
+        }
+
         $intern->load(['user', 'internProgram', 'universityRef', 'studyProgram', 'divisionRef']);
 
         return Inertia::render('admin/Interns/Show', [

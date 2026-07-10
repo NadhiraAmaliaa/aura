@@ -30,6 +30,7 @@ class User extends Authenticatable
         return [
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'division_id' => 'integer',
         ];
     }
 
