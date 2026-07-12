@@ -10,6 +10,7 @@ use App\Http\Resources\Api\V1\Attendance\AttendanceLocationResource;
 use App\Http\Resources\Api\V1\Attendance\AttendanceResource;
 use App\Models\Attendance;
 use App\Models\AttendanceLocation;
+use App\Services\AttendanceCaptureContext;
 use App\Services\AttendanceService;
 use App\Services\InternAttendanceSummaryService;
 use Illuminate\Http\JsonResponse;
@@ -107,15 +108,21 @@ class AttendanceController extends Controller
                 $request->validated('work_mode'),
                 $request->validated('latitude'),
                 $request->validated('longitude'),
+                null,
+                $this->captureContext($request),
             );
         } catch (AttendanceException $e) {
             return response()->json(['message' => $e->getMessage()], $e->status);
         }
 
+        // A replayed offline sync returns the existing record (not recently
+        // created); surface it as 200 so the client treats it as already done.
+        $status = $attendance->wasRecentlyCreated ? 201 : 200;
+
         return response()->json([
             'message' => 'Check In berhasil.',
             'data' => new AttendanceResource($attendance),
-        ], 201);
+        ], $status);
     }
 
     /**
@@ -132,6 +139,8 @@ class AttendanceController extends Controller
                 $request->user(),
                 $request->validated('latitude'),
                 $request->validated('longitude'),
+                null,
+                $this->captureContext($request),
             );
         } catch (AttendanceException $e) {
             return response()->json(['message' => $e->getMessage()], $e->status);
@@ -156,6 +165,42 @@ class AttendanceController extends Controller
         return response()->json([
             'data' => AttendanceLocationResource::collection($locations),
         ]);
+    }
+
+    /**
+     * Build the immutable capture context from the validated request.
+     *
+     * Bundles the offline-queue fields (captured time, idempotency key, the
+     * office and its frozen geofence snapshot, and the device auto-time flag)
+     * the mobile client records at capture. The web/online flow simply omits
+     * these fields, yielding an empty context.
+     */
+    private function captureContext(CheckInRequest|CheckOutRequest $request): AttendanceCaptureContext
+    {
+        $officeLatitude = $request->validated('office_latitude');
+        $officeLongitude = $request->validated('office_longitude');
+        $officeRadius = $request->validated('office_radius');
+
+        return new AttendanceCaptureContext(
+            capturedAt: $this->resolveCapturedAt($request->validated('captured_at')),
+            clientEventId: $request->validated('client_event_id'),
+            officeId: $request->validated('office_id'),
+            officeLatitude: $officeLatitude !== null ? (string) $officeLatitude : null,
+            officeLongitude: $officeLongitude !== null ? (string) $officeLongitude : null,
+            officeRadius: $officeRadius !== null ? (int) $officeRadius : null,
+            officeName: $request->validated('office_name'),
+            autoTimeEnabled: $request->validated('auto_time_enabled'),
+        );
+    }
+
+    /**
+     * Parse a validated `captured_at` string into a Carbon instance, preserving
+     * the offset the client sent so the authoritative moment is not shifted.
+     * Returns null for the immediate online flow that omits it.
+     */
+    private function resolveCapturedAt(?string $capturedAt): ?Carbon
+    {
+        return $capturedAt !== null ? Carbon::parse($capturedAt) : null;
     }
 
     /**

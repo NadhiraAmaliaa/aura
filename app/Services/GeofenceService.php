@@ -45,4 +45,33 @@ class GeofenceService
 
         return ['location' => $nearest, 'distance' => $nearestDistance];
     }
+
+    /**
+     * Match a coordinate against one specific active office location.
+     *
+     * Used when an attendance event already recorded which office it was
+     * validated against at capture time (the mobile offline queue). This keeps
+     * the geofence decision tied to the captured office rather than silently
+     * re-picking the nearest one at sync time.
+     *
+     * @return array{location: AttendanceLocation, distance: float}|null
+     *         Null when the office no longer exists or is inactive.
+     */
+    public function matchForOffice(float $latitude, float $longitude, int $officeId): ?array
+    {
+        $office = AttendanceLocation::active()->find($officeId);
+
+        if ($office === null) {
+            return null;
+        }
+
+        $distance = Geo::haversineMeters(
+            $latitude,
+            $longitude,
+            (float) $office->latitude,
+            (float) $office->longitude,
+        );
+
+        return ['location' => $office, 'distance' => $distance];
+    }
 }

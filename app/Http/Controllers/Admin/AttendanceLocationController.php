@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreAttendanceLocationRequest;
 use App\Http\Requests\UpdateAttendanceLocationRequest;
+use App\Models\Attendance;
 use App\Models\AttendanceLocation;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -68,9 +69,24 @@ class AttendanceLocationController extends Controller
 
     /**
      * Remove the specified attendance location from storage.
+     *
+     * An office that has already been used for attendance is preserved so its
+     * historical (snapshotted) records keep a valid reference; the admin is
+     * asked to deactivate it instead of deleting it. Only an unreferenced
+     * office can be hard-deleted.
      */
     public function destroy(AttendanceLocation $attendanceLocation): RedirectResponse
     {
+        $isReferenced = Attendance::where('check_in_office_id', $attendanceLocation->id)
+            ->orWhere('check_out_office_id', $attendanceLocation->id)
+            ->exists();
+
+        if ($isReferenced) {
+            return redirect()
+                ->route('admin.attendance-locations.index')
+                ->with('error', 'Lokasi ini sudah pernah digunakan untuk absensi sehingga tidak dapat dihapus. Nonaktifkan lokasi ini untuk menyembunyikannya dari penggunaan.');
+        }
+
         $attendanceLocation->delete();
 
         return redirect()

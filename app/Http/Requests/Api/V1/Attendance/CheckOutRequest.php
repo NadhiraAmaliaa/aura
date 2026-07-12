@@ -23,6 +23,17 @@ class CheckOutRequest extends FormRequest
         return [
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+            // Offline queue fields. All optional; see CheckInRequest.
+            'captured_at' => ['nullable', 'date'],
+            'client_event_id' => ['nullable', 'string', 'uuid'],
+            'office_id' => ['nullable', 'integer'],
+            // Frozen office geofence snapshot captured on the device; see
+            // CheckInRequest.
+            'office_latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'office_longitude' => ['nullable', 'numeric', 'between:-180,180'],
+            'office_radius' => ['nullable', 'integer', 'min:1', 'max:100000'],
+            'office_name' => ['nullable', 'string', 'max:255'],
+            'auto_time_enabled' => ['nullable', 'boolean'],
         ];
     }
 }
