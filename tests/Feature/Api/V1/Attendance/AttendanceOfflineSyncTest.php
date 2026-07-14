@@ -226,6 +226,71 @@ class AttendanceOfflineSyncTest extends TestCase
         $this->assertDatabaseCount('attendances', 0);
     }
 
+    public function test_check_in_with_auto_time_disabled_is_rejected(): void
+    {
+        // The client reports the device clock was set manually; the server
+        // rejects the capture outright rather than trusting captured_at.
+        Sanctum::actingAs($this->activeInternUser());
+
+        $this->postJson('/api/v1/attendance/check-in', [
+            'work_mode' => Attendance::WORK_MODE_WFO,
+            'latitude' => self::NEAR_LAT,
+            'longitude' => self::NEAR_LNG,
+            'captured_at' => '2026-07-06T07:45:00',
+            'client_event_id' => self::EVENT_A,
+            'office_id' => $this->nearOfficeId,
+            'auto_time_enabled' => false,
+        ])->assertStatus(422);
+
+        $this->assertDatabaseCount('attendances', 0);
+    }
+
+    public function test_check_in_allows_null_auto_time_for_web_and_ios(): void
+    {
+        // Web / iOS clients omit auto_time_enabled (null): the field stays
+        // backward-compatible and the capture is accepted.
+        $user = $this->activeInternUser();
+        Sanctum::actingAs($user);
+
+        $this->postJson('/api/v1/attendance/check-in', [
+            'work_mode' => Attendance::WORK_MODE_WFO,
+            'latitude' => self::NEAR_LAT,
+            'longitude' => self::NEAR_LNG,
+            'captured_at' => '2026-07-06T07:45:00',
+            'client_event_id' => self::EVENT_A,
+            'office_id' => $this->nearOfficeId,
+        ])->assertCreated();
+
+        $attendance = Attendance::where('user_id', $user->id)->firstOrFail();
+        $this->assertNull($attendance->check_in_auto_time);
+    }
+
+    public function test_check_out_with_auto_time_disabled_is_rejected(): void
+    {
+        $user = $this->activeInternUser();
+        Sanctum::actingAs($user);
+
+        $this->postJson('/api/v1/attendance/check-in', [
+            'work_mode' => Attendance::WORK_MODE_WFO,
+            'latitude' => self::NEAR_LAT,
+            'longitude' => self::NEAR_LNG,
+        ])->assertCreated();
+
+        Carbon::setTestNow(Carbon::parse('2026-07-06 17:30:00'));
+
+        $this->postJson('/api/v1/attendance/check-out', [
+            'latitude' => self::NEAR_LAT,
+            'longitude' => self::NEAR_LNG,
+            'captured_at' => '2026-07-06T17:00:00',
+            'client_event_id' => self::EVENT_A,
+            'office_id' => $this->nearOfficeId,
+            'auto_time_enabled' => false,
+        ])->assertStatus(422);
+
+        $attendance = Attendance::where('user_id', $user->id)->firstOrFail();
+        $this->assertNull($attendance->check_out_time);
+    }
+
     public function test_geofence_validates_against_the_captured_office(): void
     {
         // A second, far-away active office. The device is standing at the near

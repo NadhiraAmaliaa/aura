@@ -70,6 +70,8 @@ class AttendanceService
             $this->assertCapturedAtIsAcceptable($capture->capturedAt, $now);
         }
 
+        $this->assertAutomaticTimeEnabled($capture->autoTimeEnabled);
+
         $date = $moment->copy()->startOfDay();
 
         $this->assertCanRecordAttendance($user, $date);
@@ -176,6 +178,8 @@ class AttendanceService
         if ($capture->capturedAt !== null) {
             $this->assertCapturedAtIsAcceptable($capture->capturedAt, $now);
         }
+
+        $this->assertAutomaticTimeEnabled($capture->autoTimeEnabled);
 
         $date = $moment->copy()->startOfDay();
 
@@ -362,6 +366,25 @@ class AttendanceService
             throw AttendanceException::unprocessable(
                 'Absensi ini sudah kedaluwarsa (lebih dari '.self::OFFLINE_RETENTION_DAYS.
                 ' hari) dan tidak dapat disinkronkan.'
+            );
+        }
+    }
+
+    /**
+     * Enforce the client's "automatic date & time" requirement.
+     *
+     * The mobile client hard-blocks capture when the device clock is manual and
+     * reports the result here. An explicit `false` is rejected; `null` (web,
+     * iOS, or an unverifiable device) stays backward-compatible and is allowed,
+     * relying on the captured_at skew/retention guards instead.
+     *
+     * @throws AttendanceException
+     */
+    private function assertAutomaticTimeEnabled(?bool $autoTimeEnabled): void
+    {
+        if ($autoTimeEnabled === false) {
+            throw AttendanceException::unprocessable(
+                'Waktu perangkat tidak valid. Aktifkan Tanggal & Waktu otomatis, lalu coba lagi.'
             );
         }
     }
