@@ -88,7 +88,7 @@ class AttendanceService
             ->whereDate('attendance_date', $date)
             ->first();
         if ($existing) {
-            throw AttendanceException::conflict('Anda sudah melakukan Check In hari ini.');
+            throw AttendanceException::conflict('Anda sudah melakukan check in hari ini.');
         }
 
         // Late / on-time evaluation is measured against the captured moment but
@@ -144,7 +144,7 @@ class AttendanceService
                 }
             }
 
-            throw AttendanceException::conflict('Anda sudah melakukan Check In hari ini.');
+            throw AttendanceException::conflict('Anda sudah melakukan check in hari ini.');
         }
     }
 
@@ -195,10 +195,6 @@ class AttendanceService
             );
         }
 
-        if ($attendance->check_out_time) {
-            throw AttendanceException::conflict('Anda sudah melakukan Check Out hari ini.');
-        }
-
         $checkInMoment = $moment->copy()
             ->setTimeFromTimeString($attendance->check_in_time->format('H:i:s'));
 
@@ -206,6 +202,20 @@ class AttendanceService
             throw AttendanceException::unprocessable(
                 'Waktu Check Out harus setelah waktu Check In.'
             );
+        }
+
+        // Last-write-wins by captured time: a repeated check-out overwrites the
+        // stored one, but only when it is strictly newer. An older or delayed
+        // event (e.g. a late offline sync arriving after a fresher one) must
+        // never move the recorded check-out backwards, so it is accepted as a
+        // no-op and returns the current record unchanged.
+        if ($attendance->check_out_time !== null) {
+            $existingCheckOutMoment = $attendance->check_out_captured_at
+                ?? $moment->copy()->setTimeFromTimeString($attendance->check_out_time->format('H:i:s'));
+
+            if ($moment->lessThanOrEqualTo($existingCheckOutMoment)) {
+                return $attendance;
+            }
         }
 
         // The work mode was fixed at check-in; only WFO check-outs are

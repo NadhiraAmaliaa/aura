@@ -133,7 +133,7 @@ class AttendanceCheckInTest extends TestCase
             'work_mode' => Attendance::WORK_MODE_WFO,
         ])
             ->assertStatus(409)
-            ->assertJsonPath('message', 'Anda sudah melakukan Check In hari ini.');
+            ->assertJsonPath('message', 'Anda sudah melakukan check in hari ini.');
 
         $this->assertDatabaseCount('attendances', 1);
     }
