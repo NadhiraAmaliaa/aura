@@ -5,12 +5,9 @@ namespace App\Http\Controllers\Intern;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreLeaveRequestRequest;
 use App\Models\LeaveRequest;
-use App\Models\User;
-use App\Notifications\LeaveRequestSubmittedNotification;
+use App\Services\LeaveRequestService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -42,34 +39,13 @@ class LeaveRequestController extends Controller
     /**
      * Store a new leave request.
      */
-    public function store(StoreLeaveRequestRequest $request): RedirectResponse
+    public function store(StoreLeaveRequestRequest $request, LeaveRequestService $service): RedirectResponse
     {
-        $data = $request->validated();
-
-        $startDate = Carbon::parse($data['start_date']);
-        $endDate = Carbon::parse($data['end_date']);
-
-        // Store the uploaded evidence (PDF/image) on the public disk so it can
-        // be reviewed later by the admin/supervisor.
-        $evidencePath = $request->hasFile('evidence')
-            ? $request->file('evidence')->store('leave-evidence', 'public')
-            : null;
-
-        $leaveRequest = LeaveRequest::create([
-            'user_id' => Auth::id(),
-            'type' => $data['type'],
-            'reason' => $data['reason'],
-            'start_date' => $startDate,
-            'end_date' => $endDate,
-            'total_days' => LeaveRequest::calculateWorkingDays($startDate, $endDate),
-            'contact_phone' => $data['contact_phone'] ?? null,
-            'address' => $data['address'] ?? null,
-            'evidence_path' => $evidencePath,
-            'status' => 'pending',
-        ]);
-
-        // Notify the division supervisor (if one exists and has an email).
-        $this->notifySupervisor($leaveRequest);
+        $service->submit(
+            Auth::user(),
+            $request->validated(),
+            $request->file('evidence'),
+        );
 
         return redirect()
             ->route('intern.leave-requests.index')
@@ -88,41 +64,5 @@ class LeaveRequestController extends Controller
         return Inertia::render('intern/LeaveRequests/Show', [
             'leaveRequest' => $leaveRequest,
         ]);
-    }
-
-    /**
-     * Find and e-mail the division supervisor for this leave request.
-     */
-    private function notifySupervisor(LeaveRequest $leaveRequest): void
-    {
-        $leaveRequest->load('user.intern');
-
-        $divisionId = $leaveRequest->user?->intern?->division_id;
-
-        if (! $divisionId) {
-            return;
-        }
-
-        $supervisor = User::where('role', 'supervisor')
-            ->where('division_id', $divisionId)
-            ->whereNotNull('email')
-            ->where('is_active', true)
-            ->first();
-
-        if (! $supervisor) {
-            return;
-        }
-
-        // The email is best-effort: a leave request must still succeed even if
-        // the mail server is unreachable or rejects the message.
-        try {
-            $supervisor->notify(new LeaveRequestSubmittedNotification($leaveRequest));
-        } catch (\Throwable $e) {
-            Log::error('Gagal mengirim notifikasi pengajuan izin ke supervisor.', [
-                'leave_request_id' => $leaveRequest->id,
-                'supervisor_id' => $supervisor->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
     }
 }

@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\Attendance\AttendanceController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Leave\LeaveRequestController;
 use App\Http\Controllers\Api\V1\UniversityController;
+use App\Http\Controllers\LeaveRequestPdfController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -58,6 +59,12 @@ Route::prefix('v1')->group(function (): void {
         // processed history, and single-request detail. Read-only for now;
         // approval stays on the admin web app.
         Route::get('leave-requests', [LeaveRequestController::class, 'index']);
+        Route::post('leave-requests', [LeaveRequestController::class, 'store']);
         Route::get('leave-requests/{leaveRequest}', [LeaveRequestController::class, 'show']);
+
+        // Printable PDF of an approved leave request. Reuses the same invokable
+        // controller as the web app; it enforces ownership and the approved-only
+        // rule itself, so no extra authorization is needed here.
+        Route::get('leave-requests/{leaveRequest}/pdf', LeaveRequestPdfController::class);
     });
 });

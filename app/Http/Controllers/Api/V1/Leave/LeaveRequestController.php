@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api\V1\Leave;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreLeaveRequestRequest;
 use App\Http\Resources\Api\V1\Leave\LeaveRequestResource;
 use App\Models\LeaveRequest;
+use App\Services\LeaveRequestService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -77,6 +79,30 @@ class LeaveRequestController extends Controller
         return response()->json([
             'data' => new LeaveRequestResource($leaveRequest),
         ]);
+    }
+
+    /**
+     * Submit a new leave request (izin / sakit) for the authenticated intern.
+     *
+     * Validation is delegated to the shared {@see StoreLeaveRequestRequest} —
+     * the same form request the web app uses — so the izin/sakit date rules,
+     * evidence requirements and internship-period checks stay a single source
+     * of truth. Creation and supervisor notification run through
+     * {@see LeaveRequestService}, shared with the web controller.
+     */
+    public function store(StoreLeaveRequestRequest $request, LeaveRequestService $service): JsonResponse
+    {
+        $leaveRequest = $service->submit(
+            $request->user(),
+            $request->validated(),
+            $request->file('evidence'),
+        );
+
+        $leaveRequest->load('approver');
+
+        return response()->json([
+            'data' => new LeaveRequestResource($leaveRequest),
+        ], Response::HTTP_CREATED);
     }
 
     /**
