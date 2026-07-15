@@ -1,7 +1,8 @@
 <?php
 
-use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Attendance\AttendanceController;
+use App\Http\Controllers\Api\V1\Auth\AuthController;
+use App\Http\Controllers\Api\V1\Leave\LeaveRequestController;
 use App\Http\Controllers\Api\V1\UniversityController;
 use Illuminate\Support\Facades\Route;
 
@@ -31,7 +32,7 @@ Route::prefix('v1')->group(function (): void {
 
         // Protected: require a valid Sanctum token.
         Route::middleware('auth:sanctum')->group(function (): void {
-            Route::get('me',  [AuthController::class, 'me']);
+            Route::get('me', [AuthController::class, 'me']);
             Route::post('logout', [AuthController::class, 'logout']);
         });
     });
@@ -52,5 +53,11 @@ Route::prefix('v1')->group(function (): void {
 
         // Active office locations for WFO geofence pre-validation / map display.
         Route::get('attendance/locations', [AttendanceController::class, 'locations']);
+
+        // Leave requests (izin / sakit): the intern's own pending queue,
+        // processed history, and single-request detail. Read-only for now;
+        // approval stays on the admin web app.
+        Route::get('leave-requests', [LeaveRequestController::class, 'index']);
+        Route::get('leave-requests/{leaveRequest}', [LeaveRequestController::class, 'show']);
     });
 });
