@@ -23,9 +23,15 @@ class LeaveRequestPdfController extends Controller
 
         $leaveRequest->loadMissing('user.intern');
 
-        $isOwner = $leaveRequest->user_id === $user->id;
+        // Compare via Eloquent keys, not raw attributes: SQL Server returns
+        // foreign keys as strings ($leaveRequest->user_id === '3') while the
+        // model's primary key is cast to int ($user->id === 3), so a strict
+        // `===` on the raw columns would wrongly fail for the actual owner.
+        $isOwner = $user->is($leaveRequest->user);
+        $internDivisionId = $leaveRequest->user?->intern?->division_id;
         $isDivisionSupervisor = $user->isSupervisor()
-            && $leaveRequest->user?->intern?->division_id === $user->division_id;
+            && $internDivisionId !== null
+            && (int) $internDivisionId === (int) $user->division_id;
 
         abort_unless(
             $user->isAdmin() || $isOwner || $isDivisionSupervisor,
