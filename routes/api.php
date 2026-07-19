@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\Attendance\AttendanceController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Leave\LeaveRequestController;
+use App\Http\Controllers\Api\V1\Leave\SuratPulangCepatController;
 use App\Http\Controllers\Api\V1\UniversityController;
 use App\Http\Controllers\LeaveRequestPdfController;
 use Illuminate\Support\Facades\Route;
@@ -66,5 +67,10 @@ Route::prefix('v1')->group(function (): void {
         // controller as the web app; it enforces ownership and the approved-only
         // rule itself, so no extra authorization is needed here.
         Route::get('leave-requests/{leaveRequest}/pdf', LeaveRequestPdfController::class);
+
+        // Surat Izin Pulang Sebelum Waktunya: a stateless, on-demand PDF built
+        // from the authenticated intern's identity plus the submitted early-leave
+        // details. Nothing is persisted (no model, history, or workflow).
+        Route::post('surat-pulang-cepat/pdf', SuratPulangCepatController::class);
     });
 });
