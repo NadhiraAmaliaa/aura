@@ -4,11 +4,15 @@ namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Auth\LoginRequest;
+use App\Http\Requests\Api\V1\Auth\UpdateContactRequest;
+use App\Http\Requests\Api\V1\Auth\UpdatePasswordRequest;
 use App\Http\Resources\Api\V1\UserResource;
 use App\Models\Intern;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Hash;
 
 /**
  * Token-based authentication for the AURA mobile app (interns only).
@@ -25,7 +29,7 @@ class AuthController extends Controller
     {
         $user = $request->authenticate();
 
-        $intern = $user->loadMissing('intern')->intern;
+        $intern = $this->loadInternProfile($user)->intern;
 
         // Authorization gate: only interns whose internship is neither
         // deactivated nor finished may obtain a token. Upcoming interns are
@@ -52,7 +56,44 @@ class AuthController extends Controller
      */
     public function me(Request $request): UserResource
     {
-        return new UserResource($request->user()->loadMissing('intern'));
+        return new UserResource($this->loadInternProfile($request->user()));
+    }
+
+    /**
+     * Update the authenticated intern's contact details.
+     *
+     * The email lives on the user account while the phone belongs to the intern
+     * profile, mirroring the web profile update flow.
+     */
+    public function updateContact(UpdateContactRequest $request): UserResource
+    {
+        $user = $request->user();
+
+        $user->fill(['email' => $request->validated('email')]);
+        $user->save();
+
+        if ($user->intern !== null) {
+            $user->intern->update(['phone' => $request->validated('phone')]);
+        }
+
+        return new UserResource($this->loadInternProfile($user->fresh()));
+    }
+
+    /**
+     * Update the authenticated user's password.
+     *
+     * Leaves the current token valid so the mobile session is not interrupted
+     * by the change.
+     */
+    public function updatePassword(UpdatePasswordRequest $request): JsonResponse
+    {
+        $request->user()->update([
+            'password' => Hash::make($request->validated('password')),
+        ]);
+
+        return response()->json([
+            'message' => 'Kata sandi berhasil diperbarui.',
+        ]);
     }
 
     /**
@@ -64,6 +105,21 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Berhasil keluar.',
+        ]);
+    }
+
+    /**
+     * Eager-load the intern profile together with the master-data relations the
+     * mobile profile screen needs (university, study program, division and
+     * program), so {@see UserResource} can expose their names.
+     */
+    protected function loadInternProfile(User $user): User
+    {
+        return $user->loadMissing([
+            'intern.universityRef',
+            'intern.studyProgram',
+            'intern.divisionRef',
+            'intern.internProgram',
         ]);
     }
 

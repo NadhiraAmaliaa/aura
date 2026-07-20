@@ -36,6 +36,11 @@ Route::prefix('v1')->group(function (): void {
         Route::middleware('auth:sanctum')->group(function (): void {
             Route::get('me', [AuthController::class, 'me']);
             Route::post('logout', [AuthController::class, 'logout']);
+
+            // Self-service profile edits: update contact details (email +
+            // phone) and change the account password.
+            Route::patch('profile/contact', [AuthController::class, 'updateContact']);
+            Route::put('password', [AuthController::class, 'updatePassword']);
         });
     });
 
