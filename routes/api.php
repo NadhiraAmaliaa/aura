@@ -41,6 +41,10 @@ Route::prefix('v1')->group(function (): void {
             // phone) and change the account password.
             Route::patch('profile/contact', [AuthController::class, 'updateContact']);
             Route::put('password', [AuthController::class, 'updatePassword']);
+
+            // Profile photo: upload (camera/gallery) or remove.
+            Route::post('profile/photo', [AuthController::class, 'updateAvatar']);
+            Route::delete('profile/photo', [AuthController::class, 'deleteAvatar']);
         });
     });
 

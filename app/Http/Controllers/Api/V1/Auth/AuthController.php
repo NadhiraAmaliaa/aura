@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Auth\LoginRequest;
+use App\Http\Requests\Api\V1\Auth\UpdateAvatarRequest;
 use App\Http\Requests\Api\V1\Auth\UpdateContactRequest;
 use App\Http\Requests\Api\V1\Auth\UpdatePasswordRequest;
 use App\Http\Resources\Api\V1\UserResource;
@@ -13,6 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Token-based authentication for the AURA mobile app (interns only).
@@ -106,6 +108,43 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Berhasil keluar.',
         ]);
+    }
+
+    /**
+     * Replace the authenticated user's profile photo.
+     *
+     * Stores the upload on the public disk under `avatars` and removes the
+     * previous file, if any, so orphaned photos do not accumulate.
+     */
+    public function updateAvatar(UpdateAvatarRequest $request): UserResource
+    {
+        $user = $request->user();
+        $previousPath = $user->avatar_path;
+
+        $path = $request->file('photo')->store('avatars', 'public');
+
+        $user->update(['avatar_path' => $path]);
+
+        if ($previousPath !== null && $previousPath !== $path) {
+            Storage::disk('public')->delete($previousPath);
+        }
+
+        return new UserResource($this->loadInternProfile($user->fresh()));
+    }
+
+    /**
+     * Remove the authenticated user's profile photo, reverting to the default.
+     */
+    public function deleteAvatar(Request $request): UserResource
+    {
+        $user = $request->user();
+
+        if ($user->avatar_path !== null) {
+            Storage::disk('public')->delete($user->avatar_path);
+            $user->update(['avatar_path' => null]);
+        }
+
+        return new UserResource($this->loadInternProfile($user->fresh()));
     }
 
     /**

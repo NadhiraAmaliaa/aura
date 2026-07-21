@@ -9,7 +9,9 @@ use App\Models\StudyProgram;
 use App\Models\University;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -201,5 +203,102 @@ class ProfileTest extends TestCase
         ])
             ->assertStatus(422)
             ->assertJsonValidationErrors('password');
+    }
+
+    public function test_update_avatar_requires_authentication(): void
+    {
+        Storage::fake('public');
+
+        $this->postJson('/api/v1/auth/profile/photo', [
+            'photo' => UploadedFile::fake()->image('avatar.jpg'),
+        ])->assertUnauthorized();
+    }
+
+    public function test_update_avatar_stores_the_photo_and_returns_its_url(): void
+    {
+        $disk = Storage::fake('public');
+        [$user] = $this->activeInternUser();
+        Sanctum::actingAs($user);
+
+        $response = $this->postJson('/api/v1/auth/profile/photo', [
+            'photo' => UploadedFile::fake()->image('avatar.jpg'),
+        ])->assertOk();
+
+        $avatarUrl = $response->json('data.avatar_url');
+        $this->assertNotNull($avatarUrl);
+        // The API returns a host-relative path so the mobile client can resolve
+        // it against its own configured host; it must not embed an absolute URL.
+        $this->assertStringStartsWith('/', $avatarUrl);
+        $this->assertStringContainsString('/storage/', $avatarUrl);
+
+        $path = $user->fresh()->avatar_path;
+        $this->assertNotNull($path);
+        $disk->assertExists($path);
+    }
+
+    public function test_update_avatar_replaces_the_previous_photo(): void
+    {
+        $disk = Storage::fake('public');
+        [$user] = $this->activeInternUser();
+        Sanctum::actingAs($user);
+
+        $this->postJson('/api/v1/auth/profile/photo', [
+            'photo' => UploadedFile::fake()->image('first.jpg'),
+        ])->assertOk();
+        $firstPath = $user->fresh()->avatar_path;
+
+        $this->postJson('/api/v1/auth/profile/photo', [
+            'photo' => UploadedFile::fake()->image('second.jpg'),
+        ])->assertOk();
+        $secondPath = $user->fresh()->avatar_path;
+
+        $this->assertNotSame($firstPath, $secondPath);
+        $disk->assertMissing($firstPath);
+        $disk->assertExists($secondPath);
+    }
+
+    public function test_update_avatar_rejects_non_image_files(): void
+    {
+        Storage::fake('public');
+        [$user] = $this->activeInternUser();
+        Sanctum::actingAs($user);
+
+        $this->postJson('/api/v1/auth/profile/photo', [
+            'photo' => UploadedFile::fake()->create('document.pdf', 100, 'application/pdf'),
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('photo');
+    }
+
+    public function test_update_avatar_rejects_files_over_five_megabytes(): void
+    {
+        Storage::fake('public');
+        [$user] = $this->activeInternUser();
+        Sanctum::actingAs($user);
+
+        $this->postJson('/api/v1/auth/profile/photo', [
+            'photo' => UploadedFile::fake()->image('big.jpg')->size(5121),
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('photo');
+    }
+
+    public function test_delete_avatar_removes_the_photo(): void
+    {
+        $disk = Storage::fake('public');
+        [$user] = $this->activeInternUser();
+        Sanctum::actingAs($user);
+
+        $this->postJson('/api/v1/auth/profile/photo', [
+            'photo' => UploadedFile::fake()->image('avatar.jpg'),
+        ])->assertOk();
+        $path = $user->fresh()->avatar_path;
+
+        $this->deleteJson('/api/v1/auth/profile/photo')
+            ->assertOk()
+            ->assertJsonPath('data.avatar_url', null);
+
+        $this->assertNull($user->fresh()->avatar_path);
+        $disk->assertMissing($path);
     }
 }
