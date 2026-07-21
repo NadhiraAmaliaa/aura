@@ -9,15 +9,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
+use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'nik', 'password', 'role', 'is_active', 'division_id'])]
+#[Fillable(['name', 'email', 'avatar_path', 'nik', 'password', 'role', 'is_active', 'division_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * Get the attributes that should be cast.
@@ -29,7 +32,29 @@ class User extends Authenticatable
         return [
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'division_id' => 'integer',
         ];
+    }
+
+    /**
+     * The host-relative URL of the user's profile photo, or null when none is
+     * set.
+     *
+     * Returns a path such as `/storage/avatars/xyz.jpg` rather than an
+     * `APP_URL`-based absolute URL, so the mobile client can resolve it against
+     * its own configured API host. This keeps avatars working across dev
+     * machines/LAN IPs and in production without changing `APP_URL`.
+     */
+    public function avatarUrl(): ?string
+    {
+        if ($this->avatar_path === null) {
+            return null;
+        }
+
+        /** @var FilesystemAdapter $disk */
+        $disk = Storage::disk('public');
+
+        return parse_url($disk->url($this->avatar_path), PHP_URL_PATH) ?: null;
     }
 
     public function isAdmin(): bool

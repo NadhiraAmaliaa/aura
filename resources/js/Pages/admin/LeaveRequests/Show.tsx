@@ -225,7 +225,7 @@ export default function Show({ leaveRequest }: { leaveRequest: LeaveRequest }) {
                                 {leaveRequest.admin_note && (
                                     <div>
                                         <p className="text-on-surface-variant">
-                                            Catatan Admin
+                                            Catatan Mentor
                                         </p>
                                         <p className="font-medium text-on-surface">
                                             {leaveRequest.admin_note}

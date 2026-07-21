@@ -83,7 +83,7 @@ export default function Show({ leaveRequest }: { leaveRequest: LeaveRequest }) {
                         </Row>
                     )}
                     {leaveRequest.status !== "pending" && (
-                        <Row label="Catatan Admin">
+                        <Row label="Catatan Mentor">
                             {leaveRequest.admin_note || "-"}
                         </Row>
                     )}

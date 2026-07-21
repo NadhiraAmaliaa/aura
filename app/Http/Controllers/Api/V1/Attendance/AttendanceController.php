@@ -1,0 +1,232 @@
+<?php
+
+namespace App\Http\Controllers\Api\V1\Attendance;
+
+use App\Http\Controllers\Controller;
+use App\Exceptions\AttendanceException;
+use App\Http\Requests\Api\V1\Attendance\CheckInRequest;
+use App\Http\Requests\Api\V1\Attendance\CheckOutRequest;
+use App\Http\Resources\Api\V1\Attendance\AttendanceLocationResource;
+use App\Http\Resources\Api\V1\Attendance\AttendanceResource;
+use App\Models\Attendance;
+use App\Models\AttendanceLocation;
+use App\Services\AttendanceCaptureContext;
+use App\Services\AttendanceService;
+use App\Services\InternAttendanceSummaryService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+
+/**
+ * Attendance endpoints for the AURA mobile app (interns only).
+ *
+ * Reads (dashboard, history) plus the check-in / check-out write actions.
+ */
+class AttendanceController extends Controller
+{
+    public function __construct(
+        private readonly InternAttendanceSummaryService $summary,
+        private readonly AttendanceService $attendance,
+    ) {}
+
+    /**
+     * Return today's attendance snapshot plus the monthly recap.
+     *
+     * Accepts an optional `month=YYYY-MM` query parameter to drive the recap;
+     * it defaults to the current month. The "today" card is always today.
+     */
+    public function dashboard(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $month = $this->resolveMonth($request->query('month'));
+
+        $today = $this->summary->todaySnapshot($user);
+        $summary = $this->summary->monthlySummary($user, $month);
+
+        return response()->json([
+            'data' => [
+                'today' => [
+                    'date' => $today['date'],
+                    'is_working_day' => $today['is_working_day'],
+                    'work_hours' => $today['work_hours'],
+                    'attendance' => $today['attendance'] === null
+                        ? null
+                        : new AttendanceResource($today['attendance']),
+                    'leave' => $today['leave'],
+                ],
+                'summary' => $summary,
+            ],
+        ]);
+    }
+
+    /**
+     * Return the intern's attendance records, most recent first, paginated.
+     *
+     * Accepts an optional `page` query parameter (Laravel's paginator handles
+     * it) and a `per_page` value clamped to a sane range. The response wraps
+     * the items with a compact pagination block the mobile client can page on.
+     */
+    public function history(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $perPage = $this->resolvePerPage($request->query('per_page'));
+
+        $records = Attendance::query()
+            ->where('user_id', $user->id)
+            ->orderByDesc('attendance_date')
+            ->paginate($perPage);
+
+        return response()->json([
+            'data' => [
+                'items' => AttendanceResource::collection($records->items()),
+                'pagination' => [
+                    'current_page' => $records->currentPage(),
+                    'per_page' => $records->perPage(),
+                    'total' => $records->total(),
+                    'last_page' => $records->lastPage(),
+                    'has_more' => $records->hasMorePages(),
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * Record today's check-in.
+     *
+     * Delegates all business rules to [AttendanceService]; a rule violation is
+     * translated into the matching HTTP status with a user-safe message. On
+     * success returns the created record so the client can update its UI
+     * without an extra round-trip.
+     */
+    public function checkIn(CheckInRequest $request): JsonResponse
+    {
+        try {
+            $attendance = $this->attendance->checkIn(
+                $request->user(),
+                $request->validated('work_mode'),
+                $request->validated('latitude'),
+                $request->validated('longitude'),
+                null,
+                $this->captureContext($request),
+            );
+        } catch (AttendanceException $e) {
+            return response()->json(['message' => $e->getMessage()], $e->status);
+        }
+
+        // A replayed offline sync returns the existing record (not recently
+        // created); surface it as 200 so the client treats it as already done.
+        $status = $attendance->wasRecentlyCreated ? 201 : 200;
+
+        return response()->json([
+            'message' => 'Check In berhasil.',
+            'data' => new AttendanceResource($attendance),
+        ], $status);
+    }
+
+    /**
+     * Record today's check-out.
+     *
+     * Delegates all business rules to [AttendanceService]; a rule violation is
+     * translated into the matching HTTP status with a user-safe message. On
+     * success returns the updated record so the client can refresh its UI.
+     */
+    public function checkOut(CheckOutRequest $request): JsonResponse
+    {
+        try {
+            $attendance = $this->attendance->checkOut(
+                $request->user(),
+                $request->validated('latitude'),
+                $request->validated('longitude'),
+                null,
+                $this->captureContext($request),
+            );
+        } catch (AttendanceException $e) {
+            return response()->json(['message' => $e->getMessage()], $e->status);
+        }
+
+        return response()->json([
+            'message' => 'Check Out berhasil.',
+            'data' => new AttendanceResource($attendance),
+        ]);
+    }
+
+    /**
+     * List the active office attendance locations (geofence centres).
+     *
+     * Consumed by the client to pre-validate a WFO check-in and, later, to draw
+     * the geofence on a map. Server-side enforcement remains authoritative.
+     */
+    public function locations(): JsonResponse
+    {
+        $locations = AttendanceLocation::active()->orderBy('name')->get();
+
+        return response()->json([
+            'data' => AttendanceLocationResource::collection($locations),
+        ]);
+    }
+
+    /**
+     * Build the immutable capture context from the validated request.
+     *
+     * Bundles the offline-queue fields (captured time, idempotency key, the
+     * office and its frozen geofence snapshot, and the device auto-time flag)
+     * the mobile client records at capture. The web/online flow simply omits
+     * these fields, yielding an empty context.
+     */
+    private function captureContext(CheckInRequest|CheckOutRequest $request): AttendanceCaptureContext
+    {
+        $officeLatitude = $request->validated('office_latitude');
+        $officeLongitude = $request->validated('office_longitude');
+        $officeRadius = $request->validated('office_radius');
+
+        return new AttendanceCaptureContext(
+            capturedAt: $this->resolveCapturedAt($request->validated('captured_at')),
+            clientEventId: $request->validated('client_event_id'),
+            officeId: $request->validated('office_id'),
+            officeLatitude: $officeLatitude !== null ? (string) $officeLatitude : null,
+            officeLongitude: $officeLongitude !== null ? (string) $officeLongitude : null,
+            officeRadius: $officeRadius !== null ? (int) $officeRadius : null,
+            officeName: $request->validated('office_name'),
+            autoTimeEnabled: $request->validated('auto_time_enabled'),
+        );
+    }
+
+    /**
+     * Parse a validated `captured_at` string into a Carbon instance, preserving
+     * the offset the client sent so the authoritative moment is not shifted.
+     * Returns null for the immediate online flow that omits it.
+     */
+    private function resolveCapturedAt(?string $capturedAt): ?Carbon
+    {
+        return $capturedAt !== null ? Carbon::parse($capturedAt) : null;
+    }
+
+    /**
+     * Resolve the recap month from a `YYYY-MM` string, falling back to the
+     * current month when the value is missing or malformed.
+     */
+    private function resolveMonth(mixed $value): Carbon
+    {
+        if (is_string($value) && preg_match('/^\d{4}-\d{2}$/', $value) === 1) {
+            try {
+                return Carbon::createFromFormat('Y-m', $value)->startOfMonth();
+            } catch (\Throwable) {
+                // Fall through to the current month on an invalid date.
+            }
+        }
+
+        return Carbon::today()->startOfMonth();
+    }
+
+    /**
+     * Clamp the page size to a sane range, defaulting to 15 records per page.
+     */
+    private function resolvePerPage(mixed $value): int
+    {
+        $perPage = is_numeric($value) ? (int) $value : 15;
+
+        return max(1, min($perPage, 50));
+    }
+}

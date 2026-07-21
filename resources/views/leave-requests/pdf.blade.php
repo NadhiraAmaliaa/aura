@@ -144,7 +144,7 @@
                 <td>{{ $leaveRequest->approved_at?->format('d M Y, H:i') ?? '-' }}</td>
             </tr>
             <tr>
-                <td class="label">Catatan Admin</td><td class="colon">:</td>
+                <td class="label">Catatan Mentor</td><td class="colon">:</td>
                 <td>{{ $leaveRequest->admin_note ?: '-' }}</td>
             </tr>
         </table>
@@ -162,7 +162,7 @@
                     <img src="data:image/svg+xml;base64,{{ $supervisorQr }}" width="80" height="80" alt="Tanda tangan supervisor">
                 </div>
                 <div class="sign-name">{{ $leaveRequest->approver?->name ?? '-' }}</div>
-                <div class="sign-role">Administrator</div>
+                <div class="sign-role">Mentor</div>
             </td>
             <td>
                 <div class="sign-title">Pemohon,</div>

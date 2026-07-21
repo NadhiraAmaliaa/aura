@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Attendance;
+use App\Models\AttendanceLocation;
 use App\Models\Intern;
 use App\Models\LeaveRequest;
 use App\Models\User;
@@ -238,8 +239,20 @@ class InternPeriodTest extends TestCase
             'end_date' => Carbon::today()->addDays(40),
         ]);
 
+        AttendanceLocation::create([
+            'name' => 'Kantor Pusat',
+            'latitude' => 3.5952000,
+            'longitude' => 98.6722000,
+            'radius' => 200,
+            'is_active' => true,
+        ]);
+
         $this->actingAs($user)
-            ->post(route('intern.attendance.check-in'), ['work_mode' => 'wfo'])
+            ->post(route('intern.attendance.check-in'), [
+                'work_mode' => 'wfo',
+                'latitude' => 3.5952000,
+                'longitude' => 98.6722000,
+            ])
             ->assertSessionHas('status');
 
         $this->assertDatabaseHas('attendances', [

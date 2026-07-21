@@ -13,15 +13,28 @@ class LeaveRequestPdfController extends Controller
     /**
      * Stream a printable PDF of an approved leave request.
      *
-     * Accessible only by an admin or the request owner.
+     * Accessible by an admin, the request owner, or the supervisor of the
+     * intern's division.
      */
     public function __invoke(LeaveRequest $leaveRequest): Response
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
+        $leaveRequest->loadMissing('user.intern');
+
+        // Compare via Eloquent keys, not raw attributes: SQL Server returns
+        // foreign keys as strings ($leaveRequest->user_id === '3') while the
+        // model's primary key is cast to int ($user->id === 3), so a strict
+        // `===` on the raw columns would wrongly fail for the actual owner.
+        $isOwner = $user->is($leaveRequest->user);
+        $internDivisionId = $leaveRequest->user?->intern?->division_id;
+        $isDivisionSupervisor = $user->isSupervisor()
+            && $internDivisionId !== null
+            && (int) $internDivisionId === (int) $user->division_id;
+
         abort_unless(
-            $user->isAdmin() || $leaveRequest->user_id === $user->id,
+            $user->isAdmin() || $isOwner || $isDivisionSupervisor,
             Response::HTTP_FORBIDDEN
         );
 

@@ -49,6 +49,8 @@ export default function Index({
         setDeleteOpen(true);
     };
 
+    const hasActiveLocation = locations.some((location) => location.is_active);
+
     const columns: Column<AttendanceLocation>[] = [
         {
             header: "Nama",
@@ -115,6 +117,25 @@ export default function Index({
             }
         >
             <Head title="Lokasi Absen" />
+
+            {!hasActiveLocation && (
+                <div className="mb-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">
+                    <span className="material-symbols-rounded mt-0.5 text-xl">
+                        warning
+                    </span>
+                    <div className="text-sm">
+                        <p className="font-semibold">
+                            Belum ada lokasi absensi aktif.
+                        </p>
+                        <p className="mt-0.5">
+                            Check In WFO akan diblokir hingga minimal satu
+                            lokasi diaktifkan. Tambahkan atau aktifkan lokasi
+                            kantor agar peserta magang dapat melakukan Check In
+                            WFO.
+                        </p>
+                    </div>
+                </div>
+            )}
 
             <TableCard>
                 <TableToolbar
