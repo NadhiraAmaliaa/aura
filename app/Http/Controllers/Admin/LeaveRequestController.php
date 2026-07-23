@@ -7,16 +7,20 @@ use App\Http\Requests\UpdateLeaveRequestStatusRequest;
 use App\Models\Attendance;
 use App\Models\Division;
 use App\Models\LeaveRequest;
+use App\Services\Notifications\LeaveDecisionNotifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class LeaveRequestController extends Controller
 {
+    public function __construct(private readonly LeaveDecisionNotifier $decisionNotifier) {}
+
     /**
      * Display a filtered, paginated listing of all leave requests.
      *
@@ -180,9 +184,32 @@ class LeaveRequestController extends Controller
             }
         });
 
+        // Notify the intern only after the decision has been committed. Push
+        // delivery is best-effort and must never turn a successful decision
+        // into a failed request.
+        $this->notifyDecision($leaveRequest);
+
         return redirect()
             ->route('admin.leave-requests.show', $leaveRequest)
             ->with('status', $message);
+    }
+
+    /**
+     * Send the approve/reject push notification to the requesting intern.
+     *
+     * Best-effort: any failure here is logged and never propagated, so the
+     * decision the supervisor just made always stands.
+     */
+    private function notifyDecision(LeaveRequest $leaveRequest): void
+    {
+        try {
+            $this->decisionNotifier->notify($leaveRequest);
+        } catch (\Throwable $e) {
+            Log::error('Gagal mengirim notifikasi keputusan pengajuan izin.', [
+                'leave_request_id' => $leaveRequest->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**

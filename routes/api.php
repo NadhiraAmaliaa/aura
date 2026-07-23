@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Attendance\AttendanceController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
+use App\Http\Controllers\Api\V1\Device\DeviceTokenController;
 use App\Http\Controllers\Api\V1\Leave\LeaveRequestController;
 use App\Http\Controllers\Api\V1\Leave\SuratPulangCepatController;
 use App\Http\Controllers\Api\V1\UniversityController;
@@ -45,6 +46,10 @@ Route::prefix('v1')->group(function (): void {
             // Profile photo: upload (camera/gallery) or remove.
             Route::post('profile/photo', [AuthController::class, 'updateAvatar']);
             Route::delete('profile/photo', [AuthController::class, 'deleteAvatar']);
+
+            // Register (upsert) this device's FCM token so it can later be
+            // targeted by push notifications. Idempotent; no sending logic yet.
+            Route::post('devices', [DeviceTokenController::class, 'store']);
         });
     });
 
