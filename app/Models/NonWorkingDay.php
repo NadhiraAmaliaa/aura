@@ -2,21 +2,26 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
-#[Fillable([
-    'date',
-    'name',
-    'type',
-])]
 class NonWorkingDay extends Model
 {
     /** @use HasFactory<\Database\Factories\NonWorkingDayFactory> */
     use HasFactory;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'date',
+        'name',
+        'type',
+    ];
 
     /**
      * Supported non-working day types.
