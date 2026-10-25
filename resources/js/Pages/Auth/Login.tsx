@@ -1,49 +1,22 @@
-import Autocomplete, { AutocompleteOption } from "@/Components/Autocomplete";
-import Checkbox from "@/Components/Checkbox";
-import InputError from "@/Components/InputError";
-import InputLabel from "@/Components/InputLabel";
-import MaterialIcon from "@/Components/MaterialIcon";
-import TextInput from "@/Components/TextInput";
+import "../../../css/login.css";
 import { Head, useForm } from "@inertiajs/react";
 import { FormEventHandler, useState } from "react";
 
-type LoginTab = "admin" | "intern";
-
-const PRIMARY_COLOR = "#1e3b8a";
+// Existing project background, kept as-is.
 const HERO_IMAGE =
     "https://images.unsplash.com/photo-1711192702535-eac61a78ecb0?q=80&w=1153&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 
+const ASSET = "/images/login";
+
 export default function Login({ status }: { status?: string }) {
-    const [tab, setTab] = useState<LoginTab>("intern");
+    const [showPassword, setShowPassword] = useState(false);
 
-    const { data, setData, post, processing, errors, reset, clearErrors } =
-        useForm({
-            login_as: "intern",
-            // Admin field
-            nik: "",
-            // Intern fields
-            university_id: "" as number | string,
-            university_name: "",
-            nim: "",
-            // Shared
-            password: "",
-            remember: false,
-        });
-
-    const switchTab = (next: LoginTab) => {
-        setTab(next);
-        setData("login_as", next);
-        clearErrors();
-        reset("password");
-    };
-
-    const handleUniversity = (option: AutocompleteOption | null) => {
-        setData((previous) => ({
-            ...previous,
-            university_id: option ? option.id : "",
-            university_name: option ? option.name : "",
-        }));
-    };
+    const { data, setData, post, processing, errors, reset } = useForm({
+        login_as: "admin",
+        nik: "",
+        password: "",
+        remember: false,
+    });
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
@@ -53,365 +26,276 @@ export default function Login({ status }: { status?: string }) {
         });
     };
 
-    const isAdminTab = tab === "admin";
-
     return (
         <>
             <Head title="Login" />
 
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
-                {/* Main Container */}
-                <div
-                    className="w-full max-w-6xl bg-white rounded-xl shadow-2xl flex overflow-hidden"
-                    style={{ height: "600px" }}
-                >
-                    {/* LEFT: Hero Image Section */}
-                    <section className="hidden md:flex relative w-[45%] overflow-visible">
-                        {/* Teal Diagonal Slash Decoration - BEHIND image */}
-                        <div
-                            className="absolute pointer-events-none"
-                            style={{
-                                top: "20px",
-                                bottom: "-20px",
-                                right: "-30px",
-                                width: "130px",
-                                background: `linear-gradient(97.5deg, transparent 40%, ${PRIMARY_COLOR} 40%, ${PRIMARY_COLOR} 60%, transparent 60%)`,
-                            }}
-                        />
-
-                        {/* Background Image with diagonal clip */}
+            <div className="aura-login">
+                <div className="aura-login__card">
+                    <div className="aura-login__stage">
+                        {/* Decorative layers (desktop only) */}
                         <img
-                            alt="Tea Plantation"
-                            src={HERO_IMAGE}
-                            className="absolute inset-0 w-full h-full object-cover relative"
-                            style={{
-                                clipPath:
-                                    "polygon(0 0, 100% 0, 85% 100%, 0% 100%)",
-                            }}
+                            alt=""
+                            src={`${ASSET}/leaf-top.png`}
+                            className="aura-login__decor aura-login__leaf-top"
+                        />
+                        <img
+                            alt=""
+                            src={`${ASSET}/leaf-right.png`}
+                            className="aura-login__decor aura-login__leaf-right"
                         />
 
-                        {/* Carousel Indicators */}
-                        <div className="absolute top-8 left-1/2 -translate-x-1/2 flex space-x-2 z-10">
-                            <span className="w-8 h-1 bg-white rounded-full" />
-                            <span className="w-2 h-1 bg-white/50 rounded-full" />
-                            <span className="w-2 h-1 bg-white/50 rounded-full" />
-                        </div>
-                    </section>
-
-                    {/* RIGHT: Login Form Section */}
-                    <section className="w-full md:w-[55%] flex flex-col justify-center px-8 md:px-12 py-10 bg-white overflow-hidden">
-                        {/* Logo and Heading */}
-                        <div className="text-center mb-8">
-                            <p className="text-sm text-gray-500 mb-2">
-                                {isAdminTab
-                                    ? "Selamat datang di"
-                                    : "Masuk ke portal Anda"}
-                            </p>
-                            <h1
-                                className="text-4xl font-bold"
-                                style={{ color: PRIMARY_COLOR }}
-                            >
-                                {isAdminTab ? "Aura" : "Sistem Presensi"}
-                            </h1>
+                        <div className="aura-login__hero" aria-hidden="true">
+                            <img
+                                alt=""
+                                src={HERO_IMAGE}
+                                className="aura-login__photo"
+                            />
+                            <div className="aura-login__veil" />
                         </div>
 
-                        {/* Status Message */}
-                        {status && (
-                            <div className="mb-6 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-700">
-                                <MaterialIcon name="check_circle" />
-                                {status}
-                            </div>
-                        )}
+                        <img
+                            alt=""
+                            src={`${ASSET}/leaf-divider.png`}
+                            className="aura-login__decor aura-login__leaf-divider"
+                        />
 
-                        {/* Tab Toggle */}
-                        <div
-                            className="mb-8 flex gap-1 rounded-lg p-1"
-                            style={{ backgroundColor: "#f0f0f0" }}
-                        >
-                            <button
-                                type="button"
-                                onClick={() => switchTab("intern")}
-                                className={`flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold transition-all ${
-                                    tab === "intern"
-                                        ? "text-white shadow-md"
-                                        : "text-gray-600 hover:text-gray-900"
-                                }`}
-                                style={{
-                                    backgroundColor:
-                                        tab === "intern"
-                                            ? PRIMARY_COLOR
-                                            : "transparent",
-                                }}
-                            >
-                                <MaterialIcon
-                                    name="person"
-                                    style={{ fontSize: 18 }}
+                        <div className="aura-login__hero">
+                            <div className="aura-login__brand">
+                                <img
+                                    alt="PTPN I"
+                                    src="/images/logos/logo-ptpn.png"
                                 />
-                                Peserta
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => switchTab("admin")}
-                                className={`flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold transition-all ${
-                                    tab === "admin"
-                                        ? "text-white shadow-md"
-                                        : "text-gray-600 hover:text-gray-900"
-                                }`}
-                                style={{
-                                    backgroundColor:
-                                        tab === "admin"
-                                            ? PRIMARY_COLOR
-                                            : "transparent",
-                                }}
+                                <span>ptpn1</span>
+                            </div>
+
+                            <p className="aura-login__eyebrow">
+                                ABSENSI &amp; PERIZINAN MAGANG
+                            </p>
+
+                            <h2 className="aura-login__headline">
+                                Bertumbuh
+                                <br />
+                                Bersama
+                                <br />
+                                Untuk Negeri
+                            </h2>
+
+                            <svg
+                                className="aura-login__headline-leaf"
+                                viewBox="0 0 54 86"
+                                aria-hidden="true"
                             >
-                                {/* <MaterialIcon
-                                    name="shield_admin"
-                                    style={{ fontSize: 18 }}
-                                /> */}
-                                Admin
-                            </button>
+                                <path
+                                    d="M14 4C26 16 28 34 20 46C10 38 8 18 14 4Z"
+                                    fill="#e3b24a"
+                                />
+                                <path
+                                    d="M52 44C46 70 28 84 4 82C6 58 26 44 52 44Z"
+                                    fill="#6a8a48"
+                                />
+                            </svg>
+
+                            <div className="aura-login__rule" />
+
+                            <div className="aura-login__values">
+                                <span>AKTIF</span>
+                                <i>|</i>
+                                <span>DISIPLIN</span>
+                                <i>|</i>
+                                <span>BERDAMPAK</span>
+                            </div>
                         </div>
 
-                        {/* Form */}
-                        <form onSubmit={submit} className="space-y-5">
-                            {isAdminTab ? (
-                                <div>
-                                    <InputLabel
-                                        htmlFor="nik"
-                                        value="Username"
-                                    />
-                                    <div className="relative mt-2">
-                                        <MaterialIcon
-                                            name="badge"
-                                            style={{
-                                                fontSize: 18,
-                                                position: "absolute",
-                                                left: "12px",
-                                                top: "12px",
-                                                color: "#d1d5db",
-                                            }}
-                                        />
-                                        <TextInput
-                                            id="nik"
-                                            type="text"
-                                            name="nik"
-                                            value={data.nik}
-                                            className="mt-0 block w-full border-gray-300 pl-10 rounded-md"
-                                            placeholder="Masukkan NIK Anda"
-                                            autoComplete="username"
-                                            isFocused={true}
-                                            onChange={(e) =>
-                                                setData("nik", e.target.value)
-                                            }
-                                            style={{
-                                                borderColor: "#d1d5db",
-                                            }}
-                                        />
-                                    </div>
-                                    <InputError
-                                        message={errors.nik}
-                                        className="mt-2"
-                                    />
-                                </div>
-                            ) : (
-                                <>
-                                    <div>
-                                        <InputLabel
-                                            htmlFor="university_id"
-                                            value="Perguruan Tinggi"
-                                        />
-                                        <div className="relative mt-2">
-                                            <MaterialIcon
-                                                name="school"
-                                                style={{
-                                                    fontSize: 18,
-                                                    position: "absolute",
-                                                    left: "12px",
-                                                    top: "12px",
-                                                    color: "#d1d5db",
-                                                }}
-                                            />
-                                            <Autocomplete
-                                                id="university_id"
-                                                url={route(
-                                                    "lookup.universities",
-                                                )}
-                                                value={data.university_id}
-                                                displayValue={
-                                                    data.university_name
-                                                }
-                                                placeholder="Cari perguruan tinggi..."
-                                                onSelect={handleUniversity}
-                                            />
-                                        </div>
-                                        <InputError
-                                            message={errors.university_id}
-                                            className="mt-2"
-                                        />
-                                    </div>
+                        {/* Login form */}
+                        <section className="aura-login__panel">
+                            <img
+                                alt="Aura"
+                                src={`${ASSET}/aura-logo.png`}
+                                className="aura-login__logo"
+                            />
+                            <p className="aura-login__tagline">
+                                Sistem Absensi &amp; Perizinan Magang
+                            </p>
 
-                                    <div>
-                                        <InputLabel htmlFor="nim" value="NIM" />
-                                        <div className="relative mt-2">
-                                            <MaterialIcon
-                                                name="badge"
-                                                style={{
-                                                    fontSize: 18,
-                                                    position: "absolute",
-                                                    left: "12px",
-                                                    top: "12px",
-                                                    color: "#d1d5db",
-                                                }}
-                                            />
-                                            <TextInput
-                                                id="nim"
-                                                type="text"
-                                                name="nim"
-                                                value={data.nim}
-                                                className="mt-0 block w-full border-gray-300 pl-10 rounded-md"
-                                                placeholder="Masukkan NIM Anda"
-                                                autoComplete="username"
-                                                onChange={(e) =>
-                                                    setData(
-                                                        "nim",
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                style={{
-                                                    borderColor: "#d1d5db",
-                                                }}
-                                            />
-                                        </div>
-                                        <InputError
-                                            message={errors.nim}
-                                            className="mt-2"
-                                        />
-                                    </div>
-                                </>
+                            {status && (
+                                <div className="aura-login__status">
+                                    {status}
+                                </div>
                             )}
 
-                            <div>
-                                <InputLabel
-                                    htmlFor="password"
-                                    value="Password"
-                                />
-                                <div className="relative mt-2">
-                                    <MaterialIcon
-                                        name="lock"
-                                        style={{
-                                            fontSize: 18,
-                                            position: "absolute",
-                                            left: "12px",
-                                            top: "12px",
-                                            color: "#d1d5db",
-                                        }}
+                            <form onSubmit={submit} noValidate>
+                                <div className="aura-login__field">
+                                    <svg
+                                        className="aura-login__field-icon"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="1.6"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        aria-hidden="true"
+                                    >
+                                        <circle cx="12" cy="8" r="4" />
+                                        <path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" />
+                                    </svg>
+                                    <input
+                                        id="nik"
+                                        type="text"
+                                        name="nik"
+                                        value={data.nik}
+                                        className="aura-login__input"
+                                        placeholder="Nomor Identitas"
+                                        aria-label="Nomor Identitas"
+                                        autoComplete="username"
+                                        autoFocus
+                                        onChange={(e) =>
+                                            setData("nik", e.target.value)
+                                        }
                                     />
-                                    <TextInput
+                                    {errors.nik && (
+                                        <p className="aura-login__error">
+                                            {errors.nik}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div className="aura-login__field">
+                                    <svg
+                                        className="aura-login__field-icon"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="1.6"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        aria-hidden="true"
+                                    >
+                                        <rect
+                                            x="4"
+                                            y="10.5"
+                                            width="16"
+                                            height="10.5"
+                                            rx="2.5"
+                                        />
+                                        <path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" />
+                                        <circle cx="12" cy="15.5" r="1" />
+                                    </svg>
+                                    <input
                                         id="password"
-                                        type="password"
+                                        type={
+                                            showPassword ? "text" : "password"
+                                        }
                                         name="password"
                                         value={data.password}
-                                        className="mt-0 block w-full border-gray-300 pl-10 rounded-md"
-                                        placeholder="Masukkan password Anda"
+                                        className="aura-login__input"
+                                        placeholder="Password"
+                                        aria-label="Password"
                                         autoComplete="current-password"
                                         onChange={(e) =>
                                             setData("password", e.target.value)
                                         }
-                                        style={{
-                                            borderColor: "#d1d5db",
-                                        }}
                                     />
-                                </div>
-                                <InputError
-                                    message={errors.password}
-                                    className="mt-2"
-                                />
-                            </div>
-
-                            <div className="flex justify-between items-center">
-                                <label className="flex items-center">
-                                    <Checkbox
-                                        name="remember"
-                                        checked={data.remember}
-                                        onChange={(e) =>
-                                            setData(
-                                                "remember",
-                                                e.target.checked,
-                                            )
+                                    <button
+                                        type="button"
+                                        className="aura-login__eye"
+                                        aria-label={
+                                            showPassword
+                                                ? "Sembunyikan password"
+                                                : "Tampilkan password"
                                         }
-                                    />
-                                    <span className="ms-2 text-sm text-gray-600">
-                                        Ingat saya
-                                    </span>
-                                </label>
-                                {isAdminTab && (
-                                    <a
-                                        href="#"
-                                        className="text-xs font-medium hover:underline"
-                                        style={{ color: PRIMARY_COLOR }}
+                                        onClick={() =>
+                                            setShowPassword((v) => !v)
+                                        }
                                     >
+                                        <svg
+                                            viewBox="0 0 24 24"
+                                            width="100%"
+                                            height="100%"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="1.6"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            aria-hidden="true"
+                                        >
+                                            <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+                                            <circle cx="12" cy="12" r="3" />
+                                            {showPassword && (
+                                                <path d="M4 4l16 16" />
+                                            )}
+                                        </svg>
+                                    </button>
+                                    {errors.password && (
+                                        <p className="aura-login__error">
+                                            {errors.password}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div className="aura-login__row">
+                                    <label className="aura-login__remember">
+                                        <input
+                                            type="checkbox"
+                                            name="remember"
+                                            checked={data.remember}
+                                            onChange={(e) =>
+                                                setData(
+                                                    "remember",
+                                                    e.target.checked,
+                                                )
+                                            }
+                                        />
+                                        <span className="aura-login__box">
+                                            <svg
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="3.2"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                aria-hidden="true"
+                                            >
+                                                <path d="M5 12.5l4.5 4.5L19 7.5" />
+                                            </svg>
+                                        </span>
+                                        Ingat saya
+                                    </label>
+                                    <a href="#" className="aura-login__link">
                                         Lupa password?
                                     </a>
-                                )}
-                            </div>
+                                </div>
 
-                            <button
-                                type="submit"
-                                disabled={processing}
-                                className="w-full flex items-center justify-center gap-2 rounded-md py-3 text-sm font-bold text-white transition-all uppercase tracking-wider"
-                                style={{
-                                    backgroundColor: processing
-                                        ? "#9ca3af"
-                                        : PRIMARY_COLOR,
-                                    cursor: processing
-                                        ? "not-allowed"
-                                        : "pointer",
-                                    opacity: processing ? 0.7 : 1,
-                                }}
-                                onMouseEnter={(e) => {
-                                    if (!processing) {
-                                        e.currentTarget.style.backgroundColor =
-                                            "#172554";
-                                    }
-                                }}
-                                onMouseLeave={(e) => {
-                                    if (!processing) {
-                                        e.currentTarget.style.backgroundColor =
-                                            PRIMARY_COLOR;
-                                    }
-                                }}
-                            >
-                                {processing ? (
-                                    <>
-                                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                                        Memproses...
-                                    </>
-                                ) : (
-                                    <>
-                                        <MaterialIcon
-                                            name="login"
-                                            style={{ fontSize: 18 }}
-                                        />
-                                        {isAdminTab
-                                            ? "Login Admin"
-                                            : "Login Peserta"}
-                                    </>
-                                )}
-                            </button>
-                        </form>
+                                <button
+                                    type="submit"
+                                    disabled={processing}
+                                    className="aura-login__submit"
+                                >
+                                    {processing ? "MEMPROSES..." : "MASUK"}
+                                    {!processing && (
+                                        <svg
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="1.8"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            aria-hidden="true"
+                                        >
+                                            <path d="M4 12h16M14 6l6 6-6 6" />
+                                        </svg>
+                                    )}
+                                </button>
+                            </form>
 
-                        {/* Sign Up Footer */}
-                        <div className="text-center text-sm text-gray-600">
-                            Belum punya akun?{" "}
-                            <a
-                                href="#"
-                                className="font-bold hover:underline"
-                                style={{ color: PRIMARY_COLOR }}
-                            >
-                                Hubungi Admin
-                            </a>
-                        </div>
-                    </section>
+                            <p className="aura-login__footer">
+                                <span>
+                                    Belum memiliki akun?{" "}
+                                    <a href="#">Hubungi Admin</a>
+                                </span>
+                            </p>
+                        </section>
+                    </div>
                 </div>
             </div>
         </>

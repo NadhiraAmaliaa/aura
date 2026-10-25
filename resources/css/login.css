@@ -1,0 +1,518 @@
+/*
+ * Aura login. All desktop dimensions are authored in pixels of the 1438x783
+ * reference design and scaled through --px so the composition keeps its
+ * proportions at any viewport width.
+ */
+.aura-login {
+    --navy: #0b2559;
+    --link: #1c1fd8;
+    --cream: #fbfbf7;
+    --px: 1px;
+
+    min-height: 100vh;
+    background: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
+    color: var(--navy);
+}
+
+.aura-login__card {
+    position: relative;
+    width: 100%;
+    container-type: inline-size;
+}
+
+.aura-login__stage {
+    position: relative;
+    width: 100%;
+}
+
+.aura-login__hero,
+.aura-login__decor {
+    display: none;
+}
+
+/* Form column (mobile: normal flow) */
+.aura-login__panel {
+    position: relative;
+    width: 100%;
+    max-width: 440px;
+    margin: 0 auto;
+    padding: 40px 24px;
+}
+
+.aura-login__logo {
+    display: block;
+    width: 260px;
+    max-width: 80%;
+    margin: 0 auto;
+}
+
+.aura-login__tagline {
+    margin: 16px 0 28px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #4a7fc6;
+}
+
+.aura-login__field {
+    position: relative;
+    margin-bottom: 14px;
+}
+
+.aura-login__input {
+    display: block;
+    width: 100%;
+    height: 56px;
+    padding: 0 52px 0 62px;
+    border: 1px solid #d5d9df;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.85);
+    font-size: 15px;
+    color: var(--navy);
+    box-shadow: 0 1px 2px rgba(11, 37, 89, 0.04);
+    outline: none;
+}
+
+.aura-login__input::placeholder {
+    color: #8b929d;
+}
+
+.aura-login__input:focus {
+    border-color: var(--navy);
+    box-shadow: 0 0 0 3px rgba(11, 37, 89, 0.12);
+}
+
+.aura-login__field-icon {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    width: 22px;
+    height: 22px;
+    transform: translateY(-50%);
+    color: #5b6472;
+    pointer-events: none;
+}
+
+.aura-login__eye {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    transform: translateY(-50%);
+    border: 0;
+    background: none;
+    color: #5b6472;
+    cursor: pointer;
+}
+
+.aura-login__error {
+    margin-top: 6px;
+    font-size: 13px;
+    color: #b42318;
+}
+
+.aura-login__status {
+    margin-bottom: 14px;
+    padding: 10px 14px;
+    border: 1px solid #bbf7d0;
+    border-radius: 10px;
+    background: #f0fdf4;
+    font-size: 13px;
+    color: #15803d;
+}
+
+.aura-login__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 19px;
+    font-size: 16px;
+}
+
+.aura-login__remember {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    color: #1b2a4a;
+}
+
+.aura-login__remember input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.aura-login__box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    border: 1.5px solid var(--navy);
+    background: #fff;
+    color: #fff;
+}
+
+.aura-login__box svg {
+    width: 16px;
+    height: 16px;
+    opacity: 0;
+}
+
+.aura-login__remember input:checked + .aura-login__box {
+    background: var(--navy);
+}
+
+.aura-login__remember input:checked + .aura-login__box svg {
+    opacity: 1;
+}
+
+.aura-login__remember input:focus-visible + .aura-login__box {
+    box-shadow: 0 0 0 3px rgba(11, 37, 89, 0.25);
+}
+
+.aura-login__link {
+    font-weight: 500;
+    color: var(--link);
+    text-decoration: none;
+}
+
+.aura-login__link:hover {
+    text-decoration: underline;
+}
+
+.aura-login__submit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 100%;
+    height: 61px;
+    margin-top: 24px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--navy);
+    color: #fff;
+    font-family: inherit;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.aura-login__submit:hover:not(:disabled) {
+    background: #071a42;
+}
+
+.aura-login__submit:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.aura-login__submit svg {
+    position: absolute;
+    right: 28px;
+    width: 26px;
+    height: 26px;
+}
+
+.aura-login__footer {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 27px;
+    font-size: 16px;
+    font-style: italic;
+    color: #5b6472;
+}
+
+.aura-login__footer::before,
+.aura-login__footer::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #dde0e4;
+}
+
+.aura-login__footer a {
+    font-style: normal;
+    font-weight: 500;
+    color: var(--link);
+    text-decoration: none;
+}
+
+.aura-login__footer a:hover {
+    text-decoration: underline;
+}
+
+.aura-login__footer span {
+    white-space: nowrap;
+}
+
+/* Desktop: full-viewport composition scaled from the 1438x783 reference */
+@media (min-width: 1024px) and (min-aspect-ratio: 5/4) {
+    .aura-login__card {
+        width: 100%;
+        height: 100vh;
+        height: 100dvh;
+        container-type: size;
+        overflow: hidden;
+    }
+
+    .aura-login__stage {
+        position: absolute;
+        inset: 0;
+        /* --px: uniform content scale; --dv: height unit for the divider; --hu: capped height unit for edge leaves; --oy: vertical origin of the reference canvas */
+        --px: min(100cqw / 1438, 100cqh / 783);
+        --dv: calc(100cqh / 783);
+        --hu: min(var(--dv), calc(var(--px) * 1.25));
+        --oy: calc(50cqh - 391.5 * var(--px));
+    }
+
+    .aura-login__hero,
+    .aura-login__decor {
+        display: block;
+    }
+
+    .aura-login__decor {
+        position: absolute;
+        max-width: none;
+        pointer-events: none;
+        user-select: none;
+    }
+
+    .aura-login__stage {
+        --photo-clip: polygon(
+            0 0,
+            calc(51.8cqw + 3 * var(--dv)) 0,
+            calc(51.8cqw + 31 * var(--dv)) 10%,
+            calc(51.8cqw + 53 * var(--dv)) 25%,
+            calc(51.8cqw + 46 * var(--dv)) 40%,
+            calc(51.8cqw + 10 * var(--dv)) 55%,
+            calc(51.8cqw - 19 * var(--dv)) 70%,
+            calc(51.8cqw - 48 * var(--dv)) 85%,
+            calc(51.8cqw - 62 * var(--dv)) 100%,
+            0 100%
+        );
+    }
+
+    .aura-login__photo {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: 30% 50%;
+        clip-path: var(--photo-clip);
+    }
+
+    .aura-login__veil {
+        position: absolute;
+        inset: 0;
+        clip-path: var(--photo-clip);
+        background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.72) 0%,
+            rgba(255, 255, 255, 0.55) calc(var(--oy) + 298 * var(--px)),
+            rgba(255, 255, 255, 0) calc(var(--oy) + 485 * var(--px))
+        );
+    }
+
+    .aura-login__leaf-top {
+        left: calc(51.8cqw - 315 * var(--dv));
+        top: calc(-68 * var(--dv));
+        width: calc(820 * var(--dv));
+    }
+
+    .aura-login__leaf-right {
+        right: calc(-107 * var(--hu));
+        top: calc(-63 * var(--hu));
+        width: calc(1100 * var(--hu));
+    }
+
+    .aura-login__leaf-divider {
+        left: calc(51.8cqw - 357 * var(--dv));
+        top: calc(-30 * var(--dv));
+        width: calc(885 * var(--dv));
+    }
+
+    .aura-login__brand {
+        position: absolute;
+        left: calc(58 * var(--px));
+        top: calc(26 * var(--px));
+        width: calc(80 * var(--px));
+        text-align: center;
+    }
+
+    .aura-login__brand img {
+        display: block;
+        width: calc(72 * var(--px));
+        margin: 0 auto;
+    }
+
+    .aura-login__brand span {
+        display: block;
+        margin-top: calc(-2 * var(--px));
+        font-size: calc(21 * var(--px));
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: -0.02em;
+        color: #5f6670;
+    }
+
+    .aura-login__eyebrow {
+        position: absolute;
+        left: calc(68 * var(--px));
+        top: calc(var(--oy) + 130 * var(--px));
+        font-size: calc(15.5 * var(--px));
+        font-weight: 600;
+        letter-spacing: 0.3em;
+        white-space: nowrap;
+    }
+
+    .aura-login__headline {
+        position: absolute;
+        left: calc(68 * var(--px));
+        top: calc(var(--oy) + 156 * var(--px));
+        margin: 0;
+        font-family: "Playfair Display", Georgia, serif;
+        font-size: calc(72 * var(--px));
+        font-weight: 700;
+        line-height: calc(63 * var(--px));
+        letter-spacing: -0.015em;
+        white-space: nowrap;
+    }
+
+    .aura-login__headline-leaf {
+        position: absolute;
+        left: calc(504 * var(--px));
+        top: calc(var(--oy) + 268 * var(--px));
+        width: calc(54 * var(--px));
+        height: calc(86 * var(--px));
+    }
+
+    .aura-login__rule {
+        position: absolute;
+        left: calc(68 * var(--px));
+        top: calc(var(--oy) + 369 * var(--px));
+        width: calc(87 * var(--px));
+        height: calc(3 * var(--px));
+        background: #d9a521;
+    }
+
+    .aura-login__values {
+        position: absolute;
+        left: calc(68 * var(--px));
+        top: calc(var(--oy) + 389 * var(--px));
+        display: flex;
+        align-items: center;
+        font-size: calc(15.5 * var(--px));
+        font-weight: 600;
+        letter-spacing: 0.3em;
+        white-space: nowrap;
+    }
+
+    .aura-login__values i {
+        margin: 0 calc(27 * var(--px));
+        font-style: normal;
+        font-weight: 400;
+    }
+
+    .aura-login__panel {
+        position: absolute;
+        left: calc(78.9cqw - 241.5 * var(--px));
+        top: calc(var(--oy) + 140 * var(--px));
+        width: calc(483 * var(--px));
+        max-width: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .aura-login__logo {
+        width: calc(330 * var(--px));
+        max-width: none;
+    }
+
+    .aura-login__tagline {
+        margin: calc(2 * var(--px)) 0 calc(35 * var(--px));
+        font-size: calc(14 * var(--px));
+        letter-spacing: 0.21em;
+    }
+
+    .aura-login__field {
+        margin-bottom: calc(14 * var(--px));
+    }
+
+    .aura-login__input {
+        height: calc(56 * var(--px));
+        padding: 0 calc(52 * var(--px)) 0 calc(62 * var(--px));
+        border-radius: calc(12 * var(--px));
+        font-size: calc(15 * var(--px));
+    }
+
+    .aura-login__field-icon {
+        left: calc(20 * var(--px));
+        width: calc(22 * var(--px));
+        height: calc(22 * var(--px));
+    }
+
+    .aura-login__eye {
+        right: calc(20 * var(--px));
+        width: calc(24 * var(--px));
+        height: calc(24 * var(--px));
+    }
+
+    .aura-login__error {
+        margin-top: calc(6 * var(--px));
+        font-size: calc(13 * var(--px));
+    }
+
+    .aura-login__row {
+        margin-top: calc(19 * var(--px));
+        font-size: calc(16 * var(--px));
+    }
+
+    .aura-login__remember {
+        gap: calc(12 * var(--px));
+    }
+
+    .aura-login__box {
+        width: calc(26 * var(--px));
+        height: calc(26 * var(--px));
+        border-radius: calc(6 * var(--px));
+    }
+
+    .aura-login__box svg {
+        width: calc(16 * var(--px));
+        height: calc(16 * var(--px));
+    }
+
+    .aura-login__submit {
+        height: calc(61 * var(--px));
+        margin-top: calc(24 * var(--px));
+        font-size: calc(18 * var(--px));
+    }
+
+    .aura-login__submit svg {
+        right: calc(28 * var(--px));
+        width: calc(26 * var(--px));
+        height: calc(26 * var(--px));
+    }
+
+    .aura-login__footer {
+        gap: calc(14 * var(--px));
+        margin-top: calc(27 * var(--px));
+        font-size: calc(16 * var(--px));
+    }
+}
