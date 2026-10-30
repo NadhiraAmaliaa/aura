@@ -211,10 +211,10 @@ function SidebarLink({
         <Link
             href={href}
             className={
-                "flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 " +
+                "mr-2 flex items-center gap-3 rounded-r-md border-l-[6px] py-3 pl-3.5 pr-4 text-sm font-medium transition-colors duration-200 " +
                 (active
-                    ? "border-l-4 border-primary bg-surface-container-high text-primary"
-                    : "border-l-4 border-transparent text-on-surface-variant hover:translate-x-1 hover:bg-surface-container-low")
+                    ? "border-[#eab308] bg-[#0b2559] text-white"
+                    : "border-transparent text-on-surface-variant hover:bg-[#E8F0FC] hover:text-[#0b2559]")
             }
         >
             <MaterialIcon name={icon} filled={active} />
@@ -275,9 +275,14 @@ export default function AuthenticatedLayout({
 
                     <Link
                         href={homeRoute}
-                        className="text-2xl font-extrabold tracking-tight text-white"
+                        className="flex items-center"
+                        aria-label="Aura"
                     >
-                        Aura
+                        <img
+                            src="/images/logos/logo-aura-white.png"
+                            alt="Aura"
+                            className="h-10 w-auto sm:h-12"
+                        />
                     </Link>
                 </div>
 

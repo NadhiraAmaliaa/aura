@@ -2,33 +2,38 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
-#[Fillable([
-    'user_id',
-    'request_number',
-    'type',
-    'reason',
-    'start_date',
-    'end_date',
-    'total_days',
-    'contact_phone',
-    'address',
-    'evidence_path',
-    'status',
-    'admin_note',
-    'approved_by',
-    'approved_at',
-])]
 class LeaveRequest extends Model
 {
     /** @use HasFactory<\Database\Factories\LeaveRequestFactory> */
     use HasFactory;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'user_id',
+        'request_number',
+        'type',
+        'reason',
+        'start_date',
+        'end_date',
+        'total_days',
+        'contact_phone',
+        'address',
+        'evidence_path',
+        'status',
+        'admin_note',
+        'approved_by',
+        'approved_at',
+    ];
 
     /**
      * The accessors to append to the model's array / JSON form.

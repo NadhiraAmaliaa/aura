@@ -71,28 +71,28 @@ const cards: {
         key: "total_interns",
         label: "Total Peserta",
         icon: "groups",
-        bgGradient: "from-blue-900 to-blue-500",
+        bgGradient: "from-[#0a2455] via-[#0b3367] to-[#2a5a93]",
         iconClass: "bg-white/20",
     },
     {
         key: "active_interns",
         label: "Peserta Aktif",
         icon: "how_to_reg",
-        bgGradient: "from-blue-700 to-sky-400",
+        bgGradient: "from-[#1e67d6] via-[#2d87df] to-[#5cb3ea]",
         iconClass: "bg-white/20",
     },
     {
         key: "present_today",
         label: "Hadir Hari Ini",
         icon: "fact_check",
-        bgGradient: "from-blue-600 to-cyan-400",
+        bgGradient: "from-[#2f8c83] via-[#46a59f] to-[#7ccbc7]",
         iconClass: "bg-white/20",
     },
     {
         key: "pending_leaves",
         label: "Izin Menunggu",
         icon: "pending_actions",
-        bgGradient: "from-orange-600 to-yellow-400",
+        bgGradient: "from-[#c07d0a] via-[#dea025] to-[#f6cb58]",
         iconClass: "bg-white/20",
     },
 ];
@@ -120,7 +120,7 @@ export default function Dashboard({
                 {cards.map((card) => (
                     <div
                         key={card.key}
-                        className={`card-fade-in relative overflow-hidden rounded-2xl bg-gradient-to-br ${card.bgGradient} p-6 text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105`}
+                        className={`card-fade-in relative overflow-hidden rounded-2xl bg-gradient-to-r ${card.bgGradient} p-6 text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105`}
                     >
                         <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10"></div>
                         <div className="relative z-10">
